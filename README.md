@@ -16,12 +16,12 @@ cd Sherlock
 Do not worry all the prompts will be asked as the tool runs
 
 ## TODO
-- [*] Un-initialize variables
-- [*] Add multi-thread parallel processing
-- [*] Move all subroutines into functions
-- [*] Limit amount of data stored to disk, use more variables
+- [ ] Un-initialize variables
+- [ ] Add multi-thread parallel processing
+- [ ] Move all subroutines into functions
+- [ ] Limit amount of data stored to disk, use more variables
 - [x] Add SSL (e.g., sslyze, ssltest or testssl) checking later [done]
-- [*] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
+- [ ] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
 - [x] Write install script [done]
 
 ## Future Plans
