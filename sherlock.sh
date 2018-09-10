@@ -22,7 +22,6 @@ mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
 
 # Moving back to original workspace & loading logo
 cd $pth
-
 echo "
 _____ _               _            _    _ 
 / ____| |             | |          | |  | |
@@ -30,7 +29,7 @@ _____ _               _            _    _
 \___ \| '_ \ / _ \ '__| |/ _ \ / __| |/ / |
 ____) | | | |  __/ |  | | (_) | (__|   <|_|
 |_____/|_| |_|\___|_|  |_|\___/ \___|_|\_(_)
-"                                        
+"
 echo "Web application scanning is elementary my dear Watson!"
 echo
 

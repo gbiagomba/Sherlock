@@ -68,4 +68,4 @@ git pull https://github.com/gbiagomba/Sherlock
 cd Sherlock
 
 # Setting up symbolic link
-ln WebInspector.sh /usr/bin/sherlock
+ln sherlock.sh /usr/bin/sherlock
