@@ -1,3 +1,12 @@
+```
+     _               _            _    
+    | |             | |          | |   
+ ___| |__   ___ _ __| | ___   ___| | __
+/ __| '_ \ / _ \ '__| |/ _ \ / __| |/ /
+\__ \ | | |  __/ |  | | (_) | (__|   < 
+|___/_| |_|\___|_|  |_|\___/ \___|_|\_\
+```
+
 # Sherlock - Web Inspector
 I wrote this script because over the years I have had to do various web application aseessments and one of the most time consuming part is performing the discovery, network vulnerability and web vulnerability scans. Though this does not do all that, however it takes care of the basics for me/you. 
 
@@ -30,13 +39,12 @@ Do not worry all the prompts will be asked as the tool runs
 I plan on converting this into a python script later down the road...just an FYI
 
 ```
-
            ."""-.
           /      \
           |  _..--'-.
           >.`__.-"";"`
-         / /(     ^\
-         '-`)     =|-.
+         / /(     ^\    (
+         '-`)     =|-.   )
           /`--.'--'   \ .-.
         .'`-._ `.\    | J /
   jgs  /      `--.|   \__/
