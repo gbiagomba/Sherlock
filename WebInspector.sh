@@ -23,9 +23,13 @@ bash DependencyCheck.sh
 clear
 cd $pth
 
-# Requesting target file name & moving to work space
+# Requesting target file name & project name
 echo "What is the name of the targets file? The file with all the IP addresses or sites"
 read targets
+echo
+echo "What is the name of the project?"
+read prj_name
+echo
 
 if [ "$targets" != "$(ls $pth | grep $targets)" ]; then
     echo "File not found! Try again!"
@@ -45,9 +49,9 @@ echo "Performing scan using Sublist3r"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $pth/WebTargets);do
-	sublist3r -d $web -v -t 5 -o "$wrkpth/Sublist3r/sublist3r_output-$((++n))"
+	sublist3r -d $web -v -t 5 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$((++n))"
+    cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$((n)) > TempWeb
 done
-cat $wrkpth/Sublist3r/sublist3r_output* > TempWeb
 cat WebTargets >> TempWeb
 cat TempWeb | sort | uniq > WebTargets
 echo 
@@ -58,9 +62,9 @@ echo "Performing scan using Halberd"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $pth/WebTargets);do
-	halberd $web -o $wrkpth/Halberd/halberd_output-$((++n)) -v -p 5 &
+	halberd $web -o $wrkpth/Halberd/$prj_name-halberd_output-$((++n)) -p 5 -t 90 -v
+    grep $wrkpth/Halberd/$prj_name-halberd_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> temptargets
 done
-grep $wrkpth/Halberd/halberd_output-* | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> temptargets
 cat temptargets | sort | uniq > IPtargets
 echo
 
@@ -71,11 +75,11 @@ echo "--------------------------------------------------"
 n=0
 x=0
 for web in $(cat $pth/WebTargets);do
-    theharvester -d $web -l 500 -b all -h | tee $wrkpth/Harvester/harvester_output-$((++n))
-    metagoofil -d $web -l 500 -o $wrkpth/Harvester/Evidence -f $wrkpth/Harvester/metagoofil_output-$((++x)).html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+    theharvester -d $web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$((++n))
+    metagoofil -d $web -l 500 -o $wrkpth/Harvester/Evidence -f $wrkpth/Harvester/$prj_name-metagoofil_output-$((++x)).html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+    cat $prj_name-harvester_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> temptargets
+    cat $prj_name-harvest_output-$((x)) |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> TempWeb
 done
-cat harvester_output-* | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> temptargets
-cat harvest_output-* |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> TempWeb
 cat WebTargets >> TempWeb
 cat IPtargets >> temptargets
 cat TempWeb | sort | uniq > WebTargets
@@ -89,16 +93,16 @@ echo "--------------------------------------------------"
 for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
     pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
 done
-cat $wrkpth/Harvester/tempusr | sort | uniq > Usernames
+cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
 echo
 
 # Using masscan to perform a quick port sweep
 echo "--------------------------------------------------"
 echo "Performing scan using Masscan"
 echo "--------------------------------------------------"
-masscan -iL $pth/IPtargets -p 0-65535 --open-only --banners -oL $wrkpth/Masscan/masscan_output
-cat $wrkpth/Masscan/masscan_output | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
-OpenPORT=($(cat $wrkpth/Masscan/masscan_output | cut -d " " -f 3 | grep -v masscan | sort | uniq))
+masscan -iL $pth/IPtargets -p 0-65535 --open-only --banners -oL $wrkpth/Masscan/$prj_name-masscan_output
+cat $wrkpth/Masscan/$prj_name-masscan_output | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
+OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_output | cut -d " " -f 3 | grep -v masscan | sort | uniq))
 echo 
 
 # Combining target giles
@@ -184,8 +188,8 @@ echo "Performing scan using Nikto"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $pth/FinalTargets);do
-    nikto -C all -h https://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/nikto_https_output-$((++n)).csv | tee $wrkpth/Nikto/nikto_https_output-$((++n)).txt &
-    nikto -C all -h http://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/nikto_http_output-$((++n)).csv | tee $wrkpth/Nikto/nikto_http_output-$((++n)).txt &
+    nikto -C all -h https://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_https_output-$((++n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$((++n)).txt &
+    nikto -C all -h http://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_http_output-$((++n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$((++n)).txt &
     wait
 done
 echo
@@ -201,8 +205,8 @@ for web in $(cat $pth/FinalTargets);do
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/dirb_https_output-$((++n)) -w &
-            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/dirb_http_output-$((++n)) -w &
+            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$((++n)) -w &
+            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((++n)) -w &
             wait
         fi
     done
@@ -213,8 +217,6 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Sn1per"
 echo "--------------------------------------------------"
-echo "What is the name of the project?"
-read prj_name
 for web in $(cat $pth/FinalTargets);do
     for PORTNUM in ${OpenPORT[*]}; do
         STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
@@ -235,10 +237,10 @@ n=0
 x=0
 for web in $(cat $pth/FinalTargets);do
     arachni_multi https://$web http://$web --report-save-path=$wrkpth/Arachni/$prj_name-$((++n)).afr
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=html:outfile=$wrkpth/Arachni/HTML_Report$((++x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=json:outfile=$wrkpth/Arachni/JSON_Report$((x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=txt:outfile=$wrkpth/Arachni/TXT_Report$((x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=xml:outfile=$wrkpth/Arachni/XML_Report$((x)).zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/HTML_Report$((++x)).zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/JSON_Report$((x)).zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/TXT_Report$((x)).zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/XML_Report$((x)).zip
 done
 
 # Using testssl & sslcan
@@ -253,8 +255,8 @@ for IP in $(cat $pth/FinalTargets);do
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            sslscan --xml=$wrkpth/SSLScan/$IP:$PORTNUM-sslscan_output.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$IP:$PORTNUM-sslscan_output.txt
-            testssl -oa "$wrkpth/TestSSL/TLS" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$IP:$PORTNUM-TestSSL_output.txt
+            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$((n)).txt
+            testssl -oA "$wrkpth/TestSSL/TLS/$prj_name-testssl_output-$((++x))" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$((x)).txt
         fi
     done
 done
