@@ -12,6 +12,7 @@ n=0
 pth=$(pwd)
 TodaysDAY=$(date +%m-%d)
 TodaysYEAR=$(date +%Y)
+x=0
 wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 
 # Setting Envrionment
@@ -59,7 +60,7 @@ echo "Performing scan using Sublist3r"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $wrkpth/WebTargets);do
-    ++n
+    echo $((++n))
 	sublist3r -d $web -v -t 5 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$((n))"
     cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$((n)) > $wrkpth/TempWeb
 done
@@ -73,7 +74,7 @@ echo "Performing scan using Halberd"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $wrkpth/WebTargets);do
-    ++n
+    echo $((++n))
 	halberd $web -p 5 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$((n))
     cat $wrkpth/Halberd/$prj_name-halberd_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
 done
@@ -87,8 +88,8 @@ echo "--------------------------------------------------"
 n=0
 x=0
 for web in $(cat $wrkpth/WebTargets);do    
-    ++n
-    ++x
+    echo $((++n))
+    echo $((++x))
     theharvester -d $web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$((n))
     metagoofil -d $web -l 500 -o $wrkpth/Harvester/Evidence -f $wrkpth/Harvester/$prj_name-metagoofil_output-$((x)).html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
     cat $prj_name-harvester_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
@@ -203,9 +204,9 @@ echo "Performing scan using Nikto"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $pth/FinalTargets);do
-    ++n
+    echo $((++n))
     nikto -C all -h https://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).txt &
-    nikto -C all -h http://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_http_output-$((n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$((n)).txt &
+    nikto -C all -h http://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_http_output-$((++n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$((n)).txt &
     wait
 done
 echo
@@ -221,9 +222,9 @@ for web in $(cat $pth/FinalTargets);do
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            ++n
+            echo $((++n))
             dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$((n)) -w &
-            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((n)) -w &
+            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((++n)) -w &
             wait
         fi
     done
@@ -237,8 +238,8 @@ echo "--------------------------------------------------"
 n=0
 x=0
 for web in $(cat $pth/FinalTargets);do    
-    ++n
-    ++x
+    echo $((++n))
+    echo $((++x))
     arachni_multi https://$web http://$web --report-save-path=$wrkpth/Arachni/$prj_name-$((n)).afr
     arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/HTML_Report$((x)).zip
     arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/JSON_Report$((x)).zip
@@ -258,8 +259,8 @@ for IP in $(cat $pth/FinalTargets);do
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then            
-            ++n
-            ++x
+            echo $((++n))
+            echo $((++x))
             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$((n)).xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$((n)).txt
             testssl -oA "$wrkpth/TestSSL/TLS/$prj_name-$IP:$PORTNUM-testssl_output-$((x))" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$((x)).txt
         fi
