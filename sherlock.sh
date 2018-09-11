@@ -23,11 +23,11 @@ mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
 # Moving back to original workspace & loading logo
 cd $pth
 echo "
-_____ _               _            _    _ 
-/ ____| |             | |          | |  | |
+ _____  _               _            _    _ 
+/ ____ | |             | |          | |  | |
 | (___ | |__   ___ _ __| | ___   ___| | _| |
-\___ \| '_ \ / _ \ '__| |/ _ \ / __| |/ / |
-____) | | | |  __/ |  | | (_) | (__|   <|_|
+\___  \| '_ \ / _ \ '__| |/ _ \ / __| |/ / |
+____)  | | | |  __/ |  | | (_) | (__|   <| |
 |_____/|_| |_|\___|_|  |_|\___/ \___|_|\_(_)
 "
 echo "Web application scanning is elementary my dear Watson!"
@@ -134,18 +134,24 @@ echo "Performing scan using Nmap"
 echo "--------------------------------------------------"
 
 # Nmap - Pingsweep using ICMP echo
+echo
+echo "Pingsweep using ICMP echo"
 nmap -sP -PE -iL $pth/FinalTargets -oA $wrkpth/Nmap/icmpecho
 cat $wrkpth/Nmap/icmpecho.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
 xsltproc $wrkpth/Nmap/icmpecho.xml -o $wrkpth/Nmap/icmpecho.html
 echo
 
 # Nmap - Pingsweep using ICMP timestamp
+echo
+echo "Pingsweep using ICMP timestamp"
 nmap -sP -PP -iL $pth/FinalTargets -oA $wrkpth/Nmap/icmptimestamp
 cat $wrkpth/Nmap/icmptimestamp.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
 xsltproc $wrkpth/Nmap/icmptimestamp.xml -o $wrkpth/Nmap/icmptimestamp.html
 echo
 
 # Nmap - Pingsweep using ICMP netmask
+echo
+echo "Pingsweep using ICMP netmask"
 nmap -sP -PM -iL $pth/FinalTargets -oA $wrkpth/Nmap/icmpnetmask
 cat $wrkpth/Nmap/icmpnetmask.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
 xsltproc $wrkpth/Nmap/icmpnetmask.xml -o $wrkpth/Nmap/icmpnetmask.html
@@ -156,6 +162,8 @@ cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/pingresponse
 echo
 
 # Nmap - Pingsweep using TCP SYN and UDP
+echo
+echo "Pingsweep using TCP SYN and UDP"
 nmap -sP -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -iL $pth/FinalTargets -oA $wrkpth/Nmap/pingsweepTCP
 nmap -sP -PU 53,111,135,137,161,500 -iL $pth/FinalTargets -oA $wrkpth/Nmap/pingsweepUDP
 cat $wrkpth/Nmap/pingsweepTCP.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
@@ -169,6 +177,8 @@ echo
 # nmap http scripts: http-method-tamper,http-mobileversion-checker,http-ntlm-info,http-open-redirect,http-passwd,http-referer-checker,http-rfi-spider,http-robots.txt,http-robtex-reverse-ip,http-security-headers
 # nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
+echo
+echo "Full TCP SYN scan on live targets"
 nmap -A -Pn -R -sS -sV -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/TCPdetails
 xsltproc $wrkpth/Nmap/TCPdetails.xml -o $wrkpth/Nmap/Nmap_Output.html
 cat $wrkpth/Nmap/TCPdetails.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
@@ -184,17 +194,19 @@ cat $wrkpth/Nmap/live | sort | uniq >> $wrkpth/livehosts
 echo
 
 # Nmap - Default UDP scan on live targets
-nmap -sU -PN -T4 -iL $pth/FinalTargets -oA $wrkpth/Nmap/UDPdetails
+echo
+echo "Default UDP scan on live targets"
+nmap -sU -PN -T4 -iL $pth/FinalTargets -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') -oA $wrkpth/Nmap/UDPdetails
 cat $pth/UDPdetails.gnmap | grep ' 161/open\?\!|' | cut -d ' ' -f 2 > $pth/SNMP
 cat $pth/UDPdetails.gnmap | grep ' 500/open\?\!|' | cut -d ' ' -f 2 > $pth/isakmp
 xsltproc $wrkpth/Nmap/UDPdetails.xml -o $wrkpth/Nmap/UDPdetails.html
 echo
 
 # Nmap - Firewall evasion
-nmap -f -mtu 24 --spoof-mac Dell --randomize-hosts -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
-nmap -D RND:10 --badsum --data-length 24 --randomize-hosts -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade2
+echo
+echo "Firewall evasion scan -- You know just in case ;)"
+nmap -f -D RND:10 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
 xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
-xsltproc $wrkpth/Nmap/FW_Evade2.xml -o $wrkpth/Nmap/FW_Evade2.html
 echo
 
 # Using nikto
@@ -203,10 +215,15 @@ echo "Performing scan using Nikto"
 echo "--------------------------------------------------"
 n=0
 for web in $(cat $pth/FinalTargets);do
-    echo $((++n))
-    nikto -C all -h https://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).txt &
-    nikto -C all -h http://$web -port $(echo ${OpenPORT[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-nikto_http_output-$((++n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$((n)).txt &
-    wait
+    for PORTNUM in ${OpenPORT[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+        STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+        STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+            echo $((++n))
+            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).txt
+        fi
+    done
 done
 echo
 
@@ -222,9 +239,8 @@ for web in $(cat $pth/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo $((++n))
-            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$((n)) -w &
-            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((++n)) -w &
-            wait
+            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$((n)) -w
+            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((++n)) -w
         fi
     done
 done
