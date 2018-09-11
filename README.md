@@ -1,11 +1,12 @@
-```
+![alt tag](http://detective-tours.com/site/assets/files/1104/sherlock-banner.940x258.jpg)
+
      _               _            _    
     | |             | |          | |   
  ___| |__   ___ _ __| | ___   ___| | __
 / __| '_ \ / _ \ '__| |/ _ \ / __| |/ /
 \__ \ | | |  __/ |  | | (_) | (__|   < 
 |___/_| |_|\___|_|  |_|\___/ \___|_|\_\
-```
+
 
 # Sherlock - Web Inspector
 I wrote this script because over the years I have had to do various web application aseessments and one of the most time consuming part is performing the discovery, network vulnerability and web vulnerability scans. Though this does not do all that, however it takes care of the basics for me/you. 
