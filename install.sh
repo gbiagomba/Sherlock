@@ -1,4 +1,4 @@
-# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, nmap, sn1pe, masscan, arachni, sslscan, testssl
+# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, nmap, sn1pe, masscan, arachni, sslscan, testssl, jexboss
 if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
     # cd /opt/
     # git clone https://github.com/jmbr/halberd
@@ -61,6 +61,12 @@ fi
 if [ "testssl" != "$(ls /usr/bin/testssl)" ]; then
     apt install testssl -y
 fi
+
+# Downloading the jhexboss dependency
+cd /opt/
+git clone https://github.com/joaomatosf/jexboss.git
+cd jexboss/
+pip install -r requires.txt
 
 # Downloading the git project
 cd /opt/

