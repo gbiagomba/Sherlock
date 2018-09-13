@@ -8,11 +8,9 @@
 # set -eux
 
 # Declaring variables
-n=0
 pth=$(pwd)
 TodaysDAY=$(date +%m-%d)
 TodaysYEAR=$(date +%Y)
-x=0
 wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 
 # Setting Envrionment
@@ -58,11 +56,9 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Sublist3r"
 echo "--------------------------------------------------"
-n=0
 for web in $(cat $wrkpth/WebTargets);do
-    echo $((++n))
-	sublist3r -d $web -v -t 5 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$((n))"
-    cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$((n)) > $wrkpth/TempWeb
+	sublist3r -d $web -v -t 5 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt"
+    cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt > $wrkpth/TempWeb
 done
 cat $wrkpth/WebTargets >> $wrkpth/TempWeb
 cat $wrkpth/TempWeb | sort | uniq > $wrkpth/WebTargets
@@ -72,11 +68,9 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Halberd"
 echo "--------------------------------------------------"
-n=0
 for web in $(cat $wrkpth/WebTargets);do
-    echo $((++n))
-	halberd $web -p 5 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$((n))
-    cat $wrkpth/Halberd/$prj_name-halberd_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
+	halberd $web -p 5 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt
+    cat $wrkpth/Halberd/$prj_name-halberd_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
 done
 cat $wrkpth/TempTargets | sort | uniq > $wrkpth/IPtargets
 echo
@@ -85,15 +79,11 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Theharvester and Metagoofil"
 echo "--------------------------------------------------"
-n=0
-x=0
-for web in $(cat $wrkpth/WebTargets);do    
-    echo $((++n))
-    echo $((++x))
-    theharvester -d $web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$((n))
-    metagoofil -d $web -l 500 -o $wrkpth/Harvester/Evidence -f $wrkpth/Harvester/$prj_name-metagoofil_output-$((x)).html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-    cat $prj_name-harvester_output-$((n)) | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
-    cat $prj_name-harvest_output-$((x)) |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrkpth/TempWeb
+for web in $(cat $wrkpth/WebTargets);do
+    theharvester -d $web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt
+    metagoofil -d $web -l 500 -o $wrkpth/Harvester/Evidence -f $wrkpth/Harvester/$prj_name-metagoofil_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+    cat $prj_name-harvester_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrkpth/TempTargets
+    cat $prj_name-harvest_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrkpth/TempWeb
 done
 cat $wrkpth/WebTargets >> $wrkpth/TempWeb
 cat $wrkpth/IPtargets >> $wrkpth/TempTargets
@@ -214,15 +204,13 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Nikto"
 echo "--------------------------------------------------"
-n=0
 for web in $(cat $pth/FinalTargets);do
     for PORTNUM in ${OpenPORT[*]}; do
         STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            echo $((++n))
-            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$((n)).txt
+            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.csv | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.txt
         fi
     done
 done
@@ -232,15 +220,13 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Dirb"
 echo "--------------------------------------------------"
-n=0
 for web in $(cat $pth/FinalTargets);do
     for PORTNUM in ${OpenPORT[*]}; do
         STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            echo $((++n))
-            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$((n)) -w
+            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt -w
             dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$((++n)) -w
         fi
     done
@@ -251,34 +237,26 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using arachni"
 echo "--------------------------------------------------"
-n=0
-x=0
-for web in $(cat $pth/FinalTargets);do    
-    echo $((++n))
-    echo $((++x))
-    arachni_multi https://$web http://$web --report-save-path=$wrkpth/Arachni/$prj_name-$((n)).afr
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/HTML_Report$((x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/JSON_Report$((x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/TXT_Report$((x)).zip
-    arachni_reporter $wrkpth/Arachni/$prj_name-$((n)).afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/XML_Report$((x)).zip
+for web in $(cat $pth/FinalTargets);do
+    arachni_multi https://$web http://$web --report-save-path=$wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr
+    arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/HTML_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/JSON_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/TXT_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
+    arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/XML_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
 done
 
 # Using testssl & sslcan
 echo "--------------------------------------------------"
 echo "Performing scan using arachni"
 echo "--------------------------------------------------"
-n=0
-x=0
 for IP in $(cat $pth/FinalTargets);do
     for PORTNUM in ${OpenPORT[*]}; do
         STAT1=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/TCPdetails.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then            
-            echo $((++n))
-            echo $((++x))
-            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$((n)).xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$((n)).txt
-            testssl -oA "$wrkpth/TestSSL/TLS/$prj_name-$IP:$PORTNUM-testssl_output-$((x))" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$((x)).txt
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.txt
+            testssl -oA "$wrkpth/TestSSL/TLS/$prj_name-$IP:$PORTNUM-testssl_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.txt
         fi
     done
 done
