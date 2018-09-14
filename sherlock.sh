@@ -17,7 +17,7 @@ wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester $wrkpth/Metagoofil
 mkdir -p $wrkpth/Nikto/ $wrkpth/Dirb/ $wrkpth/Nmap/ $wrkpth/Sniper/
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
-mikdir -p $wrkpth/JexBoss
+mikdir -p $wrkpth/JexBoss $wrkpth/XssPy $wrkpth/Grabber $wrkpth/GOLismero
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -244,6 +244,15 @@ for web in $(cat $pth/FinalTargets);do
     arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/TXT_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
     arachni_reporter $wrkpth/Arachni/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/XML_Report$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-2.txt.zip
 done
+
+# Using XssPy
+# python XssPy.py -e -v -u https://$web
+
+# Using Grabber
+# grabber -s -x -b -z -d  SPIDER -j -c -e -u https://$web
+
+# Using GOLismero
+# golismero scan '$web' audit-name '$prj_name' report 'golismero_output-$((++n)).html golismero_output-$((++n)).txt golismero_output-$((++n)).rst' -db golismero_output-$((++n)).db
 
 # Using testssl & sslcan
 echo "--------------------------------------------------"
