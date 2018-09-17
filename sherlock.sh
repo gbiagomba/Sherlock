@@ -246,13 +246,19 @@ for web in $(cat $pth/FinalTargets);do
 done
 
 # Using XssPy
-# python XssPy.py -e -v -u https://$web
+for web in $(cat $pth/FinalTargets);do
+    python /opt/XssPy/XssPy.py http://$web | tee $wrkpth/XssPy/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt
+done
 
 # Using Grabber
-# grabber -s -x -b -z -d  SPIDER -j -c -e -u https://$web
+for web in $(cat $pth/FinalTargets);do
+    grabber -s -x -b -z -d  SPIDER -j -c -e -u https://$web | tee $wrkpth/Grabber/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g').txt
+done
 
 # Using GOLismero
-# golismero scan '$web' audit-name '$prj_name' report 'golismero_output-$((++n)).html golismero_output-$((++n)).txt golismero_output-$((++n)).rst' -db golismero_output-$((++n)).db
+for web in $(cat $pth/FinalTargets);do
+    golismero scan "$web" audit-name "$prj_name" report "$wrkpth/GOLismero/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-golismero_output.html $wrkpth/GOLismero/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-golismero_output.txt $wrkpth/GOLismero/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-golismero_output.rst" -db $wrkpth/GOLismero/$prj_name-$(echo $web | tr -d "/"/"-" | sed 's/https:/https-/g')-golismero_output.db
+done
 
 # Using testssl & sslcan
 echo "--------------------------------------------------"

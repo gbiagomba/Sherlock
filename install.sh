@@ -62,11 +62,23 @@ if [ "testssl" != "$(ls /usr/bin/testssl)" ]; then
     apt install testssl -y
 fi
 
+if [ "grabber" != "$(ls /usr/bin/grabber)" ]; then
+    apt install grabber -y
+fi
+
+if [ "golismero" != "$(ls /usr/bin/golismero)" ]; then
+    apt install golismero -y
+fi
+
 # Downloading the jhexboss dependency
 cd /opt/
 git clone https://github.com/joaomatosf/jexboss.git
 cd jexboss/
 pip install -r requires.txt
+
+# Downloading the XssPy dependency
+cd /opt/
+git clone https://github.com/faizann24/XssPy
 
 # Downloading the git project
 cd /opt/
