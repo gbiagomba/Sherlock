@@ -9,7 +9,7 @@
 ```
 
 # Sherlock - Web Inspector
-I wrote this script because over the years I have had to do various web application aseessments and one of the most time consuming part is performing the discovery, network vulnerability and web vulnerability scans. Though this does not do all that, however it takes care of the basics for me/you. 
+I wrote this script because over the years I have had to do various web application aseessments and one of the most time consuming part is performing the discovery, network vulnerability and web vulnerability scans. Though this does not do all that, however it takes care of the basics for you and I. 
 
 ## Install
 ```
@@ -21,9 +21,15 @@ cd Sherlock
 
 ## Usage
 ```
-./WebInspector
+sherlock
 ```
 Do not worry all the prompts will be asked as the tool runs
+
+## Uninstall
+```
+cd /opt/Sherlock/
+./uninstall.sh
+```
 
 ## TODO
 - [ ] Un-initialize variables

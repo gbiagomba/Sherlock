@@ -3,5 +3,5 @@ rm /usr/bin/sherlock
 rm /opt/Sherlock -rf
 
 # Removing dependencies
-apt remove sublist3r theharvester metagoofil nikto dirb nmap sn1pe masscan arachni sslscan testssl halberd
+apt remove halberd sublist3r theharvester metagoofil nikto dirb nmap sn1pe masscan arachni sslscan testssl jexboss -y
 pip uninstall halberd
