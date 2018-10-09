@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/env sh
 # Author: Gilles Biagomba
 # Program:Web Inspector
 # Description: This script is designed to automate the earlier phases.\n
@@ -170,7 +170,7 @@ echo
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN scan on live targets"
-nmap -A -Pn -R -sS -sV -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/TCPdetails
+nmap -A -Pn -R --reason --resolve-all -sS -sV -T4 -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/TCPdetails
 xsltproc $wrkpth/Nmap/TCPdetails.xml -o $wrkpth/Nmap/Nmap_Output.html
 cat $wrkpth/Nmap/TCPdetails.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
 cat $wrkpth/Nmap/TCPdetails.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
@@ -196,7 +196,9 @@ echo
 # Nmap - Firewall evasion
 echo
 echo "Firewall evasion scan -- You know just in case ;)"
-# nmap -D RND:10 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+# nmap -D RND:10 --reason -T1 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+nmap -f -mtu 24 --randomize-hosts --reason --resolve-all --spoof-mac Dell -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/livehosts -oA FW_Evade
+nmap -D RND:10 --badsum --data-length 24 --randomize-hosts -reason --resolve-all -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/livehosts -oA FW_Evade2
 xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
 echo
 
