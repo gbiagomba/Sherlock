@@ -170,7 +170,7 @@ echo
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN scan on live targets"
-nmap -A -Pn -R -sS -sV -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/TCPdetails
+nmap -A -Pn -R --reason --resolve-all -sS -sV -T4 -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/TCPdetails
 xsltproc $wrkpth/Nmap/TCPdetails.xml -o $wrkpth/Nmap/Nmap_Output.html
 cat $wrkpth/Nmap/TCPdetails.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
 cat $wrkpth/Nmap/TCPdetails.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
