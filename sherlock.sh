@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/env sh
 # Author: Gilles Biagomba
 # Program:Web Inspector
 # Description: This script is designed to automate the earlier phases.\n
@@ -196,7 +196,9 @@ echo
 # Nmap - Firewall evasion
 echo
 echo "Firewall evasion scan -- You know just in case ;)"
-# nmap -D RND:10 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+# nmap -D RND:10 --reason -T1 --badsum --data-length 24 --mtu 24 --spoof-mac Dell --randomize-hosts -A -F -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+nmap -f -mtu 24 --randomize-hosts --reason --resolve-all --spoof-mac Dell -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/livehosts -oA FW_Evade
+nmap -D RND:10 --badsum --data-length 24 --randomize-hosts -reason --resolve-all -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/livehosts -oA FW_Evade2
 xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
 echo
 
