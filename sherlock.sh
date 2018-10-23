@@ -1,4 +1,4 @@
-#!/bin/env sh
+#!/usr/bin/env bash
 # Author: Gilles Biagomba
 # Program:Web Inspector
 # Description: This script is designed to automate the earlier phases.\n
