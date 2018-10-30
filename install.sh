@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, nmap, sn1pe, masscan, arachni, sslscan, testssl, jexboss
 if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
     # cd /opt/
