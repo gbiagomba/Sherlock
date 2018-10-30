@@ -105,7 +105,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Masscan"
 echo "--------------------------------------------------"
-masscan -iL $wrkpth/IPtargets -p 0-65535 --open-only --banners -oL $wrkpth/Masscan/$prj_name-masscan_output
+masscan -iL $wrkpth/IPtargets -p 0-65535 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_output
 cat $wrkpth/Masscan/$prj_name-masscan_output | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_output | cut -d " " -f 3 | grep -v masscan | sort | uniq))
 #OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_output | cut -d " " -f 3 | grep -v masscan | sort | uniq))

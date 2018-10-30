@@ -7,66 +7,66 @@ if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
     pip install halberd
 fi
 
-if [ "dnsenum" != "$(ls /usr/bin/dnsenum)" ]; then
+if [ "dnsenum" != "$(ls /usr/bin/ | grep dnsenum)" ]; then
     apt install dnsenum -y
 fi
 
-if [ "sublist3r" != "$(ls /usr/bin/sublist3r)" ]; then
+if [ "sublist3r" != "$(ls /usr/bin/ | grep sublist3r)" ]; then
     apt install sublist3r -y
 fi
 
-if [ "theharvester" != "$(ls /usr/bin/theharvester)" ]; then
+if [ "theharvester" != "$(ls /usr/bin/ | grep theharvester)" ]; then
     apt install theharvester -y
 fi
 
-if [ "metagoofil" != "$(ls /usr/bin/metagoofil)" ]; then
+if [ "metagoofil" != "$(ls /usr/bin/ | grep metagoofil)" ]; then
     apt install metagoofil -y
 fi
 
-if [ "nikto" != "$(ls /usr/bin/nikto)" ]; then
+if [ "nikto" != "$(ls /usr/bin/ | grep nikto)" ]; then
     apt install nikto -y
 fi
 
-if [ "dirb" != "$(ls /usr/bin/dirb)" ]; then
+if [ "dirb" != "$(ls /usr/bin/ | grep dirb)" ]; then
     apt install dirb -y
 fi
 
-if [ "nmap" != "$(ls /usr/bin/nmap)" ]; then
+if [ "nmap" != "$(ls /usr/bin/ | grep nmap)" ]; then
     apt install nmap -y
 fi
 
-if [ "sniper" != "$(ls /usr/bin/sniper)" ]; then
+if [ "sniper" != "$(ls /usr/bin/ | grep sniper)" ]; then
     cd /opt/
     git clone https://github.com/1N3/Sn1per
     cd Sn1per
     bash install,sh
 fi
 
-if [ "masscan" != "$(ls /usr/bin/masscan)" ]; then
+if [ "masscan" != "$(ls /usr/bin/ | grep masscan)" ]; then
     apt install masscan -y
 fi
 
-if [ "html2text" != "$(ls /usr/bin/html2text)" ]; then
+if [ "html2text" != "$(ls /usr/bin/ | grep html2text)" ]; then
     apt install html2text -y
 fi
 
-if [ "arachni" != "$(ls /usr/bin/arachni)" ]; then
+if [ "arachni" != "$(ls /usr/bin/ | grep arachni)" ]; then
     apt install arachni -y
 fi
 
-if [ "sslscan" != "$(ls /usr/bin/sslscan)" ]; then
+if [ "sslscan" != "$(ls /usr/bin/ | grep sslscan)" ]; then
     apt install sslscan -y
 fi
 
-if [ "testssl" != "$(ls /usr/bin/testssl)" ]; then
+if [ "testssl" != "$(ls /usr/bin/ | grep testssl)" ]; then
     apt install testssl -y
 fi
 
-if [ "grabber" != "$(ls /usr/bin/grabber)" ]; then
+if [ "grabber" != "$(ls /usr/bin/ | grep grabber)" ]; then
     apt install grabber -y
 fi
 
-if [ "golismero" != "$(ls /usr/bin/golismero)" ]; then
+if [ "golismero" != "$(ls /usr/bin/ | grep golismero)" ]; then
     apt install golismero -y
 fi
 
@@ -86,4 +86,4 @@ git pull https://github.com/gbiagomba/Sherlock
 cd Sherlock
 
 # Setting up symbolic link
-ln sherlock.sh /usr/bin/sherlock
+ln sherlock.sh /usr/bin/ | grep sherlock
