@@ -21,7 +21,7 @@ cd Sherlock
 
 ## Usage
 ```
-sherlock
+sherlock targetfile
 ```
 Do not worry all the prompts will be asked as the tool runs
 

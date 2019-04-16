@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
-# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, nmap, sn1pe, masscan, arachni, sslscan, testssl, jexboss
-if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
-    # cd /opt/
-    # git clone https://github.com/jmbr/halberd
-    # cd halberd
-    # python setup.py install
-    pip install halberd
-fi
+# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, arachni, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 
-if [ "dnsenum" != "$(ls /usr/bin/ | grep dnsenum)" ]; then
-    apt install dnsenum -y
+if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
+    pip install halberd
 fi
 
 if [ "sublist3r" != "$(ls /usr/bin/ | grep sublist3r)" ]; then
@@ -40,7 +33,7 @@ if [ "sniper" != "$(ls /usr/bin/ | grep sniper)" ]; then
     cd /opt/
     git clone https://github.com/1N3/Sn1per
     cd Sn1per
-    bash install,sh
+    bash install.sh
 fi
 
 if [ "masscan" != "$(ls /usr/bin/ | grep masscan)" ]; then
@@ -71,20 +64,27 @@ if [ "golismero" != "$(ls /usr/bin/ | grep golismero)" ]; then
     apt install golismero -y
 fi
 
-# Downloading the jhexboss dependency
+if [ "docker" != "$(ls /usr/bin/ | grep docker)" ]; then
+    apt install docker -y
+fi
+
+# Downloading the jexboss dependency
 cd /opt/
-git clone https://github.com/joaomatosf/jexboss.git
+git clone https://github.com/joaomatosf/jexboss
 cd jexboss/
 pip install -r requires.txt
 
-# Downloading the XssPy dependency
+# Downloading the XSStrike dependency
 cd /opt/
-git clone https://github.com/faizann24/XssPy
+git clone https://github.com/UltimateHackers/XSStrike
+cd XSStrike/
+pip3 install -r requirements.txt
 
-# Downloading the git project
+# Downloading the Sherlock git project
 cd /opt/
 git pull https://github.com/gbiagomba/Sherlock
 cd Sherlock
+ln -s sherlock.sh /usr/bin/sherlock
 
-# Setting up symbolic link
-ln sherlock.sh /usr/bin/ | grep sherlock
+# Done
+echo finished!
