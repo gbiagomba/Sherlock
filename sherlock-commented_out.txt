@@ -1,7 +1,4 @@
 
-
-
-
 # Nmap - Firewall evasion
 # echo
 # echo "Firewall evasion scan -- You know just in case ;)"

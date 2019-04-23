@@ -5,7 +5,8 @@
 #              of a web application assessment (specficailly recon).\n
 
 # for debugging purposes
-# set -eux
+set -eux
+trap "echo Booh!" SIGINT SIGTERM
 
 # Declaring variables
 pth=$(pwd)
@@ -35,21 +36,19 @@ ____)  | | | |  __/ |  | | (_) | (__|   <| |
 echo "Web application scanning is elementary my dear Watson!"
 echo
 
-# Requesting target file name & project name
+# Requesting target file name or checking the target file exists & requesting the project name
 if [ -z $targets ]; then
     echo "What is the name of the targets file? The file with all the IP addresses or sites"
     read targets
     echo
+elif [ ! -e $targets ]; then
+    echo "File not found! Try again!"
+    exit
 fi
 
 echo "What is the name of the project?"
 read prj_name
 echo
-
-if [ "$targets" != "$(ls $pth | grep $targets)" ]; then
-    echo "File not found! Try again!"
-    exit
-fi
 
 # Parsing the target file
 cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" > $wrktmp/WebTargets
@@ -98,6 +97,7 @@ for web in $(cat $wrktmp/WebTargets);do
         # cat $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrktmp/TempWeb
     fi
 done
+echo
 
 # Some house cleaning
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
@@ -117,6 +117,7 @@ if [ -d $wrkpth/Harvester/Evidence/ ]; then
     rm $wrkpth/Harvester/tempusr
     echo
 fi
+echo
 
 # ---------------------------------
 # Ping Sweep with Masscan and Nmap
@@ -137,7 +138,9 @@ echo
 echo "--------------------------------------------------"
 echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
 echo "--------------------------------------------------"
-nmap -PE -PM -PP -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -PU 53,111,135,137,161,500 -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
+# nmap -PE -PM -PP -PS "21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU "53,111,135,137,161,500" -R --reason --resolve-all -sP -iL $targets
+nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
+nmap --append-output -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -PU 53,111,135,137,161,500-R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -r $wrkpth/Nmap/live ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
     cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/$prj_name-pingresponse
@@ -162,7 +165,7 @@ echo "--------------------------------------------------"
 echo "Performing portknocking scan using Masscan"
 echo "--------------------------------------------------"
 masscan -iL $wrktmp/IPtargets -p 0-65535 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
-if [ -r $wrkpth/Masscan/$prj_name-masscan_portknock ]; then
+if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then # need to find out what is wrong with this line of code
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
     OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 3 | grep -v masscan | sort | uniq))
 fi
@@ -179,7 +182,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sS -sU -sV -T4 -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p 0-65535 --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
