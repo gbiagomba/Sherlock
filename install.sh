@@ -1,70 +1,75 @@
 #!/usr/bin/env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, arachni, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 
-if [ "halberd" != "$(ls /usr/local/bin/halberd)" ]; then
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
+if [ ! -x /usr/local/bin/halberd ]; then
     pip install halberd
 fi
 
-if [ "sublist3r" != "$(ls /usr/bin/ | grep sublist3r)" ]; then
+if [ ! -x /usr/bin/sublist3r ]; then
     apt install sublist3r -y
 fi
 
-if [ "theharvester" != "$(ls /usr/bin/ | grep theharvester)" ]; then
+if [ ! -x /usr/bin/theharvester ]; then
     apt install theharvester -y
 fi
 
-if [ "metagoofil" != "$(ls /usr/bin/ | grep metagoofil)" ]; then
+if [ ! -x /usr/bin/metagoofil ]; then
     apt install metagoofil -y
 fi
 
-if [ "nikto" != "$(ls /usr/bin/ | grep nikto)" ]; then
+if [ ! -x /usr/bin/nikto) ]; then
     apt install nikto -y
 fi
 
-if [ "dirb" != "$(ls /usr/bin/ | grep dirb)" ]; then
+if [ ! -x /usr/bin/dirb ]; then
     apt install dirb -y
 fi
 
-if [ "nmap" != "$(ls /usr/bin/ | grep nmap)" ]; then
+if [ ! -x /usr/bin/nmap ]; then
     apt install nmap -y
 fi
 
-if [ "sniper" != "$(ls /usr/bin/ | grep sniper)" ]; then
+if [ ! -x /usr/bin/sniper ]; then
     cd /opt/
     git clone https://github.com/1N3/Sn1per
     cd Sn1per
     bash install.sh
 fi
 
-if [ "masscan" != "$(ls /usr/bin/ | grep masscan)" ]; then
+if [ ! -x /usr/bin/masscan ]; then
     apt install masscan -y
 fi
 
-if [ "html2text" != "$(ls /usr/bin/ | grep html2text)" ]; then
+if [ ! -x /usr/bin/html2text ]; then
     apt install html2text -y
 fi
 
-if [ "arachni" != "$(ls /usr/bin/ | grep arachni)" ]; then
+if [ ! -x /usr/bin/arachni ]; then
     apt install arachni -y
 fi
 
-if [ "sslscan" != "$(ls /usr/bin/ | grep sslscan)" ]; then
+if [ ! -x /usr/bin/sslscan ]; then
     apt install sslscan -y
 fi
 
-if [ "testssl" != "$(ls /usr/bin/ | grep testssl)" ]; then
+if [ ! -x /usr/bin/testssl ]; then
     apt install testssl -y
 fi
 
-if [ "grabber" != "$(ls /usr/bin/ | grep grabber)" ]; then
+if [ ! -x /usr/bin/grabber ]; then
     apt install grabber -y
 fi
 
-if [ "golismero" != "$(ls /usr/bin/ | grep golismero)" ]; then
+if [ ! -x /usr/bin/golismero ]; then
     apt install golismero -y
 fi
 
-if [ "docker" != "$(ls /usr/bin/ | grep docker)" ]; then
+if [ ! -x/usr/bin/docker ]; then
     apt install docker -y
 fi
 

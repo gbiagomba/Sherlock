@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Removing dependencies
 
+# Checking UAC
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 # Removing the Sherlock project file and soft link
 rm /usr/bin/sherlock
 rm /opt/Sherlock -rf

