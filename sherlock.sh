@@ -5,7 +5,7 @@
 #              of a web application assessment (specficailly recon).\n
 
 # for debugging purposes
-set -eux
+# set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
 # Declaring variables
@@ -21,7 +21,7 @@ mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoo
 mkdir -p $wrkpth/Nikto/ $wrkpth/Dirb/ $wrkpth/Nmap/ $wrkpth/Sniper/
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
 mkdir -p $wrkpth/JexBoss/ $wrkpth/XSStrike/ $wrkpth/Grabber/ $wrkpth/GOLismero/
-mkdir -p $wrkpth/Wappalyzer/
+mkdir -p $wrkpth/Wappalyzer/ $wrkpth/Gobuster/
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -128,7 +128,7 @@ echo
 echo "--------------------------------------------------"
 echo "Masscan Pingsweep"
 echo "--------------------------------------------------"
-masscan --ping --wait 10 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+masscan --ping -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
 if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
@@ -155,8 +155,8 @@ echo "--------------------------------------------------"
 if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
     cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
     cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
-    cat $wrktmp/TempTargets | sort | uniq > $pth/FinalTargets
-    cat $wrktmp/WebTargets >> $pth/FinalTargets
+    cat $wrktmp/TempTargets | sort | uniq > $wrktmp/TempTargets
+    cat $wrktmp/WebTargets >> $wrktmp/TempTargets
 fi
 echo
 
@@ -167,7 +167,7 @@ echo "--------------------------------------------------"
 masscan -iL $wrktmp/IPtargets -p 0-65535 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then # need to find out what is wrong with this line of code
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
-    OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 3 | grep -v masscan | sort | uniq))
+    # OpenPORT=($(cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 3 | grep -v masscan | sort | uniq))
 fi
 echo 
 
@@ -182,8 +182,10 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p 0-65535 --script=ssl-enum-ciphers,vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 200 --script=ssl-enum-ciphers,vulners -iL $wrktmp/TempTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
+    echo
+    echo success
     xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
@@ -193,22 +195,22 @@ if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_na
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep http | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/HTTP
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSH
     cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSL
+    # OpenPORT=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep open | cut -d "/" -f 1 | sort | uniq | grep -v cpe))
 fi
 echo
+
+# Merging HTTP and SSL ports
+HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw http | grep -iw tcp | cut -d "/" -f 1))
+SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssl | grep -iw tcp | cut -d "/" -f 1))
+NEW=("${HTTPPort[@]}" "${SSLPort[@]}")
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
 echo "Performing scan using Wappalyzer"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            docker run --rm wappalyzer/cli https://$web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_output-$web-$PORTNUM.json
-        fi
-    done
+service docker start
+for web in $(cat $wrktmp/TempTargets);do
+    docker run --rm wappalyzer/cli https://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_output-$web.json
 done
 echo
 
@@ -216,8 +218,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Nikto"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for web in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
@@ -233,16 +235,16 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Dirb"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for web in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$web.txt -w
-            dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$web.txt -w
-        fi
-    done
+            # dirb https://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_https_output-$web.txt -w
+            # dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$web.txt -w
+            gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_output-$web:$PORTNUM.txt -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -u https://$web:$PORTNUM
+            gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_output-$web:$PORTNUM.txt -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -u http://$web:$PORTNUM
 done
 echo
 
@@ -250,8 +252,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using arachni"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for web in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
@@ -270,8 +272,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using XSStrike"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for web in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
@@ -286,8 +288,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using GOLismero"
 echo "--------------------------------------------------"
-for web in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for web in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
@@ -302,21 +304,23 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using sslscan & testssl"
 echo "--------------------------------------------------"
-for IP in $(cat $pth/FinalTargets);do
-    for PORTNUM in ${OpenPORT[*]}; do
+for IP in $(cat $wrktmp/TempTargets);do
+    for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt.txt
-            testssl -oA "$wrkpth/TestSSL/TLS/$prj_name-$IP:$PORTNUM-testssl_output-$web-2.txt" --append --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web-2.txt.txt
+            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
+            testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+            cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+            cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
         fi
     done
 done
 echo
 
 # Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
-zip -ru9 $pth/$prj_name-$TodaysDAY-$TodaysYEAR.zip $pth/$TodaysYEAR
+zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
 
 # Goodbye Message
 echo "

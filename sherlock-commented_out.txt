@@ -2,8 +2,8 @@
 # Nmap - Firewall evasion
 # echo
 # echo "Firewall evasion scan -- You know just in case ;)"
-# nmap -f -mtu 24 --randomize-hosts --reason --resolve-all --spoof-mac Dell -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
-# nmap -D RND:10 --badsum --data-length 24 --randomize-hosts -reason --resolve-all -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets-oA $wrkpth/Nmap/FW_Evade2
+# nmap -f -F -mtu 24 --randomize-hosts --reason --resolve-all --spoof-mac Dell -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets -oA $wrkpth/Nmap/FW_Evade
+# nmap -D RND:10 -F --badsum --data-length 24 --randomize-hosts -reason --resolve-all -T2 -A -Pn -R -sS -sU -sV --script=vulners -iL $pth/FinalTargets-oA $wrkpth/Nmap/FW_Evade2
 # xsltproc $wrkpth/Nmap/FW_Evade.xml -o $wrkpth/Nmap/FW_Evade.html
 # xsltproc $wrkpth/Nmap/FW_Evade2.xml -o $wrkpth/Nmap/FW_Evade2.html
 # echo
