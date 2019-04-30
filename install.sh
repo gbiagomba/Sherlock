@@ -84,6 +84,8 @@ cd /opt/
 git clone https://github.com/UltimateHackers/XSStrike
 cd XSStrike/
 pip3 install -r requirements.txt
+cd /usr/bin/
+ln -s /opt/XSStrike/xsstrike.py ./xsstrike
 
 # Downloading the Sherlock git project
 cd /opt/
