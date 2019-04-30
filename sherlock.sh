@@ -85,39 +85,11 @@ done
 cat $wrktmp/IPtargets >> $wrktmp/TempTargets
 echo
 
-# Using theharvester & metagoofil
-echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil"
-echo "--------------------------------------------------"
-for web in $(cat $wrktmp/WebTargets);do
-    theharvester -d https://$web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$web.txt
-    timeout 90 metagoofil -d https://$web -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-    if [ -r wrkpth/Harvester/$prj_name-harvester_output-$web.txt ] || [ -r $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html ]; then
-        cat $wrkpth/Harvester/$prj_name-harvester_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-        # cat $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrktmp/TempWeb
-    fi
-done
-echo
-
 # Some house cleaning
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets >> $wrktmp/TempTargets
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
-
-# Parsing PDF documents
-echo "--------------------------------------------------"
-echo "Parsing all the PDF documents found"
-echo "--------------------------------------------------"
-if [ -d $wrkpth/Harvester/Evidence/ ]; then
-    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
-        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
-    done
-    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
-    rm $wrkpth/Harvester/tempusr
-    echo
-fi
-echo
 
 # ---------------------------------
 # Ping Sweep with Masscan and Nmap
@@ -260,9 +232,9 @@ for web in $(cat $wrktmp/TempTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-HTML_Report-$web-$PORTNUM.zip
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-JSON_Report-$web-$PORTNUM.zip
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-TXT_Report-$web-$PORTNUM.zip
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-XML_Report-$web-$PORTNUM.zip
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-JSON_Report-$web-$PORTNUM.json
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-TXT_Report-$web-$PORTNUM.txt
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-XML_Report-$web-$PORTNUM.xml
         fi
     done
 done
@@ -282,6 +254,34 @@ for web in $(cat $wrktmp/TempTargets);do
         fi
     done
 done
+echo
+
+# Using theharvester & metagoofil
+echo "--------------------------------------------------"
+echo "Performing scan using Theharvester and Metagoofil"
+echo "--------------------------------------------------"
+for web in $(cat $wrktmp/WebTargets);do
+    theharvester -d https://$web -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_output-$web.txt
+    timeout 90 metagoofil -d https://$web -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+    if [ -r wrkpth/Harvester/$prj_name-harvester_output-$web.txt ] || [ -r $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html ]; then
+        cat $wrkpth/Harvester/$prj_name-harvester_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+        # cat $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrktmp/TempWeb
+    fi
+done
+echo
+
+# Parsing PDF documents
+echo "--------------------------------------------------"
+echo "Parsing all the PDF documents found"
+echo "--------------------------------------------------"
+if [ -d $wrkpth/Harvester/Evidence/ ]; then
+    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
+        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
+    done
+    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
+    rm $wrkpth/Harvester/tempusr
+    echo
+fi
 echo
 
 # Using GOLismero
