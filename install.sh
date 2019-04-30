@@ -90,8 +90,8 @@ ln -s /opt/XSStrike/xsstrike.py ./xsstrike
 # Downloading the Sherlock git project
 cd /opt/
 git pull https://github.com/gbiagomba/Sherlock
-cd Sherlock
-ln -s sherlock.sh /usr/bin/sherlock
+cd /usr/bin/
+ln -s /opt/Sherlock/sherlock.sh ./sherlock
 
 # Done
 echo finished!
