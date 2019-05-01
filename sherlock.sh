@@ -177,7 +177,7 @@ echo
 # Merging HTTP and SSL ports
 HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw http | grep -iw tcp | cut -d "/" -f 1))
 SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssl | grep -iw tcp | cut -d "/" -f 1))
-NEW=("${HTTPPort[@]}" "${SSLPort[@]}")
+NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
@@ -222,6 +222,8 @@ for web in $(cat $wrktmp/FinalTargets);do
             # dirb http://$web:$PORTNUM /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Dirb/$prj_name-dirb_http_output-$web.txt -w
             gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -u https://$web:$PORTNUM
             gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -u http://$web:$PORTNUM
+        fi
+    done
 done
 echo
 
