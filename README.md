@@ -37,7 +37,7 @@ cd /opt/Sherlock/
 - [ ] Move all subroutines into functions
 - [ ] Limit amount of data stored to disk, use more variables
 - [x] Add SSL (e.g., sslyze, ssltest or testssl) checking later [done]
-- [ ] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
+- [x] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc) [done]
 - [x] Write install script [done]
 - [ ] Create Moriarty script
 - [ ] Create Watson script 
