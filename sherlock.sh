@@ -18,10 +18,10 @@ targets=$1
 
 # Setting Envrionment
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoofil/
-mkdir -p $wrkpth/Nikto/ $wrkpth/Dirb/ $wrkpth/Nmap/ $wrkpth/Sniper/
+mkdir -p $wrkpth/Nikto/ $wrkpth/Gobuster/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
 mkdir -p $wrkpth/JexBoss/ $wrkpth/XSStrike/ $wrkpth/Grabber/ $wrkpth/GOLismero/
-mkdir -p $wrkpth/Wappalyzer/ $wrkpth/Gobuster/
+mkdir -p $wrkpth/EyeWitness/
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -63,13 +63,21 @@ echo "Performing scan using Sublist3r"
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt"
 for web in $(cat $wrktmp/WebTargets);do
-	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt"
+	sublist3r -d $web -v -b -t 25 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt"
     if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] && [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
-        cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt > $wrktmp/TempWeb
+        cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt >> $wrktmp/TempWeb
         cat $wrktmp/WebTargets >> $wrktmp/TempWeb
         cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
     fi
 done
+echo 
+
+# Using Eyewitness to take screenshots
+echo "--------------------------------------------------"
+echo "Performing scan using EyeWitness"
+echo "--------------------------------------------------"
+eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all
+mv /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
 echo 
 
 # Using halberd
@@ -100,7 +108,7 @@ echo
 echo "--------------------------------------------------"
 echo "Masscan Pingsweep"
 echo "--------------------------------------------------"
-masscan --ping -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+timeout 180 masscan --ping -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
 if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] && [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
