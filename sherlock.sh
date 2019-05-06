@@ -76,7 +76,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using EyeWitness"
 echo "--------------------------------------------------"
-eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all
+eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve
 mv /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
 echo 
 
