@@ -62,6 +62,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using Sublist3r"
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt"
+# gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Gobuster/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 for web in $(cat $wrktmp/WebTargets);do
 	sublist3r -d $web -v -b -t 25 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt"
     if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] && [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
