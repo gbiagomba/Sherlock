@@ -77,8 +77,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using EyeWitness (2 of 20)"
 echo "--------------------------------------------------"
-eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve
-cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
+eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve -d $wrkpth/EyeWitness/
+# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
 echo 
 
 # Using halberd

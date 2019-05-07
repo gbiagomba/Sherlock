@@ -22,7 +22,7 @@ if [ ! -x /usr/bin/metagoofil ]; then
     apt install metagoofil -y
 fi
 
-if [ ! -x /usr/bin/nikto) ]; then
+if [ ! -x /usr/bin/nikto ]; then
     apt install nikto -y
 fi
 
