@@ -8,6 +8,12 @@
 # set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
+# Checking if the user is root
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 # Declaring variables
 pth=$(pwd)
 TodaysDAY=$(date +%m-%d)
@@ -195,6 +201,7 @@ echo "--------------------------------------------------"
 service docker start
 for web in $(cat $wrktmp/FinalTargets);do
     echo Scanning $web
+    echo "--------------------------------------------------"
     docker run --rm wappalyzer/cli https://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_https_output-$web.json
     docker run --rm wappalyzer/cli http://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_http_output-$web.json
     echo "--------------------------------------------------"
@@ -212,6 +219,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
             nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web.csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
             echo "--------------------------------------------------"
@@ -232,6 +240,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -e -f -u https://$web:$PORTNUM
             gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -e -f -u http://$web:$PORTNUM
             echo "--------------------------------------------------"
@@ -251,6 +260,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-HTML_Report-$web-$PORTNUM.zip
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-JSON_Report-$web-$PORTNUM.json
@@ -273,6 +283,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_https_output-$web-$PORTNUM.txt
             python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_http_output-$web-$PORTNUM.txt
             echo "--------------------------------------------------"
@@ -292,6 +303,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             timeout 90 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_https_output-$web:$PORTNUM.txt
             timeout 90 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_https_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
             timeout 90 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_http_output-$web:$PORTNUM.txt
@@ -331,6 +343,7 @@ for web in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             golismero scan "https://$web:$PORTNUM" audit-name "$prj_name" report "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.txt $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.rst" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.db
             golismero scan "http://$web:$PORTNUM" audit-name "$prj_name" report "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.txt $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.rst" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.db
             echo "--------------------------------------------------"
@@ -350,6 +363,7 @@ for IP in $(cat $wrktmp/FinalTargets);do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
             echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
             testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
