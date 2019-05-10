@@ -220,8 +220,8 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
-            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web.csv | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
+            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
+            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
             echo "--------------------------------------------------"
         fi
     done
