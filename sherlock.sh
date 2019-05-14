@@ -228,10 +228,10 @@ for web in $(cat $wrktmp/FinalTargets);do
 done
 echo
 
-# Using dirb
+# Using gobuster
 # consider switching to gobuster, works faster
 echo "--------------------------------------------------"
-echo "Performing scan using Dirb (11 of 20)"
+echo "Performing scan using Gobuster (11 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
