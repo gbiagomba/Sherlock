@@ -115,7 +115,7 @@ echo
 echo "--------------------------------------------------"
 echo "Masscan Pingsweep (4 of 20)"
 echo "--------------------------------------------------"
-timeout 180 masscan --ping -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+timeout 600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
 if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] && [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
@@ -125,7 +125,7 @@ echo
 echo "--------------------------------------------------"
 echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (5 of 20)"
 echo "--------------------------------------------------"
-nmap -PE -PM -PP -PS "21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU "53,111,135,137,161,500" -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
+nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T4 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap --append-output -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -PU 53,111,135,137,161,500-R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -s $wrkpth/Nmap/live ]; then
@@ -155,7 +155,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing portknocking scan using Masscan (7 of 20)"
 echo "--------------------------------------------------"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 fi
