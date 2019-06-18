@@ -34,12 +34,12 @@ if [ ! -x /usr/bin/nmap ]; then
     apt install nmap -y
 fi
 
-if [ ! -x /usr/bin/sniper ]; then
-    cd /opt/
-    git clone https://github.com/1N3/Sn1per
-    cd Sn1per
-    bash install.sh
-fi
+# if [ ! -x /usr/bin/sniper ]; then
+#     cd /opt/
+#     git clone https://github.com/1N3/Sn1per
+#     cd Sn1per
+#     bash install.sh
+# fi
 
 if [ ! -x /usr/bin/masscan ]; then
     apt install masscan -y
@@ -92,6 +92,16 @@ cd /opt/
 git pull https://github.com/gbiagomba/Sherlock
 cd /usr/bin/
 ln -s /opt/Sherlock/sherlock.sh ./sherlock
+
+# Downloading the SpiderLabs Nmap Script
+cd /opt/
+git pull https://github.com/SpiderLabs/Nmap-Tools
+cp /opt/SpiderLabs/Nmap-Tools/NSE/http-screenshot.nse /usr/share/nmap/scripts/
+
+# Downloading the Vulners Nmap Script
+cd /opt/
+git clone https://github.com/vulnersCom/nmap-vulners
+cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
 
 # Done
 echo finished!

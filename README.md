@@ -42,6 +42,8 @@ cd /opt/Sherlock/
 - [ ] Create Watson script 
 - [ ] Add DNS recon
 - [ ] Add SSH audit
+- [ ] Add XSSTrike
+- [ ] Add RetireJS
 
 ## Future Plans
 I plan on converting this into a python script later down the road...just an FYI
