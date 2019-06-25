@@ -92,7 +92,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using Halberd (3 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets);do
-	timeout 90 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$web.txt
+	timeout 900 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$web.txt
     if [ -r $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ] && [ -s $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ]; then
         cat $wrkpth/Halberd/$prj_name-halberd_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
@@ -115,7 +115,7 @@ echo
 echo "--------------------------------------------------"
 echo "Masscan Pingsweep (4 of 20)"
 echo "--------------------------------------------------"
-timeout 600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+timeout 3600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
 if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] && [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
@@ -220,8 +220,8 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
-            nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
+            timeout 3600 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
+            timeout 3600 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
             echo "--------------------------------------------------"
         fi
     done
@@ -304,10 +304,10 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            timeout 90 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_https_output-$web:$PORTNUM.txt
-            timeout 90 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_https_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-            timeout 90 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_http_output-$web:$PORTNUM.txt
-            timeout 90 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_http_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+            timeout 900 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_https_output-$web:$PORTNUM.txt
+            timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_https_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+            timeout 900 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_http_output-$web:$PORTNUM.txt
+            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_http_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
             if [ -r wrkpth/Harvester/$prj_name-harvester_output-$web.txt ] || [ -r $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html ]; then
                 cat $wrkpth/Harvester/$prj_name-harvester_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
                 # cat $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrktmp/TempWeb
