@@ -27,7 +27,7 @@ mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoo
 mkdir -p $wrkpth/Nikto/ $wrkpth/Gobuster/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
 mkdir -p $wrkpth/JexBoss/ $wrkpth/XSStrike/ $wrkpth/Grabber/ $wrkpth/GOLismero/
-mkdir -p $wrkpth/EyeWitness/
+mkdir -p $wrkpth/EyeWitness/ $wrkpth/DNS_Recon/ $wrkpth/SSH_Audit/ $wrkpth/RetieJS/
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -65,13 +65,13 @@ echo
 
 # Using sublist3r 
 echo "--------------------------------------------------"
-echo "Performing scan using Sublist3r (1 of 20)"
+echo "Performing scan using Sublist3r (1 of 21)"
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt"
 # gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Gobuster/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 for web in $(cat $wrktmp/WebTargets);do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt"
-    if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] && [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
+    if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] || [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
         cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt >> $wrktmp/TempWeb
         cat $wrktmp/WebTargets >> $wrktmp/TempWeb
         cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
@@ -81,7 +81,7 @@ echo
 
 # Using Eyewitness to take screenshots
 echo "--------------------------------------------------"
-echo "Performing scan using EyeWitness (2 of 20)"
+echo "Performing scan using EyeWitness (2 of 21)"
 echo "--------------------------------------------------"
 eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve -d $wrkpth/EyeWitness/
 # cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
@@ -89,11 +89,11 @@ echo
 
 # Using halberd
 echo "--------------------------------------------------"
-echo "Performing scan using Halberd (3 of 20)"
+echo "Performing scan using Halberd (3 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets);do
 	timeout 900 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$web.txt
-    if [ -r $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ] && [ -s $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ]; then
+    if [ -r $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ] || [ -s $wrkpth/Halberd/$prj_name-halberd_output-$web.txt ]; then
         cat $wrkpth/Halberd/$prj_name-halberd_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
 done
@@ -113,17 +113,17 @@ cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 # Masscan - Pingsweep
 echo
 echo "--------------------------------------------------"
-echo "Masscan Pingsweep (4 of 20)"
+echo "Masscan Pingsweep (4 of 21)"
 echo "--------------------------------------------------"
-timeout 3600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
-if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] && [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
+timeout 3600 masscan --ping --rate 25000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] || [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
 echo "--------------------------------------------------"
-echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (5 of 20)"
+echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (5 of 21)"
 echo "--------------------------------------------------"
 nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T4 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
@@ -139,7 +139,7 @@ echo
 
 # Combining targets
 echo "--------------------------------------------------"
-echo "Merging all targets files (6 of 20)"
+echo "Merging all targets files (6 of 21)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Masscan/live ] || [ -s $wrkpth/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
@@ -153,17 +153,17 @@ echo
 
 # Using masscan to perform a quick port sweep
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Masscan (7 of 20)"
+echo "Performing portknocking scan using Masscan (7 of 21)"
 echo "--------------------------------------------------"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
-if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 25000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] || [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 fi
 echo 
 
 # Using Nmap
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Nmap (8 of 20)"
+echo "Performing portknocking scan using Nmap (8 of 21)"
 echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 # nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
@@ -173,8 +173,8 @@ echo "--------------------------------------------------"
 echo
 echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 200 --script=http-screenshot,rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
-    if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
+if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
+    if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
         xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
@@ -196,7 +196,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
-echo "Performing scan using Wappalyzer (9 of 20)"
+echo "Performing scan using Wappalyzer (9 of 21)"
 echo "--------------------------------------------------"
 service docker start
 for web in $(cat $wrktmp/FinalTargets);do
@@ -208,9 +208,10 @@ for web in $(cat $wrktmp/FinalTargets);do
 done
 echo
 
+# Need to troubleshoot this
 # Using nikto
 echo "--------------------------------------------------"
-echo "Performing scan using Nikto (10 of 20)"
+echo "Performing scan using Nikto (10 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -220,8 +221,8 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            timeout 3600 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
-            timeout 3600 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
+            timeout 900 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
+            timeout 900 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
             echo "--------------------------------------------------"
         fi
     done
@@ -231,7 +232,7 @@ echo
 # Using gobuster
 # consider switching to gobuster, works faster
 echo "--------------------------------------------------"
-echo "Performing scan using Gobuster (11 of 20)"
+echo "Performing scan using Gobuster (11 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -251,7 +252,7 @@ echo
 
 # Using arachni
 echo "--------------------------------------------------"
-echo "Performing scan using arachni (12 of 20)"
+echo "Performing scan using arachni (12 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -274,7 +275,7 @@ echo
 
 # Using XSStrike
 echo "--------------------------------------------------"
-echo "Performing scan using XSStrike (13 of 20)"
+echo "Performing scan using XSStrike (13 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -294,7 +295,7 @@ echo
 
 # Using theharvester & metagoofil
 echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil (14 of 20)"
+echo "Performing scan using Theharvester and Metagoofil (14 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -320,7 +321,7 @@ echo
 
 # Parsing PDF documents
 echo "--------------------------------------------------"
-echo "Parsing all the PDF documents found (16 of 20)"
+echo "Parsing all the PDF documents found (15 of 21)"
 echo "--------------------------------------------------"
 if [ -d $wrkpth/Harvester/Evidence/ ]; then
     for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
@@ -334,27 +335,14 @@ echo
 
 # Using GOLismero
 echo "--------------------------------------------------"
-echo "Performing scan using GOLismero (17 of 20)"
+echo "Performing scan using GOLismero (16 of 21)"
 echo "--------------------------------------------------"
-for web in $(cat $wrktmp/FinalTargets);do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            golismero scan "https://$web:$PORTNUM" audit-name "$prj_name" report "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.txt $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.rst" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_https_output.db
-            golismero scan "http://$web:$PORTNUM" audit-name "$prj_name" report "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.txt $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.rst" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_http_output.db
-            echo "--------------------------------------------------"
-        fi
-    done
-done
+golismero scan -i $wrkpth/Nmap/$prj_name-nmap_portknock.xml audit-name "$prj_name" -o "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.txt" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.db
 echo
 
 # Using testssl & sslcan
 echo "--------------------------------------------------"
-echo "Performing scan using sslscan & testssl (18 of 20)"
+echo "Performing scan using sslscan & testssl (17 of 21)"
 echo "--------------------------------------------------"
 for IP in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -375,9 +363,100 @@ done
 mv $PWD/*.csv $wrkpth/SSLScan/
 echo
 
+# Using DNS Scan
+# echo "--------------------------------------------------"
+# echo "Performing scan using DNS Scan (18 of 21)"
+# echo "--------------------------------------------------"
+# for IP in $(cat $wrktmp/FinalTargets);do
+#     for PORTNUM in ${NEW[*]}; do
+#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+#         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
+#             echo Scanning $web:$PORTNUM
+#             echo "--------------------------------------------------"
+#             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
+#             testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+#             echo "--------------------------------------------------"
+#         fi
+#     done
+# done
+# mv $PWD/*.csv $wrkpth/SSLScan/
+# echo
+
+# # Using SSH Audit
+# echo "--------------------------------------------------"
+# echo "Performing scan using SSH Audit (19 of 21)"
+# echo "--------------------------------------------------"
+# for IP in $(cat $wrktmp/FinalTargets);do
+#     for PORTNUM in ${NEW[*]}; do
+#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+#         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
+#             echo Scanning $web:$PORTNUM
+#             echo "--------------------------------------------------"
+#             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
+#             testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+#             echo "--------------------------------------------------"
+#         fi
+#     done
+# done
+# mv $PWD/*.csv $wrkpth/SSLScan/
+# echo
+
+# # Using xsstrike
+# echo "--------------------------------------------------"
+# echo "Performing scan using xsstrike (20 of 21)"
+# echo "--------------------------------------------------"
+# for IP in $(cat $wrktmp/FinalTargets);do
+#     for PORTNUM in ${NEW[*]}; do
+#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+#         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
+#             echo Scanning $web:$PORTNUM
+#             echo "--------------------------------------------------"
+#             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
+#             testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+#             echo "--------------------------------------------------"
+#         fi
+#     done
+# done
+# mv $PWD/*.csv $wrkpth/SSLScan/
+# echo
+
+# # Using RetireJS
+# echo "--------------------------------------------------"
+# echo "Performing scan using RetireJS (21 of 21)"
+# echo "--------------------------------------------------"
+# for IP in $(cat $wrktmp/FinalTargets);do
+#     for PORTNUM in ${NEW[*]}; do
+#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+#         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
+#             echo Scanning $web:$PORTNUM
+#             echo "--------------------------------------------------"
+#             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
+#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+#             echo "--------------------------------------------------"
+#         fi
+#     done
+# done
+# mv $PWD/*.csv $wrkpth/SSLScan/
+# echo
+
 # Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
 echo "--------------------------------------------------"
-echo "Gift wrapping everything and putting a bowtie on it! (20 of 20)"
+echo "Gift wrapping everything and putting a bowtie on it!"
 echo "--------------------------------------------------"
 zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
 

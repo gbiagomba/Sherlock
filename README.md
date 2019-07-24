@@ -35,11 +35,11 @@ cd /opt/Sherlock/
 - [ ] Un-initialize variables
 - [ ] Add multi-thread parallel processing
 - [ ] Limit amount of data stored to disk, use more variables
+- [ ] Create Moriarty script
+- [ ] Create Watson script 
 - [x] Add SSL (e.g., sslyze, ssltest or testssl) checking later [done]
 - [x] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc) [done]
 - [x] Write install script [done]
-- [ ] Create Moriarty script
-- [ ] Create Watson script 
 - [ ] Add DNS recon
 - [ ] Add SSH audit
 - [ ] Add XSSTrike
