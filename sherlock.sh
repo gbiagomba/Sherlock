@@ -71,11 +71,11 @@ echo "--------------------------------------------------"
 # gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Gobuster/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 for web in $(cat $wrktmp/WebTargets);do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt"
-    if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] || [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
-        cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt >> $wrktmp/TempWeb
-        cat $wrktmp/WebTargets >> $wrktmp/TempWeb
-        cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
-    fi
+    # if [ -r wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ] || [ -s wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt ]; then
+    cat $wrkpth/Sublist3r/$prj_name-sublist3r_output-$web.txt >> $wrktmp/TempWeb
+    cat $wrktmp/WebTargets >> $wrktmp/TempWeb
+    cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
+    # fi
 done
 echo 
 
@@ -242,8 +242,8 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u https://$web:$PORTNUM
-            gobuster -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u http://$web:$PORTNUM
+            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u https://$web:$PORTNUM
+            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u http://$web:$PORTNUM
             echo "--------------------------------------------------"
         fi
     done
@@ -353,7 +353,7 @@ for IP in $(cat $wrktmp/FinalTargets);do
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
-            testssl --append --csv --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+            testssl --append --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
             echo "--------------------------------------------------"
