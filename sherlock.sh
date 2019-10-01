@@ -260,7 +260,7 @@ if [ -s $wrkpth/Nmap/DNS ]; then
     for IP in $(cat $wrkpth/Nmap/DNS);do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP 
+        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP 
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-DNSRecon_output-$web.txt
         echo "--------------------------------------------------"
     done
@@ -272,10 +272,13 @@ echo "--------------------------------------------------"
 echo "Performing scan using SSH Audit (13 of 20)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     docker run -it mozilla/ssh_scan /app/bin/ssh_scan -f $wrkpth/Nmap/SSH -o $wrkpth/SSH_Audit/$prj_name-ssh-scan_output.json
     for IP in $(cat $wrkpth/Nmap/SSH);do
-        python3 /opt/ssh-audit/ssh-audit.py $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+        echo Scanning $IP
+        echo "--------------------------------------------------"
+        python /opt/ssh-audit/ssh-audit.py $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+        echo "--------------------------------------------------"
     done
 fi
 echo
