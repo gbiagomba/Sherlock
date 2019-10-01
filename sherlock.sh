@@ -208,10 +208,33 @@ for web in $(cat $wrktmp/FinalTargets);do
 done
 echo
 
+# Using testssl & sslcan
+echo "--------------------------------------------------"
+echo "Performing scan using sslscan & testssl (10 of 21)"
+echo "--------------------------------------------------"
+for IP in $(cat $wrktmp/FinalTargets);do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
+            testssl --append --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+            cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+            cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+            echo "--------------------------------------------------"
+        fi
+    done
+done
+mv $PWD/*.csv $wrkpth/SSLScan/
+echo
+
 # Need to troubleshoot this
 # Using nikto
 echo "--------------------------------------------------"
-echo "Performing scan using Nikto (10 of 21)"
+echo "Performing scan using Nikto (11 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -232,7 +255,7 @@ echo
 # Using gobuster
 # consider switching to gobuster, works faster
 echo "--------------------------------------------------"
-echo "Performing scan using Gobuster (11 of 21)"
+echo "Performing scan using Gobuster (12 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -252,7 +275,7 @@ echo
 
 # Using arachni
 echo "--------------------------------------------------"
-echo "Performing scan using arachni (12 of 21)"
+echo "Performing scan using arachni (13 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -262,11 +285,11 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-HTML_Report-$web-$PORTNUM.zip
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-JSON_Report-$web-$PORTNUM.json
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-TXT_Report-$web-$PORTNUM.txt
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-XML_Report-$web-$PORTNUM.xml
+            arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr 2> /dev/null
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-HTML_Report-$web-$PORTNUM.zip 2> /dev/null
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-JSON_Report-$web-$PORTNUM.json 2> /dev/null
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-TXT_Report-$web-$PORTNUM.txt 2> /dev/null
+            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-XML_Report-$web-$PORTNUM.xml 2> /dev/null
             echo "--------------------------------------------------"
         fi
     done
@@ -275,7 +298,7 @@ echo
 
 # Using XSStrike
 echo "--------------------------------------------------"
-echo "Performing scan using XSStrike (13 of 21)"
+echo "Performing scan using XSStrike (14 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -295,7 +318,7 @@ echo
 
 # Using theharvester & metagoofil
 echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil (14 of 21)"
+echo "Performing scan using Theharvester and Metagoofil (15 of 21)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -321,7 +344,7 @@ echo
 
 # Parsing PDF documents
 echo "--------------------------------------------------"
-echo "Parsing all the PDF documents found (15 of 21)"
+echo "Parsing all the PDF documents found (16 of 21)"
 echo "--------------------------------------------------"
 if [ -d $wrkpth/Harvester/Evidence/ ]; then
     for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
@@ -335,32 +358,9 @@ echo
 
 # Using GOLismero
 echo "--------------------------------------------------"
-echo "Performing scan using GOLismero (16 of 21)"
+echo "Performing scan using GOLismero (17 of 21)"
 echo "--------------------------------------------------"
 golismero scan -i $wrkpth/Nmap/$prj_name-nmap_portknock.xml audit-name "$prj_name" -o "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.txt" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.db
-echo
-
-# Using testssl & sslcan
-echo "--------------------------------------------------"
-echo "Performing scan using sslscan & testssl (17 of 21)"
-echo "--------------------------------------------------"
-for IP in $(cat $wrktmp/FinalTargets);do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
-            testssl --append --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
-            cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
-            cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
-            echo "--------------------------------------------------"
-        fi
-    done
-done
-mv $PWD/*.csv $wrkpth/SSLScan/
 echo
 
 # Using DNS Scan
