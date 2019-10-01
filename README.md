@@ -41,7 +41,7 @@ cd /opt/Sherlock/
 - [x] Add DNS recon [done]
 - [x] Add SSH audit [done]
 - [x] Add XSSTrike [done]
-- [x] Add RetireJS [done]
+- [ ] ~Add RetireJS~ [TBD]
 
 ## Future Plans
 I plan on converting this into a python script later down the road...just an FYI

@@ -231,10 +231,59 @@ done
 mv $PWD/*.csv $wrkpth/SSLScan/
 echo
 
+# Using XSStrike
+echo "--------------------------------------------------"
+echo "Performing scan using XSStrike (11 of 20)"
+echo "--------------------------------------------------"
+for web in $(cat $wrktmp/FinalTargets);do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_https_output-$web-$PORTNUM.txt
+            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_http_output-$web-$PORTNUM.txt
+            echo "--------------------------------------------------"
+        fi
+    done
+done
+echo
+
+# Using DNS Recon
+# Will revise this later to account for other ports one might use for dns
+echo "--------------------------------------------------"
+echo "Performing scan using DNS Scan (12 of 20)"
+echo "--------------------------------------------------"
+if [ -s $wrkpth/Nmap/DNS ]; then
+    for IP in $(cat $wrkpth/Nmap/DNS);do
+        echo Scanning $IP
+        echo "--------------------------------------------------"
+        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP 
+        dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-DNSRecon_output-$web.txt
+        echo "--------------------------------------------------"
+    done
+fi
+echo
+
+# # Using SSH Audit
+echo "--------------------------------------------------"
+echo "Performing scan using SSH Audit (13 of 20)"
+echo "--------------------------------------------------"
+if [ -s $wrkpth/Nmap/SSH ]; then
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    docker run -it mozilla/ssh_scan /app/bin/ssh_scan -f $wrkpth/Nmap/SSH -o $wrkpth/SSH_Audit/$prj_name-ssh-scan_output.json
+    for IP in $(cat $wrkpth/Nmap/SSH);do
+        python3 /opt/ssh-audit/ssh-audit.py $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+    done
+fi
+echo
+
 # Need to troubleshoot this
 # Using nikto
 echo "--------------------------------------------------"
-echo "Performing scan using Nikto (11 of 20)"
+echo "Performing scan using Nikto (14 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -255,7 +304,7 @@ echo
 # Using gobuster
 # consider switching to gobuster, works faster
 echo "--------------------------------------------------"
-echo "Performing scan using Gobuster (12 of 20)"
+echo "Performing scan using Gobuster (15 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -275,7 +324,7 @@ echo
 
 # Using arachni
 echo "--------------------------------------------------"
-echo "Performing scan using arachni (13 of 20)"
+echo "Performing scan using arachni (16 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -296,29 +345,9 @@ for web in $(cat $wrktmp/FinalTargets);do
 done
 echo
 
-# Using XSStrike
-echo "--------------------------------------------------"
-echo "Performing scan using XSStrike (14 of 20)"
-echo "--------------------------------------------------"
-for web in $(cat $wrktmp/FinalTargets);do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_https_output-$web-$PORTNUM.txt
-            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_http_output-$web-$PORTNUM.txt
-            echo "--------------------------------------------------"
-        fi
-    done
-done
-echo
-
 # Using theharvester & metagoofil
 echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil (15 of 20)"
+echo "Performing scan using Theharvester and Metagoofil (17 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets);do
     for PORTNUM in ${NEW[*]}; do
@@ -344,7 +373,7 @@ echo
 
 # Parsing PDF documents
 echo "--------------------------------------------------"
-echo "Parsing all the PDF documents found (16 of 20)"
+echo "Parsing all the PDF documents found (18 of 20)"
 echo "--------------------------------------------------"
 if [ -d $wrkpth/Harvester/Evidence/ ]; then
     for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf);do
@@ -357,41 +386,12 @@ echo
 
 # Using GOLismero
 echo "--------------------------------------------------"
-echo "Performing scan using GOLismero (17 of 20)"
+echo "Performing scan using GOLismero (19 of 20)"
 echo "--------------------------------------------------"
 golismero scan -i $wrkpth/Nmap/$prj_name-nmap_portknock.xml audit-name "$prj_name" -o "$wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.html $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.txt" -db $wrkpth/GOLismero/$prj_name-$web-$PORTNUM-golismero_output.db
 echo
 
-# Using DNS Recon
-# Will revise this later to account for other ports one might use for dns
-echo "--------------------------------------------------"
-echo "Performing scan using DNS Scan (18 of 20)"
-echo "--------------------------------------------------"
-if [ -s $wrkpth/Nmap/DNS ]; then
-    for IP in $(cat $wrkpth/Nmap/DNS);do
-        echo Scanning $IP
-        echo "--------------------------------------------------"
-        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP 
-        dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-DNSRecon_output-$web.txt
-        echo "--------------------------------------------------"
-    done
-fi
-echo
-
-# # Using SSH Audit
-echo "--------------------------------------------------"
-echo "Performing scan using SSH Audit (19 of 20)"
-echo "--------------------------------------------------"
-if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p dns --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
-    docker run -it mozilla/ssh_scan /app/bin/ssh_scan -f $wrkpth/Nmap/SSH -o $wrkpth/SSH_Audit/$prj_name-ssh-scan_output.json
-    for IP in $(cat $wrkpth/Nmap/SSH);do
-        python3 /opt/ssh-audit/ssh-audit.py $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
-    done
-fi
-echo
-
-# # Using RetireJS
+# # Using TBD
 # echo "--------------------------------------------------"
 # echo "Performing scan using RetireJS (20 of 20)"
 # echo "--------------------------------------------------"
