@@ -35,15 +35,13 @@ cd /opt/Sherlock/
 - [ ] Un-initialize variables
 - [ ] Add multi-thread parallel processing
 - [ ] Limit amount of data stored to disk, use more variables
-- [ ] Create Moriarty script
-- [ ] Create Watson script 
 - [x] Add SSL (e.g., sslyze, ssltest or testssl) checking later [done]
-- [x] Add zipping of all content and sending it via some medium (e.g., email, ftp, etc) [done]
+- [x] Add zipping of all content ~and sending it via some medium (e.g., email, ftp, etc)~ [done]
 - [x] Write install script [done]
-- [ ] Add DNS recon
-- [ ] Add SSH audit
-- [ ] Add XSSTrike
-- [ ] Add RetireJS
+- [x] Add DNS recon [done]
+- [x] Add SSH audit [done]
+- [x] Add XSSTrike [done]
+- [x] Add RetireJS [done]
 
 ## Future Plans
 I plan on converting this into a python script later down the road...just an FYI
