@@ -463,12 +463,11 @@ ___________________¶¶¶¶¶
 If you eliminate all other possibilities, the one that remains, however unlikely, is the right answer."
 
 # Empty file cleanup
-find $pth -size 0c -type f -exec rm -rf {} \;
+find $wrkpth -size 0c -type f -exec rm -rf {} \;
 
 # Removing unnessary files
 rm $wrktmp/IPtargets -f
 rm $wrktmp/TempTargets -f
-rm tempusr -f
 rm $wrktmp/TempWeb -f
 rm $wrktmp/WebTargets -f
 
