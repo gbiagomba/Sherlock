@@ -176,13 +176,15 @@ nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 200 --script=http-sc
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
         xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 21/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/FTP
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 25/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMTP
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 53/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/DNS
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 23/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/telnet
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 445/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/SMB
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 3389/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/RDP
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 139/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/NBT
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep http | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/HTTP
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSH
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssh | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSH
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSL
         # OpenPORT=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep open | cut -d "/" -f 1 | sort | uniq | grep -v cpe))
     fi
