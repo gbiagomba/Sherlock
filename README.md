@@ -45,6 +45,7 @@ cd /opt/Sherlock/
 - [ ] Add SMTP testing [ ]
 - [ ] Add SMB testing [ ]
 - [ ] Add RDP testing [ ]
+- [ ] Add Tenable API scanning/support [ ]
 
 ## Future Plans
 I plan on converting this into a python script later down the road...just an FYI
