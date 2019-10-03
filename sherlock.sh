@@ -223,9 +223,11 @@ for IP in $(cat $wrktmp/FinalTargets);do
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
-            testssl --append --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+            echo "--------------------------------------------------"
+            testssl --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
+            mv $pth/*.html $wrkpth/TestSSL/
             echo "--------------------------------------------------"
         fi
     done
@@ -246,6 +248,7 @@ for web in $(cat $wrktmp/FinalTargets);do
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_https_output-$web-$PORTNUM.txt
+            echo "--------------------------------------------------"
             python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee $wrkpth/XSStrike/$prj_name-xsstrike_http_output-$web-$PORTNUM.txt
             echo "--------------------------------------------------"
         fi
@@ -262,7 +265,8 @@ if [ -s $wrkpth/Nmap/DNS ]; then
     for IP in $(cat $wrkpth/Nmap/DNS);do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP 
+        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP
+        echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-DNSRecon_output-$web.txt
         echo "--------------------------------------------------"
     done
@@ -275,11 +279,12 @@ echo "Performing scan using SSH Audit (13 of 20)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/SSH ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
-    docker run -it mozilla/ssh_scan /app/bin/ssh_scan -f $wrkpth/Nmap/SSH -o $wrkpth/SSH_Audit/$prj_name-ssh-scan_output.json
     for IP in $(cat $wrkpth/Nmap/SSH);do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        python /opt/ssh-audit/ssh-audit.py $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+        ssh-audit $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+        echo "--------------------------------------------------"
+        docker run -it mozilla/ssh_scan /app/bin/ssh_scan -t $IP -o $wrkpth/SSH_Audit/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
     done
 fi
@@ -299,6 +304,7 @@ for web in $(cat $wrktmp/FinalTargets);do
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             timeout 2700 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -ssl | tee $wrkpth/Nikto/$prj_name-nikto_https_output-$web.txt
+            echo "--------------------------------------------------"
             timeout 2700 nikto -C all -h $web -port $PORTNUM -o $wrkpth/Nikto/$prj_name-nikto_https_output-$web:$PORTNUM.csv -nossl | tee $wrkpth/Nikto/$prj_name-nikto_http_output-$web.txt
             echo "--------------------------------------------------"
         fi
@@ -320,6 +326,7 @@ for web in $(cat $wrktmp/FinalTargets);do
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u https://$web:$PORTNUM
+            echo "--------------------------------------------------"
             gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u http://$web:$PORTNUM
             echo "--------------------------------------------------"
         fi
@@ -364,6 +371,7 @@ for web in $(cat $wrktmp/FinalTargets);do
             echo "--------------------------------------------------"
             timeout 900 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_https_output-$web:$PORTNUM.txt
             timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_https_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+            echo "--------------------------------------------------"
             timeout 900 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-harvester_http_output-$web:$PORTNUM.txt
             timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-metagoofil_http_output-$web:$PORTNUM.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
             if [ -r wrkpth/Harvester/$prj_name-harvester_output-$web.txt ] || [ -r $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html ]; then

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
 #                         arachni, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
-#                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster
+#                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists
 
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
@@ -50,8 +50,8 @@ if [ ! -x /usr/bin/dnsrecon ]; then
     apt install dnsrecon -y
 fi
 
-if [ ! -x /usr/bin/python3 ]; then
-    apt install python3 -y
+if [ ! -x /usr/bin/python3 ] && [ ! -x /usr/bin/python2 ]; then
+    apt install python3 python2 -y
 fi
 
 if [ ! -x /usr/bin/masscan ]; then
@@ -76,6 +76,10 @@ fi
 
 if [ ! -x /usr/bin/gobuster ]; then
     apt install gobuster -y
+fi
+
+if [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
+    apt install seclists -y
 fi
 
 if [ ! -x/usr/bin/docker ]; then
@@ -114,6 +118,8 @@ ln -s /opt/Sherlock/sherlock.sh ./sherlock
 # Downloading the ssh-audit
 cd /opt/
 git pull https://github.com/arthepsy/ssh-audit
+cd /usr/bin/
+ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
 
 # Downloading the sshscan
 cd /opt/
