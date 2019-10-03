@@ -282,7 +282,7 @@ if [ -s $wrkpth/Nmap/SSH ]; then
     for IP in $(cat $wrkpth/Nmap/SSH);do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        ssh-audit $IP | aha -a $wrkpth/SSH_Audit/$prj_name-ssh-audit_output.txt
+        ssh-audit $IP | aha -t "SSH Audit" > $wrkpth/SSH_Audit/$prj_name-$IP-ssh-audit_output.html
         echo "--------------------------------------------------"
         docker run -it mozilla/ssh_scan /app/bin/ssh_scan -t $IP -o $wrkpth/SSH_Audit/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
