@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Removing dependencies
 
-# Checking UAC
+# Setting up variables
+OS_CHK=$(cat /etc/os-release | grep -o debian)
+
+# Checking user is root
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit

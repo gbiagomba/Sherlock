@@ -21,6 +21,8 @@ TodaysYEAR=$(date +%Y)
 wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 wrktmp=$(mktemp -d)
 targets=$1
+API_AK="" #Tenable Access Key
+API_SK="" #Tenable Secret Key
 
 # Setting Envrionment
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoofil/
@@ -172,7 +174,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 200 --script=http-screenshot,rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 250 --script=http-screenshot,rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
         xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
@@ -210,6 +212,10 @@ for web in $(cat $wrktmp/FinalTargets);do
 done
 echo
 
+# Using Tenable
+# curl -sH "X-ApiKeys: accessKey=$API_AK; secretKey=$API_SK" https://cloud.tenable.com/scans
+# curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
+
 # Using testssl & sslcan
 echo "--------------------------------------------------"
 echo "Performing scan using sslscan & testssl (10 of 20)"
@@ -224,10 +230,13 @@ for IP in $(cat $wrktmp/FinalTargets);do
             echo "--------------------------------------------------"
             sslscan --xml=$wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.xml $IP:$PORTNUM | tee -a $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt
             echo "--------------------------------------------------"
-            testssl --csv --html --json --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
+            testssl --assume-http --csv --html --json-pretty --log --parallel --sneaky $IP:$PORTNUM | tee -a $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt
             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
             mv $pth/*.html $wrkpth/TestSSL/
+            mv $pth/*.csv $wrkpth/TestSSL/
+            mv $pth/*.json $wrkpth/TestSSL/
+            mv $pth/*.log $wrkpth/TestSSL/
             echo "--------------------------------------------------"
         fi
     done
@@ -239,7 +248,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using XSStrike (11 of 20)"
 echo "--------------------------------------------------"
-for web in $(cat $wrktmp/FinalTargets);do
+for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
@@ -282,9 +291,9 @@ if [ -s $wrkpth/Nmap/SSH ]; then
     for IP in $(cat $wrkpth/Nmap/SSH);do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        ssh-audit $IP | aha -t "SSH Audit" > $wrkpth/SSH_Audit/$prj_name-$IP-ssh-audit_output.html
+        python2 /opt/ssh-audit/ssh-audit.py $IP | aha -t "SSH Audit" > $wrkpth/SSH_Audit/$prj_name-$IP-ssh-audit_output.html
         echo "--------------------------------------------------"
-        docker run -it mozilla/ssh_scan /app/bin/ssh_scan -t $IP -o $wrkpth/SSH_Audit/$prj_name-$IP-ssh-scan_output.json
+        ssh_scan -t $IP -o $wrkpth/SSH_Audit/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
     done
 fi
@@ -325,9 +334,9 @@ for web in $(cat $wrktmp/FinalTargets);do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u https://$web:$PORTNUM
+            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_https_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -k --wildcard -u https://$web:$PORTNUM
             echo "--------------------------------------------------"
-            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -u http://$web:$PORTNUM
+            gobuster dir -o $wrkpth/Gobuster/$prj_name-gobuster_http_output-$web:$PORTNUM.txt -t 25 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -f -k --wildcard -u http://$web:$PORTNUM
             echo "--------------------------------------------------"
         fi
     done
@@ -476,7 +485,7 @@ ___________________¶¶¶¶¶
 If you eliminate all other possibilities, the one that remains, however unlikely, is the right answer."
 
 # Empty file cleanup
-find $wrkpth -size 0c -type f -exec rm -rf {} \;
+find $wrkpth -size 0c -type d,f -exec rm -rf {} \;
 
 # Removing unnessary files
 rm $wrktmp/IPtargets -f
