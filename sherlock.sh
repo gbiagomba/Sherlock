@@ -58,6 +58,9 @@ echo "What is the name of the project?"
 read prj_name
 echo
 
+# Recording screen output
+exec > $PWD/$prj_name-term_output.log 2>&1
+
 # Parsing the target file
 cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" > $wrktmp/WebTargets
 cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
@@ -81,17 +84,9 @@ for web in $(cat $wrktmp/WebTargets);do
 done
 echo 
 
-# Using Eyewitness to take screenshots
-echo "--------------------------------------------------"
-echo "Performing scan using EyeWitness (2 of 20)"
-echo "--------------------------------------------------"
-eyewitness -f $wrktmp/WebTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve -d $wrkpth/EyeWitness/
-# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
-echo 
-
 # Using halberd
 echo "--------------------------------------------------"
-echo "Performing scan using Halberd (3 of 20)"
+echo "Performing scan using Halberd (2 of 20)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets);do
 	timeout 900 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-halberd_output-$web.txt
@@ -115,9 +110,9 @@ cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 # Masscan - Pingsweep
 echo
 echo "--------------------------------------------------"
-echo "Masscan Pingsweep (4 of 20)"
+echo "Masscan Pingsweep (3 of 20)"
 echo "--------------------------------------------------"
-timeout 3600 masscan --ping --rate 25000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
+timeout 3600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
 if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] || [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
 fi
@@ -125,7 +120,7 @@ fi
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
 echo "--------------------------------------------------"
-echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (5 of 20)"
+echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 20)"
 echo "--------------------------------------------------"
 nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T4 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
@@ -141,9 +136,9 @@ echo
 
 # Combining targets
 echo "--------------------------------------------------"
-echo "Merging all targets files (6 of 20)"
+echo "Merging all targets files (5 of 20)"
 echo "--------------------------------------------------"
-if [ -s $wrkpth/Masscan/live ] || [ -s $wrkpth/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
+if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
         cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
         cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
@@ -155,17 +150,17 @@ echo
 
 # Using masscan to perform a quick port sweep
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Masscan (7 of 20)"
+echo "Performing portknocking scan using Masscan (6 of 20)"
 echo "--------------------------------------------------"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 25000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
-if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] || [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 fi
 echo 
 
 # Using Nmap
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Nmap (8 of 20)"
+echo "Performing portknocking scan using Nmap (7 of 20)"
 echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 # nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
@@ -175,7 +170,7 @@ echo "--------------------------------------------------"
 echo
 echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 250 --script=http-screenshot,rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
+if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
         xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ' 21/open' | cut -d ' ' -f 2 > $wrkpth/Nmap/FTP
@@ -190,6 +185,11 @@ if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -s $wrkpth/Nmap/$prj_na
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSL
         # OpenPORT=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep open | cut -d "/" -f 1 | sort | uniq | grep -v cpe))
     fi
+else
+    echo "Something want wrong, the nmap output files either do not exist or were empty
+    I recommend chacking the $wrkpth/Nmap/
+    Then check your network connection & re-run the script"
+    exit
 fi
 echo
 
@@ -197,6 +197,14 @@ echo
 HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw http | grep -iw tcp | cut -d "/" -f 1))
 SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssl | grep -iw tcp | cut -d "/" -f 1))
 NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
+
+# Using Eyewitness to take screenshots
+echo "--------------------------------------------------"
+echo "Performing scan using EyeWitness (8 of 20)"
+echo "--------------------------------------------------"
+eyewitness -f $wrktmp/FinalTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve -d $wrkpth/EyeWitness/
+# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
+echo 
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
