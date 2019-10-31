@@ -105,7 +105,7 @@ fi
 
 # Downloading the XSStrike dependency
 cd /opt/
-git clone https://github.com/UltimateHackers/XSStrike
+git clone https://github.com/s0md3v/XSStrike
 cd XSStrike/
 pip3 install -r requirements.txt
 
@@ -121,9 +121,8 @@ git pull https://github.com/arthepsy/ssh-audit
 cd /usr/bin/
 ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
 
-# Downloading the sshscan
-cd /opt/
-git pull https://github.com/evict/SSHScan/
+# Downloading mozilla's sshscan
+gem install ssh_scan
 
 # Downloading and installing npm & nodejs
 if [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
