@@ -41,10 +41,10 @@ cd /opt/Sherlock/
 - [x] Add DNS recon [done]
 - [x] Add SSH audit [done]
 - [x] Add XSSTrike [done]
-- [ ] Add FTP testing [ ]
-- [ ] Add SMTP testing [ ]
-- [ ] Add SMB testing [ ]
-- [ ] Add RDP testing [ ]
+- [ ] Add FTP testing [inprogress]
+- [ ] Add SMTP testing [inprogress]
+- [ ] Add SMB testing [inprogress]
+- [ ] Add RDP testing [inprogress]
 - [ ] Add Tenable API scanning/support [ ]
 
 ## Future Plans
