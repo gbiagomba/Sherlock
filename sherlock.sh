@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Author: Gilles Biagomba
-# Program:Web Inspector
+# Program: Sherlock.sh
 # Description: This script is designed to automate the earlier phases.\n
 #              of a web application assessment (specficailly recon).\n
 
@@ -307,7 +307,7 @@ if [ -s $wrkpth/Nmap/SSH ]; then
         ssh_scan -t $IP -o $wrkpth/SSH/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
         service postgresql start
-        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:targets; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:targets; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
     done
 fi
 echo
@@ -331,7 +331,7 @@ for web in $(cat $wrktmp/FinalTargets); do
     #         echo "--------------------------------------------------"
     #     fi
     # done
-    nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -o $wrkpth/Nikto/$prj_name-$web-nikto_output.csv | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
+    nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
 done
 echo
 
