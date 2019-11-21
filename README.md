@@ -45,6 +45,7 @@ cd /opt/Sherlock/
 - [ ] Add SMTP testing [inprogress]
 - [ ] Add SMB testing [inprogress]
 - [ ] Add RDP testing [inprogress]
+- [ ] Add DB/SQL testing [inprogress]
 - [ ] Add Tenable API scanning/support [ ]
 
 ## Future Plans
