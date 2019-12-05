@@ -122,7 +122,7 @@ echo
 echo "--------------------------------------------------"
 echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 25)"
 echo "--------------------------------------------------"
-nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T4 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
+nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T5 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap --append-output -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -PU 53,111,135,137,161,500-R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -s $wrkpth/Nmap/live ]; then
@@ -169,7 +169,8 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+# nmap -p - -T5 -A -v -Pn --script rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
         xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
@@ -271,10 +272,12 @@ if [ -s $wrkpth/Nmap/DNS ]; then
     for IP in $(cat $wrkpth/Nmap/DNS); do
         echo Scanning $IP
         echo "--------------------------------------------------"
-        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP
+        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP
         echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output.txt
         echo "--------------------------------------------------"
+        xsltproc $wrkpth/Nmap/$prj_name-nmap_dns.xml -o $wrkpth/Nmap/$prj_name-nmap_dns.html
+        python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_dns.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_dns.csv
     done
 fi
 echo
@@ -284,7 +287,9 @@ echo "--------------------------------------------------"
 echo "Performing scan using SSH Audit (14 of 25)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --open --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
+    python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
     for IP in $(cat $wrkpth/Nmap/SSH); do
         echo Scanning $IP
         echo "--------------------------------------------------"
@@ -304,7 +309,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using Nikto (15 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
-    nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
+    nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv -Display 1,2,3,4 | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
 done
 echo
 
@@ -312,7 +317,7 @@ echo
 # Switching back to dirb, it is the most stable
 # Need to do more troubleshooting gobuster
 echo "--------------------------------------------------"
-echo "Performing scan using Gobuster (16 of 25)"
+echo "Performing scan using Dirbuster (16 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
