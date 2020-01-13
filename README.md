@@ -46,7 +46,8 @@ cd /opt/Sherlock/
 - [ ] Add SMB testing [inprogress]
 - [ ] Add RDP testing [inprogress]
 - [ ] Add DB/SQL testing [inprogress]
-- [ ] Add Tenable API scanning/support [ ]
+- [ ] Add Tenable API scanning/support [Queued]
+- [ ] Addd function to check if the script is running on latest version [inprogress]
 
 ## Future Plans
 I plan on converting this into a python script later down the road...just an FYI

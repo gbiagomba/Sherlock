@@ -1,0 +1,11 @@
+autoconfig
+beans
+configprops
+dump
+env
+health
+info
+metrics
+mappings
+shutdown
+trace

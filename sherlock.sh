@@ -14,6 +14,15 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+# Ensuring system is debian based
+if [ "$OS_CHK" != "debian" ]; then
+    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
+    exit
+fi
+
+# Checking if running the latest version
+# curl --connect-timeout 5 -s https://api.github.com/repos/gbiagomba/Sherlock/tags | grep -eo '^(\d+\.)?(\d+\.)?(\*|\d+)$'| head -1 | cut -c11-13
+
 # Declaring variables
 pth=$(pwd)
 TodaysDAY=$(date +%m-%d)
@@ -133,11 +142,11 @@ echo
 echo "--------------------------------------------------"
 echo "Performing portknocking scan using Masscan (5 of 25)"
 echo "--------------------------------------------------"
-# masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
-# if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
-#     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
-# fi
-# echo 
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
+    cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
+fi
+echo 
 
 # Using Nmap
 echo "--------------------------------------------------"
@@ -266,8 +275,9 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using SSH Audit (13 of 25)"
 echo "--------------------------------------------------"
+SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssh | grep -iw tcp | cut -d "/" -f 1))
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --open --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
     for IP in $(cat $wrkpth/Nmap/SSH); do
@@ -315,10 +325,10 @@ for web in $(cat $wrktmp/FinalTargets); do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
         STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
         STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             docker run stefanoj3/dirstalk dirstalk scan "http://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_http_output.txt
-        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "Up" ] && [ "$STAT5" == "Up" ]; then
+        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             docker run stefanoj3/dirstalk dirstalk scan "https://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_https_output.txt
         fi
@@ -360,12 +370,12 @@ for web in $(cat $wrktmp/FinalTargets); do
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
         STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
         STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             timeout 900 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
             timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-         elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "Up" ] && [ "$STAT5" == "Up" ]; then
+         elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             timeout 900 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
@@ -543,6 +553,19 @@ find $wrkpth -type d,f -empty | xargs rm -rf
 # Zipping the rest up
 zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
 
+# Stopping services we turned on
+service postgresql stop
+service docker stop
+
+# Removing unnessary files
+rm -rf $wrktmp/
+
+# Uninitializing variables
+for var in API_AK API_SK HTTPPort IP NEW PORTNUM prj_name pth SSHPort SSLPort STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp; do
+    unset $var
+done
+unset var
+
 # Goodbye Message
 echo "
 ___________________________¶¶¶
@@ -585,14 +608,3 @@ ____________________¶¶¶¶¶¶¶¶¶¶
 ____________________¶¶¶¶¶¶¶¶
 ___________________¶¶¶¶¶
 If you eliminate all other possibilities, the one that remains, however unlikely, is the right answer."
-
-# Stopping services we turned on
-service postgresql stop
-service docker stop
-
-# Removing unnessary files
-rm -rf $wrktmp/
-
-# Uninitializing variables
-# do later
-set -u

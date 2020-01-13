@@ -18,9 +18,9 @@ if [ "$OS_CHK" != "debian" ]; then
     exit
 fi
 
-if [ ! -x /usr/local/bin/halberd ]; then
-    pip install halberd
-fi
+# if [ ! -x /usr/local/bin/halberd ]; then
+#     pip install halberd
+# fi
 
 if [ ! -x /usr/bin/sublist3r ]; then
     apt install sublist3r -y
@@ -37,10 +37,6 @@ fi
 if [ ! -x /usr/bin/nikto ]; then
     apt install nikto -y
 fi
-
-# if [ ! -x /usr/bin/dirb ]; then
-#     apt install dirb -y
-# fi
 
 if [ ! -x /usr/bin/nmap ]; then
     apt install nmap -y
@@ -62,21 +58,17 @@ if [ ! -x /usr/bin/arachni ]; then
     apt install arachni -y
 fi
 
-if [ ! -x /usr/bin/sslscan ]; then
-    apt install sslscan -y
-fi
-
 if [ ! -x /usr/bin/testssl ]; then
     apt install testssl -y
 fi
 
-if [ ! -x /usr/bin/golismero ]; then
-    apt install golismero -y
-fi
+# if [ ! -x /usr/bin/golismero ]; then
+#     apt install golismero -y
+# fi
 
-if [ ! -x /usr/bin/gobuster ]; then
-    apt install gobuster -y
-fi
+# if [ ! -x /usr/bin/gobuster ]; then
+#     apt install gobuster -y
+# fi
 
 if [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
     apt install seclists -y
@@ -103,26 +95,10 @@ if [ ! -x/usr/bin/docker ]; then
     apt-get install docker-ce docker-ce-cli containerd.io -y
 fi
 
-# Downloading the XSStrike dependency
-cd /opt/
-git clone https://github.com/s0md3v/XSStrike
-cd XSStrike/
-pip3 install -r requirements.txt
-
-# Downloading the Sherlock git project
-cd /opt/
-git pull https://github.com/gbiagomba/Sherlock
-cd /usr/bin/
-ln -s /opt/Sherlock/sherlock.sh ./sherlock
-
-# Downloading the ssh-audit
-cd /opt/
-git pull https://github.com/arthepsy/ssh-audit
-cd /usr/bin/
-ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
-
 # Downloading mozilla's sshscan
-gem install ssh_scan
+if [ ! -x /usr/bin/ssh_scan ]; then
+    gem install ssh_scan
+fi
 
 # Downloading and installing npm & nodejs
 if [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
@@ -163,15 +139,33 @@ if [ ! -x /usr/local/bin/retire]; then
     npm install -g retire
 fi
 
-# Downloading the SpiderLabs Nmap Script
+# Downloading the XSStrike dependency
 cd /opt/
-git pull https://github.com/SpiderLabs/Nmap-Tools
-cp /opt/SpiderLabs/Nmap-Tools/NSE/http-screenshot.nse /usr/share/nmap/scripts/
+git clone https://github.com/s0md3v/XSStrike
+cd XSStrike/
+pip3 install -r requirements.txt
+cd /usr/bin/
+ln -s /opt/XSStrike/xsstrike.py ./xsstrike
+
+# Downloading the ssh-audit
+cd /opt/
+git pull https://github.com/arthepsy/ssh-audit
+cd /usr/bin/
+ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
+
+# Downloading the SpiderLabs Nmap Script
+# cd /opt/
+# git pull https://github.com/SpiderLabs/Nmap-Tools
+# cp /opt/SpiderLabs/Nmap-Tools/NSE/http-screenshot.nse /usr/share/nmap/scripts/
 
 # Downloading the Vulners Nmap Script
 cd /opt/
 git clone https://github.com/vulnersCom/nmap-vulners
 cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
+
+# Downloading the Sherlock git project
+cd /usr/bin/
+ln -s /opt/Sherlock/sherlock.sh ./sherlock
 
 # Done
 echo finished!
