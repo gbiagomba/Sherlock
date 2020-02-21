@@ -171,7 +171,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing portknocking scan using Masscan (5 of 25)"
 echo "--------------------------------------------------"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 fi
@@ -416,12 +416,12 @@ for web in $(cat $wrktmp/FinalTargets); do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            timeout 900 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
+            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
             timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
          elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            timeout 900 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
+            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
             timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
             echo "--------------------------------------------------"
         fi
