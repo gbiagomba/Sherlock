@@ -149,9 +149,12 @@ ln -s /opt/XSStrike/xsstrike.py ./xsstrike
 
 # Downloading the ssh-audit
 cd /opt/
-git pull https://github.com/arthepsy/ssh-audit
+git pull https://github.com/jtesta/ssh-audit
 cd /usr/bin/
 ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
+if [ ! -x `which ssh-audit`]; then
+    pip3 install ssh-audit
+fi
 
 # Downloading the SpiderLabs Nmap Script
 # cd /opt/

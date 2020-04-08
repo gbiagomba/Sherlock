@@ -161,8 +161,8 @@ if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wr
         cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
     fi
 fi
-cat $wrktmp/FinalTargets
-cat $wrktmp/IPtargets
+echo "Printing final list of targets to be used"
+cat $wrktmp/FinalTargets $wrktmp/IPtargets | sort | uniq
 echo
 
 # Using masscan to perform a quick port sweep
@@ -188,7 +188,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 # nmap -p - -T5 -A -v -Pn --script rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
@@ -214,6 +214,7 @@ fi
 echo
 
 # Using testssl & sslcan
+# switch back to for loop, testssl doesnt properly parse gnmap
 echo "--------------------------------------------------"
 echo "Performing scan using testssl (7 of 25)"
 echo "--------------------------------------------------"
@@ -249,7 +250,7 @@ echo "Performing scan using SSH Audit (12 of 25)"
 echo "--------------------------------------------------"
 SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssh | grep -iw tcp | cut -d "/" -f 1))
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
     for IP in $(cat $wrkpth/Nmap/SSH); do
@@ -260,7 +261,7 @@ if [ -s $wrkpth/Nmap/SSH ]; then
         docker run --rm mozilla/ssh_scan -t $IP -o $wrkpth/SSH/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
         service postgresql start
-        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:targets; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
     done
 fi
 echo
@@ -276,7 +277,7 @@ if [ ${#HTTPPort[@]} -eq 0 ] || [ ${#SSLPort[@]} -eq 0 ]; then
     echo "There are no open web ports, exiting now"
     exit
 fi
-NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
+NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Will need testing
 # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
 # ./scanreport.sh -f ~/Documents/Projects/XPC/2020Q1/2020/01-22/Nmap/XPC-2020Q1-nmap_portknock.gnmap -s http | grep -v Host | cut -d$'\t' -f 1 | sort | uniq
 
@@ -284,7 +285,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
 echo "--------------------------------------------------"
 echo "Performing scan using EyeWitness (8 of 25)"
 echo "--------------------------------------------------"
-eyewitness -f $wrktmp/FinalTargets --web --threads 25 --prepend-https --no-prompt --resolve --only-ports "$(echo ${NEW[*]} | sed 's/ /,/g')" -d $wrkpth/EyeWitness/
+eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
 # cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
 echo 
 
@@ -342,7 +343,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using HTTP Audit (13 of 25)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/SSL ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
     xsltproc $wrkpth/Nmap/$prj_name-nmap_http.xml -o $wrkpth/Nmap/$prj_name-nmap_http.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_http.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_http.csv
 fi
