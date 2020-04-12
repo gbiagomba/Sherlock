@@ -14,6 +14,10 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+# Checking if running the latest version
+# curl --connect-timeout 5 -s https://api.github.com/repos/gbiagomba/Sherlock/tags | grep -eo '^(\d+\.)?(\d+\.)?(\*|\d+)$'| head -1 | cut -c11-13
+# https://www.regextester.com/95064
+
 # Declaring variables
 pth=$(pwd)
 TodaysDAY=$(date +%m-%d)
@@ -23,13 +27,31 @@ wrktmp=$(mktemp -d)
 targets=$1
 API_AK="" #Tenable Access Key
 API_SK="" #Tenable Secret Key
+diskMax=95
+diskSize=$(df | grep /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
+OS_CHK=$(cat /etc/os-release | grep -o debian)
+
+# Ensuring system is debian based
+if [ "$OS_CHK" != "debian" ]; then
+    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
+    exit
+fi
+
+# Checking system resources (HDD space)
+if [ "$diskSize" -ge "$diskMax" ];then
+	clear
+	echo 
+	echo "You are using $diskSize% and I am concerned you might run out of space"
+	echo "Remove some files and try again, you will thank me later, trust me :)"
+	exit
+fi
 
 # Setting Envrionment
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoofil/
 mkdir -p $wrkpth/Nikto/ $wrkpth/Gobuster/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
-mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/TestSSL/ $wrkpth/SSLScan/
-mkdir -p $wrkpth/JexBoss/ $wrkpth/XSStrike/ $wrkpth/Grabber/ $wrkpth/GOLismero/
-mkdir -p $wrkpth/EyeWitness/ $wrkpth/DNS_Recon/ $wrkpth/SSH/ $wrkpth/RetieJS/
+mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/SSL/ $wrkpth/XSStrike/
+mkdir -p $wrkpth/GOLismero/ $wrkpth/DNS_Recon/ $wrkpth/SSH/ $wrkpth/RetieJS/
+mkdir -p $wrkpth/EyeWitness/
 
 # Moving back to original workspace & loading logo
 cd $pth
@@ -62,7 +84,7 @@ echo
 # exec >|$PWD/$prj_name-term_output.log 2>&1
 
 # Parsing the target file
-cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" > $wrktmp/WebTargets
+cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.*)" > $wrktmp/WebTargets
 cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
@@ -76,8 +98,11 @@ echo "--------------------------------------------------"
 # gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Gobuster/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 for web in $(cat $wrktmp/WebTargets); do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt"
-    if [ -r wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ] || [ -s wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ]; then
-        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt >> $wrktmp/TempWeb
+    if [ -r $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ] || [ -s $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ]; then
+        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep -v "BR" >> $wrktmp/TempWeb
+        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep "BR" | cut -d "<" -f 1 >> $wrktmp/TempWeb
+        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep "BR" | cut -d ">" -f 1 | cut -d ">" -f 1 >> $wrktmp/TempWeb
+        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | cut -d ":" -f 1 >> $wrktmp/TempWeb
         cat $wrktmp/WebTargets >> $wrktmp/TempWeb
         cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
     fi
@@ -89,40 +114,29 @@ echo "--------------------------------------------------"
 echo "Performing scan using Halberd (2 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets); do
-	timeout 900 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-$web-halberd_output.txt
-    if [ -r $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ] || [ -s $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ]; then
+	timeout 300 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-$web-halberd_output.txt
+    if [ -r $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ] && [ -s $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ]; then
         cat $wrkpth/Halberd/$prj_name-$web-halberd_output.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
 done
-cat $wrktmp/IPtargets >> $wrktmp/TempTargets
 echo
 
+echo
+echo "--------------------------------------------------"
+echo "Some house cleaning (2 of 25)"
+echo "--------------------------------------------------"
 # Some house cleaning
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets >> $wrktmp/TempTargets
-cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
-cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
-
-# ---------------------------------
-# Ping Sweep with Masscan and Nmap
-# ---------------------------------
-
-# Masscan - Pingsweep
-echo
-echo "--------------------------------------------------"
-echo "Masscan Pingsweep (3 of 25)"
-echo "--------------------------------------------------"
-timeout 3600 masscan --ping --rate 10000 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_pingsweep
-if [ -r $wrkpth/Masscan/$prj_name-masscan_pingsweep ] || [ -s $wrkpth/Masscan/$prj_name-masscan_pingsweep ]; then
-    cat $wrkpth/Masscan/$prj_name-masscan_pingsweep | cut -d " " -f 4 | grep -v masscan |grep -v end | sort | uniq >> $wrkpth/Masscan/live
-fi
+cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
+cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
 echo "--------------------------------------------------"
-echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 25)"
+echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (3 of 25)"
 echo "--------------------------------------------------"
-nmap -PE -PM -PP -PS"21,22,23,25,53,80,88,110,111,135,139,443,445,8080" -PU"53,111,135,137,161,500" -PY"22,80" -T5 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
+nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap -PE -PM -PP -R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 # nmap --append-output -PS 21,22,23,25,53,80,88,110,111,135,139,443,445,8080 -PU 53,111,135,137,161,500-R --reason --resolve-all -sP -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -s $wrkpth/Nmap/live ]; then
@@ -136,23 +150,28 @@ echo
 
 # Combining targets
 echo "--------------------------------------------------"
-echo "Merging all targets files (5 of 25)"
+echo "Merging all targets files (4 of 25)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
-        cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
+        # cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
         cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
         cat $wrktmp/TempTargets | sort | uniq > $wrktmp/FinalTargets
         cat $wrktmp/WebTargets >> $wrktmp/FinalTargets
+        cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
     fi
 fi
+echo "Printing final list of targets to be used"
+cat $wrktmp/FinalTargets $wrktmp/IPtargets | sort | uniq
 echo
 
 # Using masscan to perform a quick port sweep
+# Consider switcing to unicornscan
+# unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Masscan (6 of 25)"
+echo "Performing portknocking scan using Masscan (5 of 25)"
 echo "--------------------------------------------------"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 10000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
 fi
@@ -160,7 +179,7 @@ echo
 
 # Using Nmap
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Nmap (7 of 25)"
+echo "Performing portknocking scan using Nmap (6 of 25)"
 echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 # nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
@@ -169,7 +188,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 # nmap -p - -T5 -A -v -Pn --script rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
@@ -187,86 +206,29 @@ if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_na
         python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_portknock.csv
     fi
 else
-    echo "Something want wrong, the nmap output files either do not exist or were empty
+    echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
     I recommend chacking the $wrkpth/Nmap/
     Then check your network connection & re-run the script"
     exit
 fi
 echo
 
-# Merging HTTP and SSL ports
-HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw http | grep -iw tcp | cut -d "/" -f 1))
-SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssl | grep -iw tcp | cut -d "/" -f 1))
-NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | sort | uniq)
-
-# Using Eyewitness to take screenshots
-echo "--------------------------------------------------"
-echo "Performing scan using EyeWitness (8 of 25)"
-echo "--------------------------------------------------"
-eyewitness -f $wrktmp/FinalTargets --web --threads 25 --prepend-https --cycle all --no-prompt --resolve --only-ports "$(echo ${NEW[*]} | sed 's/ /,/g')" -d $wrkpth/EyeWitness/
-# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
-echo 
-
-# Using Wappalyzer
-echo "--------------------------------------------------"
-echo "Performing scan using Wappalyzer (9 of 25)"
-echo "--------------------------------------------------"
-service docker start
-for web in $(cat $wrktmp/FinalTargets); do
-    echo Scanning $web
-    echo "--------------------------------------------------"
-    docker run --rm wappalyzer/cli https://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-    docker run --rm wappalyzer/cli http://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-    echo "--------------------------------------------------"
-done
-echo
-
-# Using Tenable
-echo "--------------------------------------------------"
-echo "Performing scan using Tenable (10 of 25)"
-echo "--------------------------------------------------"
-echo "Code to be added later"
-# curl -sH "X-ApiKeys: accessKey=$API_AK; secretKey=$API_SK" https://cloud.tenable.com/scans
-# curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
-echo
-
 # Using testssl & sslcan
+# switch back to for loop, testssl doesnt properly parse gnmap
 echo "--------------------------------------------------"
-echo "Performing scan using testssl (11 of 25)"
+echo "Performing scan using testssl (7 of 25)"
 echo "--------------------------------------------------"
-testssl --assume-http --csv --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/TestSSL/$prj_name-TestSSL_output.txt
-mv $pth/*.html $wrkpth/TestSSL/
-mv $pth/*.csv $wrkpth/TestSSL/
-mv $pth/*.json $wrkpth/TestSSL/
-mv $pth/*.log $wrkpth/TestSSL/
-mv $PWD/*.csv $wrkpth/SSLScan/
-echo
-
-# Using XSStrike
-echo "--------------------------------------------------"
-echo "Performing scan using XSStrike (12 of 25)"
-echo "--------------------------------------------------"
-for web in $(cat $wrktmp/FinalTargets); do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
-            echo "--------------------------------------------------"
-            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
-            echo "--------------------------------------------------"
-        fi
-    done
-done
+testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
+mv $pth/*.html $wrkpth/SSL/
+mv $pth/*.csv $wrkpth/SSL/
+mv $pth/*.json $wrkpth/SSL/
+mv $pth/*.log $wrkpth/SSL/
 echo
 
 # Using DNS Recon
 # Will revise this later to account for other ports one might use for dns
 echo "--------------------------------------------------"
-echo "Performing scan using DNS Scan (13 of 25)"
+echo "Performing scan using DNS Scan (11 of 25)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/DNS ]; then
     for IP in $(cat $wrkpth/Nmap/DNS); do
@@ -282,12 +244,13 @@ if [ -s $wrkpth/Nmap/DNS ]; then
 fi
 echo
 
-# # Using SSH Audit
+# Using SSH Audit
 echo "--------------------------------------------------"
-echo "Performing scan using SSH Audit (14 of 25)"
+echo "Performing scan using SSH Audit (12 of 25)"
 echo "--------------------------------------------------"
+SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssh | grep -iw tcp | cut -d "/" -f 1))
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p ssh --open --script=ssh* -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
     for IP in $(cat $wrkpth/Nmap/SSH); do
@@ -295,43 +258,124 @@ if [ -s $wrkpth/Nmap/SSH ]; then
         echo "--------------------------------------------------"
         ssh-audit $IP | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP-ssh-audit_output.html
         echo "--------------------------------------------------"
-        ssh_scan -t $IP -o $wrkpth/SSH/$prj_name-$IP-ssh-scan_output.json
+        docker run --rm mozilla/ssh_scan -t $IP -o $wrkpth/SSH/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
         service postgresql start
-        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:targets; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
     done
 fi
 echo
 
-# Need to troubleshoot this
-# Using nikto
+# Combining ports
+# echo "--------------------------------------------------"
+# echo "Combining ports
+# echo "--------------------------------------------------"
+# Merging HTTP and SSL ports
+HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw http | grep -iw tcp | cut -d "/" -f 1))
+SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssl | grep -iw tcp | cut -d "/" -f 1))
+if [ ${#HTTPPort[@]} -eq 0 ] || [ ${#SSLPort[@]} -eq 0 ]; then
+    echo "There are no open web ports, exiting now"
+    exit
+fi
+NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Will need testing
+# Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
+# ./scanreport.sh -f ~/Documents/Projects/XPC/2020Q1/2020/01-22/Nmap/XPC-2020Q1-nmap_portknock.gnmap -s http | grep -v Host | cut -d$'\t' -f 1 | sort | uniq
+
+# Using Eyewitness to take screenshots
 echo "--------------------------------------------------"
-echo "Performing scan using Nikto (15 of 25)"
+echo "Performing scan using EyeWitness (8 of 25)"
 echo "--------------------------------------------------"
+eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
+# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
+echo 
+
+# Using Wappalyzer
+echo "--------------------------------------------------"
+echo "Performing scan using Wappalyzer (8 of 25)"
+echo "--------------------------------------------------"
+service docker start
 for web in $(cat $wrktmp/FinalTargets); do
-    nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv -Display 1,2,3,4 | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
+    echo Scanning $web
+    echo "--------------------------------------------------"
+    docker run --rm wappalyzer/cli https://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+    docker run --rm wappalyzer/cli http://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+    echo "--------------------------------------------------"
 done
 echo
 
-# Using dirbuster
-# Switching back to dirb, it is the most stable
-# Need to do more troubleshooting gobuster
+# Using Tenable
 echo "--------------------------------------------------"
-echo "Performing scan using Dirbuster (16 of 25)"
+echo "Performing scan using Tenable (9 of 25)"
+echo "--------------------------------------------------"
+echo "Code to be added later"
+# curl -sH "X-ApiKeys: accessKey=$API_AK; secretKey=$API_SK" https://cloud.tenable.com/scans
+# curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
+echo
+
+# Using XSStrike
+echo "--------------------------------------------------"
+echo "Performing scan using XSStrike (10 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
-            dirb $web /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-dirb_output.txt -w
-            # echo "--------------------------------------------------"
-            # gobuster dir -o $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_https_output.txt -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -e -f -k -r --wildcard -u https://$web:$PORTNUM
-            # echo "--------------------------------------------------"
-            # gobuster dir -o $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_http_output.txt -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt" -e -f -k -r --wildcard -u http://$web:$PORTNUM
-            # echo "--------------------------------------------------"
+            echo "--------------------------------------------------"
+            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
+            echo "--------------------------------------------------"
+        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
+            echo "--------------------------------------------------"
+        fi
+    done
+done
+echo
+
+# Testing HTTP pages further
+echo "--------------------------------------------------"
+echo "Performing scan using HTTP Audit (13 of 25)"
+echo "--------------------------------------------------"
+if [ -s $wrkpth/Nmap/SSL ]; then
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
+    xsltproc $wrkpth/Nmap/$prj_name-nmap_http.xml -o $wrkpth/Nmap/$prj_name-nmap_http.html
+    python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_http.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_http.csv
+fi
+echo
+
+# Using nikto
+echo "--------------------------------------------------"
+echo "Performing scan using Nikto (14 of 25)"
+echo "--------------------------------------------------"
+# for web in $(cat $wrktmp/FinalTargets); do
+#     nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv -Display 1,2,3,4 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
+# done
+nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
+echo
+
+# Using dirstalk
+echo "--------------------------------------------------"
+echo "Performing scan using Dirstalk (15 of 25)"
+echo "--------------------------------------------------"
+for web in $(cat $wrktmp/FinalTargets); do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
+            echo Scanning $web:$PORTNUM
+            docker run stefanoj3/dirstalk dirstalk scan "http://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_http_output.txt
+        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            docker run stefanoj3/dirstalk dirstalk scan "https://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_https_output.txt
         fi
     done
 done
@@ -339,21 +383,20 @@ echo
 
 # Using arachni
 echo "--------------------------------------------------"
-echo "Performing scan using arachni (17 of 25)"
+echo "Performing scan using arachni (16 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr 2> /dev/null
+            arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --scope-include-subdomains --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr 2> /dev/null
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-HTML_Report.zip 2> /dev/null
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-JSON_Report.json 2> /dev/null
             arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-TXT_Report.txt 2> /dev/null
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=xml:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-XML_Report.xml 2> /dev/null
             echo "--------------------------------------------------"
         fi
     done
@@ -362,26 +405,26 @@ echo
 
 # Using theharvester & metagoofil
 echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil (18 of 25)"
+echo "Performing scan using Theharvester and Metagoofil (17 of 25)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10)
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            timeout 900 theharvester -d https://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
+            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
+            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+         elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
             timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
             echo "--------------------------------------------------"
-            timeout 900 theharvester -d http://$web:$PORTNUM -l 500 -b all -h | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
-            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-            # if [ -r wrkpth/Harvester/$prj_name-harvester_output-$web.txt ] || [ -r $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html ]; then
-            #     cat $wrkpth/Harvester/$prj_name-harvester_output-$web.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-            #     # cat $wrkpth/Metagoofil/$prj_name-metagoofil_output-$web.html |grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz)" | cut -d ":" -f 1 >> $wrktmp/TempWeb
-            # fi
-            # echo "--------------------------------------------------"
         fi
     done
 done
@@ -400,14 +443,16 @@ echo
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -429,14 +474,16 @@ echo
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -451,14 +498,16 @@ echo
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -473,14 +522,16 @@ echo
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -495,14 +546,16 @@ echo
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -513,18 +566,20 @@ echo
 
 # SQL Testing
 # echo "--------------------------------------------------"
-# echo "Performing further RDP testing (24 of 25)"
+# echo "Performing further RDP testing (25 of 25)"
 # echo "--------------------------------------------------"
 # for IP in $(cat $wrktmp/FinalTargets); do
 #     for PORTNUM in ${NEW[*]}; do
-#         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10)
-#         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open" -m 1 -o | grep "open" -o)
-#         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/filtered" -m 1 -o | grep "filtered" -o)
+        # STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        # STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "open" -o) # Check to see if the port is open & is a web service
+        # STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "filtered" -o) # Check to see if the port is filtered & is a web service
+        # STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        # STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
 #         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ] && [ "$PORTNUM" != 80 ]; then
 #             echo Scanning $web:$PORTNUM
 #             echo "--------------------------------------------------"
 #             docker run --rm -v $(pwd):/usr/src/app fhunii/retire.js
-#             cat $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/TestSSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
+#             cat $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.txt | aha -t "TestSSL Output for $IP:$PORTNUM" > $wrkpth/SSL/$prj_name-$IP:$PORTNUM-TestSSL_output-$web.html
 #             cat $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.txt | aha -t "SSLScan Output for $IP:$PORTNUM" > $wrkpth/SSLScan/$prj_name-$IP:$PORTNUM-sslscan_output-$web.html
 #             echo "--------------------------------------------------"
 #         fi
@@ -533,11 +588,27 @@ echo
 # mv $PWD/*.csv $wrkpth/SSLScan/
 # echo
 
-# Add zipping of all content and sending it via some medium (e.g., email, ftp, etc)
+# Cleaning empty files and zipping up all content
 echo "--------------------------------------------------"
 echo "Gift wrapping everything and putting a bowtie on it!"
 echo "--------------------------------------------------"
+# Empty file cleanup
+find $wrkpth -type d,f -empty | xargs rm -rf
+# Zipping the rest up
 zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
+
+# Stopping services we turned on
+# service postgresql stop
+# service docker stop
+
+# Removing unnessary files
+rm -rf $wrktmp/
+
+# Uninitializing variables
+for var in API_AK API_SK HTTPPort IP NEW PORTNUM OS_CHK prj_name pth SSHPort SSLPort STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp; do
+    unset $var
+done
+unset var
 
 # Goodbye Message
 echo "
@@ -581,20 +652,3 @@ ____________________¶¶¶¶¶¶¶¶¶¶
 ____________________¶¶¶¶¶¶¶¶
 ___________________¶¶¶¶¶
 If you eliminate all other possibilities, the one that remains, however unlikely, is the right answer."
-
-# Empty file cleanup
-find $wrkpth -size 0c -type d,f -exec rm -rf {} \;
-
-# Stopping services we turned on
-service postgresql stop
-service docker stop
-
-# Removing unnessary files
-rm $wrktmp/IPtargets -f
-rm $wrktmp/TempTargets -f
-rm $wrktmp/TempWeb -f
-rm $wrktmp/WebTargets -f
-
-# Uninitializing variables
-# do later
-set -u
