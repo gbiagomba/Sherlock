@@ -166,9 +166,17 @@ cd /opt/
 git clone https://github.com/vulnersCom/nmap-vulners
 cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
 
-# Downloading the Sherlock git project
-cd /usr/bin/
-ln -s /opt/Sherlock/sherlock.sh ./sherlock
+# Downloading & installing nmap-converter
+cd /opt/
+git clone https://github.com/mrschyte/nmap-converter
+cd nmap-converter
+pip3 install -r requirements.txt
+
+# Downloading & installing nmaptocsv
+cd /opt/
+git clone https://github.com/maaaaz/nmaptocsv
+cd nmaptocsv
+pip3 install -r requirements.txt
 
 # Done
 echo finished!

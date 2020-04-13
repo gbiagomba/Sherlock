@@ -144,6 +144,7 @@ if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -s $wrkpth/Nmap/live 
         cat $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
         cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponse
         xsltproc $wrkpth/Nmap/$prj_name-nmap_pingsweep.xml -o $wrkpth/Nmap/$prj_name-nmap_pingsweep.html
+        python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_pingsweep.xlsx" $wrkpth/Nmap/
     fi
 fi
 echo
@@ -204,6 +205,7 @@ if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_na
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssh | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSH
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep ssl | grep open | cut -d ' ' -f 2 > $wrkpth/Nmap/SSL
         python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_portknock.csv
+        python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_portknock.xlsx" $wrkpth/Nmap/
     fi
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -240,6 +242,7 @@ if [ -s $wrkpth/Nmap/DNS ]; then
         echo "--------------------------------------------------"
         xsltproc $wrkpth/Nmap/$prj_name-nmap_dns.xml -o $wrkpth/Nmap/$prj_name-nmap_dns.html
         python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_dns.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_dns.csv
+        python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_dns.xlsx" $wrkpth/Nmap/
     done
 fi
 echo
@@ -253,6 +256,7 @@ if [ -s $wrkpth/Nmap/SSH ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
+    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_ssh.xlsx" $wrkpth/Nmap/
     for IP in $(cat $wrkpth/Nmap/SSH); do
         echo Scanning $IP
         echo "--------------------------------------------------"
@@ -346,6 +350,7 @@ if [ -s $wrkpth/Nmap/SSL ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
     xsltproc $wrkpth/Nmap/$prj_name-nmap_http.xml -o $wrkpth/Nmap/$prj_name-nmap_http.html
     python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_http.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_http.csv
+    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_http.xlsx" $wrkpth/Nmap/
 fi
 echo
 
