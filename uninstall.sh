@@ -25,19 +25,35 @@ pip3 uninstall -r /opt/XSStrike/requirements.txt
 rm /opt/XSStrike/ -rf
 rm /usr/bin/xsstrike
 
-# Removing the SpiderLabs Nmap Script dependency
-# rm /opt/SpiderLabs/Nmap-Tools -rf
-# rm /usr/share/nmap/scripts/http-screenshot.nse
+# Removing nmap-converter
+rm -rf /opt/nmap-converter
+
+# Removing installing nmaptocsv
+rm -rf /opt/maptocsv
 
 # Removing the Vulners Nmap Script dependency
 rm /opt/vulnersCom/nmap-vulners -rf
 rm /usr/share/nmap/scripts/nmap-vulners/vulners.nse
 
 # Removing ssh-audit dependency
-rm -rf /opt/ssh-audit
+rm -rf /opt/ssh-audit/
+rm -rf /usr/bin//ssh-audit
+if [ ! -x `which ssh-audit`]; then
+    pip3 uninstall ssh-audit
+fi
 
-# Removing the sshscan dependency
-rm -rf /opt/SSHScan/
+# Removing the XSStrike dependency
+pip3 uninstall -r /opt/XSStrike/requirements.txt
+rm -rf /opt/XSStrike/
+rm /usr/bin/xsstrike
+
+# Downloading & installing nmap-converter
+pip3 uninstall -r /opt/nmap-converter/requirements.txt
+rm -rf /opt/nmap-converter
+
+# Downloading & installing nmaptocsv
+pip3 uninstall -r /opt/nmap-converter/requirements.txt
+rm -rf /opt/nmap-converter
 
 # Removing npm, nodejs, and retirejs dependency
 npm uninstall retire -g

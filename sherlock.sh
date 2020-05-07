@@ -38,7 +38,7 @@ if [ "$OS_CHK" != "debian" ]; then
 fi
 
 # Checking system resources (HDD space)
-if [ "$diskSize" -ge "$diskMax" ];then
+if [ "$diskSize" -ge "$diskMax" ]; then
 	clear
 	echo 
 	echo "You are using $diskSize% and I am concerned you might run out of space"
@@ -84,7 +84,7 @@ echo
 # exec >|$PWD/$prj_name-term_output.log 2>&1
 
 # Parsing the target file
-cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.*)" > $wrktmp/WebTargets
+cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io)" > $wrktmp/WebTargets
 cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
@@ -99,9 +99,7 @@ echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets); do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt"
     if [ -r $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ] || [ -s $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ]; then
-        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep -v "BR" >> $wrktmp/TempWeb
-        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep "BR" | cut -d "<" -f 1 >> $wrktmp/TempWeb
-        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | grep "BR" | cut -d ">" -f 1 | cut -d ">" -f 1 >> $wrktmp/TempWeb
+        cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | tr "<BR>" "\n" | sort | uniq >> $wrktmp/TempWeb
         cat $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt | cut -d ":" -f 1 >> $wrktmp/TempWeb
         cat $wrktmp/WebTargets >> $wrktmp/TempWeb
         cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
@@ -162,6 +160,7 @@ if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wr
         cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
     fi
 fi
+echo
 echo "Printing final list of targets to be used"
 cat $wrktmp/FinalTargets $wrktmp/IPtargets | sort | uniq
 echo
