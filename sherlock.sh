@@ -48,7 +48,7 @@ fi
 
 # Setting Envrionment
 mkdir -p  $wrkpth/Halberd/ $wrkpth/Sublist3r/ $wrkpth/Harvester/ $wrkpth/Metagoofil/
-mkdir -p $wrkpth/Nikto/ $wrkpth/Gobuster/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
+mkdir -p $wrkpth/Nikto/ $wrkpth/Dirstalk/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
 mkdir -p $wrkpth/Masscan/ $wrkpth/Arachni/ $wrkpth/SSL/ $wrkpth/XSStrike/
 mkdir -p $wrkpth/GOLismero/ $wrkpth/DNS_Recon/ $wrkpth/SSH/ $wrkpth/RetieJS/
 mkdir -p $wrkpth/EyeWitness/  $wrkpth/Batea/
@@ -95,7 +95,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using Sublist3r (1of 30)"
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-1.0.txt"
-# gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Gobuster/$prj_name-gobuster_dns_output-$web.txt" -u example.com
+# gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-1.0.txt -o "$wrkpth/Dirstalk/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 for web in $(cat $wrktmp/WebTargets); do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt"
     if [ -r $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ] || [ -s $wrkpth/Sublist3r/$prj_name-$web-sublist3r_output.txt ]; then
@@ -383,18 +383,18 @@ for web in $(cat $wrktmp/FinalTargets); do
         STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
-            docker run stefanoj3/dirstalk dirstalk scan "http://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_http_output.txt
+            docker run stefanoj3/dirstalk dirstalk scan "http://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Dirstalk/$prj_name-$web-$PORTNUM-dirstalk_http_output.txt
         elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
-            docker run stefanoj3/dirstalk dirstalk scan "https://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Gobuster/$prj_name-$web-$PORTNUM-gobuster_https_output.txt
+            docker run stefanoj3/dirstalk dirstalk scan "https://$web:$PORTNUM" -d "https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-1.0.txt" --no-check-certificate --http-statuses-to-ignore '404,301' -t 25 | tee -a $wrkpth/Dirstalk/$prj_name-$web-$PORTNUM-dirstalk_https_output.txt
         fi
     done
 done
 echo
 
-# Using arachni
+# Using Wapiti
 echo "--------------------------------------------------"
-echo "Performing scan using arachni (19of 30)"
+echo "Performing scan using Wapiti (19of 30)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
@@ -404,10 +404,12 @@ for web in $(cat $wrktmp/FinalTargets); do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --scope-include-subdomains --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr 2> /dev/null
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-HTML_Report.zip 2> /dev/null
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-JSON_Report.json 2> /dev/null
-            arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-TXT_Report.txt 2> /dev/null
+            # arachni_multi https://$web:$PORTNUM http://$web:$PORTNUM --scope-include-subdomains --report-save-path=$wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr 2> /dev/null
+            # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-HTML_Report.zip 2> /dev/null
+            # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-JSON_Report.json 2> /dev/null
+            # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-TXT_Report.txt 2> /dev/null
+            wapiti -u http://$web:$PORTNUM -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM -f html -m "*" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
+            wapiti -u https://$web:$PORTNUM -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM -f html -m "*" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
             echo "--------------------------------------------------"
         fi
     done

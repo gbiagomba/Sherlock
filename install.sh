@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
-#                         arachni, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
+#                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 #                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists
 
 # Setting up variables
@@ -34,8 +34,8 @@ elif [ ! -x /usr/bin/python3 ] && [ ! -x /usr/bin/python2 ]; then
     apt install python3 python2 -y
 elif [ ! -x /usr/bin/masscan ]; then
     apt install masscan -y
-elif [ ! -x /usr/bin/arachni ]; then
-    apt install arachni -y
+elif [ ! -x /usr/bin/wapiti ]; then
+    apt install wapiti -y
 elif [ ! -x /usr/bin/testssl ]; then
     apt install testssl -y
 elif [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
