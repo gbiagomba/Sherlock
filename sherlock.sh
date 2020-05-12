@@ -219,11 +219,13 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using testssl (8of 30)"
 echo "--------------------------------------------------"
-testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
-mv $pth/*.html $wrkpth/SSL/
-mv $pth/*.csv $wrkpth/SSL/
-mv $pth/*.json $wrkpth/SSL/
-mv $pth/*.log $wrkpth/SSL/
+if [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//ssl" ] || [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//http" ]; then
+    testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
+    mv $pth/*.html $wrkpth/SSL/
+    mv $pth/*.csv $wrkpth/SSL/
+    mv $pth/*.json $wrkpth/SSL/
+    mv $pth/*.log $wrkpth/SSL/
+fi
 echo
 
 # Using DNS Recon

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
 #                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
-#                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists
+#                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists, metasploit
 
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
@@ -40,6 +40,9 @@ elif [ ! -x /usr/bin/testssl ]; then
     apt install testssl -y
 elif [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
     apt install seclists -y
+elif [ ! -x /usr/bin/metasploit ]; then
+    curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
+    systemctl enable postgresql
 elif [ ! -x/usr/bin/docker ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
@@ -60,7 +63,7 @@ elif [ ! -x/usr/bin/docker ]; then
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
 elif [ ! -x /usr/bin/ssh_scan ]; then
-    gem install ssh_scan
+    $SUDOH gem install ssh_scan
 elif [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
 

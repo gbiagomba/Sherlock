@@ -69,7 +69,7 @@ pip3 uninstall -e .
 rm -rf /opt/batea/
 
 # Removing remaining dependencies
-apt remove halberd sublist3r theharvester metagoofil nikto nmap dnsrecon masscan arachni wapiti testssl seclists docker-ce docker-ce-cli containerd.io nodejs -y
+apt remove halberd sublist3r theharvester metagoofil nikto nmap dnsrecon masscan arachni wapiti testssl seclists docker-ce docker-ce-cli containerd.io metasploit-framework -y
 pip uninstall halberd
 
 # Done!
