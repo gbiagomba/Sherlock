@@ -6,75 +6,41 @@
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
 
-# Checking user is root
+# Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
-fi
-
-# Ensuring system is debian based
-if [ "$OS_CHK" != "debian" ]; then
+elif [ "$OS_CHK" != "debian" ]; then
     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
     exit
 fi
 
-# if [ ! -x /usr/local/bin/halberd ]; then
-#     pip install halberd
-# fi
+# Setting sudo to HOME variable to target user's home dir
+SUDOH="sudo -H"
 
 if [ ! -x /usr/bin/sublist3r ]; then
     apt install sublist3r -y
-fi
-
-if [ ! -x /usr/bin/theharvester ]; then
+elif [ ! -x /usr/bin/theharvester ]; then
     apt install theharvester -y
-fi
-
-if [ ! -x /usr/bin/metagoofil ]; then
+elif [ ! -x /usr/bin/metagoofil ]; then
     apt install metagoofil -y
-fi
-
-if [ ! -x /usr/bin/nikto ]; then
+elif [ ! -x /usr/bin/nikto ]; then
     apt install nikto -y
-fi
-
-if [ ! -x /usr/bin/nmap ]; then
+elif [ ! -x /usr/bin/nmap ]; then
     apt install nmap -y
-fi
-
-if [ ! -x /usr/bin/dnsrecon ]; then
+elif [ ! -x /usr/bin/dnsrecon ]; then
     apt install dnsrecon -y
-fi
-
-if [ ! -x /usr/bin/python3 ] && [ ! -x /usr/bin/python2 ]; then
+elif [ ! -x /usr/bin/python3 ] && [ ! -x /usr/bin/python2 ]; then
     apt install python3 python2 -y
-fi
-
-if [ ! -x /usr/bin/masscan ]; then
+elif [ ! -x /usr/bin/masscan ]; then
     apt install masscan -y
-fi
-
-if [ ! -x /usr/bin/arachni ]; then
+elif [ ! -x /usr/bin/arachni ]; then
     apt install arachni -y
-fi
-
-if [ ! -x /usr/bin/testssl ]; then
+elif [ ! -x /usr/bin/testssl ]; then
     apt install testssl -y
-fi
-
-# if [ ! -x /usr/bin/golismero ]; then
-#     apt install golismero -y
-# fi
-
-# if [ ! -x /usr/bin/gobuster ]; then
-#     apt install gobuster -y
-# fi
-
-if [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
+elif [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
     apt install seclists -y
-fi
-
-if [ ! -x/usr/bin/docker ]; then
+elif [ ! -x/usr/bin/docker ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -93,15 +59,9 @@ if [ ! -x/usr/bin/docker ]; then
 
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
-fi
-
-# Downloading mozilla's sshscan
-if [ ! -x /usr/bin/ssh_scan ]; then
+elif [ ! -x /usr/bin/ssh_scan ]; then
     gem install ssh_scan
-fi
-
-# Downloading and installing npm & nodejs
-if [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
+elif [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
 
     # Warning message to user
@@ -132,10 +92,7 @@ if [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
     #Testing our installation
     node –version
     npm -v
-fi
-
-# installing retirejs
-if [ ! -x /usr/local/bin/retire]; then
+elif [ ! -x /usr/local/bin/retire]; then
     npm install -g retire
 fi
 
@@ -143,7 +100,7 @@ fi
 cd /opt/
 git clone https://github.com/s0md3v/XSStrike
 cd XSStrike/
-pip3 install -r requirements.txt
+$SUDOH pip3 install -r requirements.txt
 cd /usr/bin/
 ln -s /opt/XSStrike/xsstrike.py ./xsstrike
 
@@ -153,7 +110,7 @@ git clone https://github.com/jtesta/ssh-audit
 cd /usr/bin/
 ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
 if [ ! -x `which ssh-audit`]; then
-    pip3 install ssh-audit
+    $SUDOH pip3 install ssh-audit
 fi
 
 # Downloading the Vulners Nmap Script
@@ -165,13 +122,27 @@ cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
 cd /opt/
 git clone https://github.com/mrschyte/nmap-converter
 cd nmap-converter
-pip3 install -r requirements.txt
+$SUDOH pip3 install -r requirements.txt
 
 # Downloading & installing nmaptocsv
 cd /opt/
 git clone https://github.com/maaaaz/nmaptocsv
 cd nmaptocsv
-pip3 install -r requirements.txt
+$SUDOH pip3 install -r requirements.txt
+
+# Downloading & installing nmaptocsv
+cd /opt/
+git clone https://github.com/maaaaz/nmaptocsv
+cd nmaptocsv
+$SUDOH pip3 install -r requirements.txt
+
+# Downloading & installing batea
+cd /opt/
+git clone git@github.com:delvelabs/batea.git
+cd batea
+$SUDOH python3 setup.py sdist
+$SUDOH pip3 install -r requirements.txt
+$SUDOH pip3 install -e .
 
 # Done
 echo finished!

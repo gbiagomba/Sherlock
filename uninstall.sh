@@ -65,6 +65,12 @@ rm -rf /usr/share/nmap/scripts/vulners.nse
 # Removing mozilla's ssh_scan dependcy
 gem uninstall ssh_scan
 
+# Downloading & installing batea
+cd /opt/batea
+pip3 uninstall -r requirements.txt
+pip3 uninstall -e .
+rm -rf /opt/batea/
+
 # Removing remaining dependencies
 apt remove halberd sublist3r theharvester metagoofil nikto nmap dnsrecon masscan arachni testssl seclists docker-ce docker-ce-cli containerd.io nodejs -y
 pip uninstall halberd
