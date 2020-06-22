@@ -188,7 +188,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners.vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 # nmap -p - -T5 -A -v -Pn --script rdp-enum-encryption,ssl-enum-ciphers,vulners -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] && [ -s $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.nmap ]; then
@@ -220,7 +220,7 @@ echo "--------------------------------------------------"
 echo "Performing scan using testssl (8of 30)"
 echo "--------------------------------------------------"
 if [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//ssl" ] || [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//http" ]; then
-    testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
+    docker run --rm -ti drwetter/testssl.sh --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
     mv $pth/*.html $wrkpth/SSL/
     mv $pth/*.csv $wrkpth/SSL/
     mv $pth/*.json $wrkpth/SSL/
@@ -240,6 +240,7 @@ if [ -s $wrkpth/Nmap/DNS ]; then
         nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP
         echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output.txt
+        dnsrecon -d $IP  -t zonewalk | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output.txt
         echo "--------------------------------------------------"
         xsltproc $wrkpth/Nmap/$prj_name-nmap_dns.xml -o $wrkpth/Nmap/$prj_name-nmap_dns.html
         python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_dns.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_dns.csv
@@ -369,7 +370,7 @@ echo "--------------------------------------------------"
 # for web in $(cat $wrktmp/FinalTargets); do
 #     nikto -C all -h $web -port $(echo ${NEW[*]} | sed 's/ /,/g') -output $wrkpth/Nikto/$prj_name-$web-nikto_output.csv -Display 1,2,3,4 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-$web-nikto_output.txt
 # done
-nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
+nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
 echo
 
 # Using dirstalk
@@ -396,7 +397,7 @@ echo
 
 # Using Wapiti
 echo "--------------------------------------------------"
-echo "Performing scan using Wapiti (19of 30)"
+echo "Performing scan using Wapiti (19 of 30)"
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
@@ -410,8 +411,8 @@ for web in $(cat $wrktmp/FinalTargets); do
             # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=html:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-HTML_Report.zip 2> /dev/null
             # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=json:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-JSON_Report.json 2> /dev/null
             # arachni_reporter $wrkpth/Arachni/$prj_name-$web-$PORTNUM.afr --reporter=txt:outfile=$wrkpth/Arachni/$prj_name-Arachni/$prj_name-$web-$PORTNUM-TXT_Report.txt 2> /dev/null
-            wapiti -u http://$web:$PORTNUM -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM -f html -m "*" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
-            wapiti -u https://$web:$PORTNUM -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM -f html -m "*" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
+            wapiti -u "http://$web:$PORTNUM/" -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.html -f html -m "all" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
+            wapiti -u "https://$web:$PORTNUM/" -o $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.html -f html -m "all" -v 1 | tee -a $wrkpth/Arachni/$prj_name-wapiti_result-$PORTNUM.log
             echo "--------------------------------------------------"
         fi
     done
