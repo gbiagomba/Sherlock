@@ -50,6 +50,10 @@ cd /opt/Sherlock/
 - [ ] Add joomscan [Queued]
 - [ ] Add  docker run --rm asannou/droopescan scan [Queued]
 - [ ] Add function to check if the script is running on latest version [inprogress]
+- [ ] Switch sublister with subfinder [https://github.com/projectdiscovery/subfinder]
+- [ ] Switch grep with ripgrep
+- [ ] Add blc - [https://github.com/stevenvachon/broken-link-checker]
+- [ ] Add arjun [https://github.com/s0md3v/Arjun]
 - [ ] Add exclusion list config file
 
 ## Future Plans
@@ -61,7 +65,7 @@ I plan on converting this into a python script later down the road...just an FYI
           |  _..--'-.
           >.`__.-"";"`
          / /(     ^\    (
-         '-`)     =|-.   )
+         '-`)     =|-.   )s
           /`--.'--'   \ .-.
         .'`-._ `.\    | J /
   jgs  /      `--.|   \__/
