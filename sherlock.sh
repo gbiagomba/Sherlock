@@ -187,8 +187,8 @@ echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners.vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners.vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
     for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
@@ -208,7 +208,8 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using testssl (8of 30)"
 echo "--------------------------------------------------"
-if [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//ssl" ] || [ `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap` == "tcp//http" ]; then
+SSLCHECK=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap)
+if [ $SSLCHECK == "tcp//ssl" ] || [ $SSLCHECK == "tcp//http" ]; then
     docker run --rm -ti drwetter/testssl.sh --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
     mv $pth/*.html $wrkpth/SSL/
     mv $pth/*.csv $wrkpth/SSL/
@@ -613,7 +614,7 @@ zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
 rm -rf $wrktmp/
 
 # Uninitializing variables
-for var in API_AK API_SK HTTPPort IP NEW PORTNUM OS_CHK prj_name pth SSHPort SSLPort STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp; do
+for var in API_AK API_SK HTTPPort IP NEW PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp; do
     unset $var
 done
 unset var
