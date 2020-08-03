@@ -190,11 +190,9 @@ echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
-    xsltproc $wrkpth/Nmap/$prj_name-nmap_portknock.xml -o $wrkpth/Nmap/$prj_name-nmap_portknock.html
     for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 >  $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
     done
-    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_portknock.xlsx" $wrkpth/Nmap/$prj_name-nmap_portknock.xml
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
     I recommend chacking the $wrkpth/Nmap/
@@ -210,7 +208,7 @@ echo "Performing scan using testssl (8of 30)"
 echo "--------------------------------------------------"
 SSLCHECK=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap)
 if [ $SSLCHECK == "tcp//ssl" ] || [ $SSLCHECK == "tcp//http" ]; then
-    docker run --rm -ti drwetter/testssl.sh --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
+    testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
     mv $pth/*.html $wrkpth/SSL/
     mv $pth/*.csv $wrkpth/SSL/
     mv $pth/*.json $wrkpth/SSL/
@@ -223,19 +221,15 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using DNS Scan (9of 30)"
 echo "--------------------------------------------------"
-if [ -s $wrkpth/Nmap/DNS ]; then
-    for IP in $(cat $wrkpth/Nmap/DNS); do
+if [ -s $wrkpth/Nmap/DOMAIN ]; then
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns -iL $wrkpth/Nmap/DOMAIN
+    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dnsv6 -iL $wrkpth/Nmap/DOMAIN
+    for IP in $(cat $wrkpth/Nmap/DOMAIN); do
         echo Scanning $IP
-        echo "--------------------------------------------------"
-        nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns $IP
-        nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dnsv6 $IP
         echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output.txt
         dnsrecon -d $IP  -t zonewalk | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output.txt
         echo "--------------------------------------------------"
-        xsltproc $wrkpth/Nmap/$prj_name-nmap_dns.xml -o $wrkpth/Nmap/$prj_name-nmap_dns.html
-        python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_dns.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_dns.csv
-        python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_dns.xlsx" $wrkpth/Nmap/
     done
 fi
 echo
@@ -248,9 +242,6 @@ SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssh | grep 
 if [ -s $wrkpth/Nmap/SSH ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
-    xsltproc $wrkpth/Nmap/$prj_name-nmap_ssh.xml -o $wrkpth/Nmap/$prj_name-nmap_ssh.html
-    python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_ssh.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_ssh.csv
-    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_ssh.xlsx" $wrkpth/Nmap/$wrkpth/Nmap/$prj_name-nmap_ssh.xml
     for IP in $(cat $wrkpth/Nmap/SSH); do
         echo Scanning $IP
         echo "--------------------------------------------------"
@@ -258,9 +249,10 @@ if [ -s $wrkpth/Nmap/SSH ]; then
         echo "--------------------------------------------------"
         docker run --rm mozilla/ssh_scan -t $IP -o $wrkpth/SSH/$prj_name-$IP-ssh-scan_output.json
         echo "--------------------------------------------------"
-        service postgresql start
-        msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
     done
+    service postgresql start
+    msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+
 fi
 echo
 
@@ -354,8 +346,6 @@ echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/SSL ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
     xsltproc $wrkpth/Nmap/$prj_name-nmap_http.xml -o $wrkpth/Nmap/$prj_name-nmap_http.html
-    python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$prj_name-nmap_http.xml -S -d "," -n -o $wrkpth/Nmap/$prj_name-nmap_http.csv
-    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_http.xlsx" $wrkpth/Nmap/
 fi
 echo
 
@@ -605,6 +595,13 @@ echo
 echo "--------------------------------------------------"
 echo "Gift wrapping everything and putting a bowtie on it!"
 echo "--------------------------------------------------"
+# Generating HTML, CSV and XLSX reports
+for i in `ls $wrkpth/Nmap/ | grep xml`; then
+    xsltproc $i -o `echo $i | tr -d 'xml'`html
+    python /opt/nmaptocsv/nmaptocsv.py -x $i -S -d "," -n -o `echo $i | tr -d 'xml'`csv
+done
+python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/
+
 # Empty file cleanup
 find $wrkpth -type d,f -empty | xargs rm -rf
 # Zipping the rest up
