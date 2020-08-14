@@ -52,8 +52,7 @@ cd /opt/Sherlock/
 - [ ] Add function to check if the script is running on latest version [inprogress]
 - [ ] Switch sublister with subfinder [https://github.com/projectdiscovery/subfinder]
 - [ ] Switch grep with ripgrep
-- [ ] Add blc - [https://github.com/stevenvachon/broken-link-checker]
-- [ ] Add arjun [https://github.com/s0md3v/Arjun]
+- [x] Add arjun [https://github.com/s0md3v/Arjun] [done]
 - [ ] Add exclusion list config file
 
 ## Future Plans
