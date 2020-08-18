@@ -95,8 +95,30 @@ elif [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
     #Testing our installation
     node –version
     npm -v
-elif [ ! -x /usr/local/bin/retire]; then
-    npm install -g retire
+elif [ ! -x `which amass` ]; then
+    apt install amass -y
+elif [ ! -x `which go`]; then
+    add-apt-repository ppa:longsleep/golang-backports
+    apt update
+    apt install golang-go -y
+    $SUDOH export GOPATH=$(go env GOPATH)
+    $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
+elif [ ! -x `which httprobe`]; then
+    $SUDOH go get -u github.com/tomnomnom/httprobe
+elif [ ! -x `which gospider`]; then
+    $SUDOH go get -u github.com/jaeles-project/gospider
+elif [ ! -x `which hakrawler`]; then
+    $SUDOH go get github.com/hakluke/hakrawler
+elif [ ! -x `which ffuf`]; then
+    $SUDOH go get github.com/ffuf/ffuf
+elif [ ! -x `which massdns`]; then
+    git clone https://github.com/blechschmidt/massdns.git
+    cd massdns
+    $SUDOH make install
+elif [ ! -x `which shuffledns`]; then
+    $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
+elif [ ! -x `which aquatone`]; then
+    $SUDOH go get github.com/michenriksen/aquatone
 fi
 
 # Downloading the XSStrike dependency
@@ -133,10 +155,10 @@ git clone https://github.com/maaaaz/nmaptocsv
 cd nmaptocsv
 $SUDOH pip3 install -r requirements.txt
 
-# Downloading & installing nmaptocsv
+# Downloading & installing SubDomainizer
 cd /opt/
-git clone https://github.com/maaaaz/nmaptocsv
-cd nmaptocsv
+git clone https://github.com/nsonaniya2010/SubDomainizer.git
+cd SubDomainizer
 $SUDOH pip3 install -r requirements.txt
 
 # Downloading & installing batea
