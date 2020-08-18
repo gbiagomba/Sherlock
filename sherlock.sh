@@ -61,7 +61,7 @@ function gift_wrap()
     echo "Gift wrapping everything and putting a bowtie on it!"
     echo "--------------------------------------------------"
     # Generating HTML, CSV and XLSX reports
-    for i in `ls $wrkpth/Nmap/ | grep xml`; then
+    for i in $(ls $wrkpth/Nmap/ | grep xml); then
         xsltproc $i -o `echo $i | tr -d 'xml'`html
         python /opt/nmaptocsv/nmaptocsv.py -x $i -S -d "," -n -o `echo $i | tr -d 'xml'`csv
     done
@@ -164,7 +164,9 @@ fi
 cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" > $wrktmp/WebTargets
 cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
+cat $pth/$targets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
+cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
 echo
 
 # Using sublist3r 
@@ -176,7 +178,7 @@ echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets); do
 	sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt"
     amass enum -brute -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt"
-    gobuster -m dns -i -t 25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.txt" -u $web
+    gobuster dns -i -t 25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.txt" -d $web
     shuffledns -d cars.com -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
 done
 echo
@@ -189,7 +191,8 @@ echo
 # Pulling out all the web targets
 cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | tr "<BR>" "\n" | sort | uniq >> $wrktmp/TempWeb
 cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" > $wrktmp/WebTargets
+cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/WebTargets
+cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 
@@ -215,16 +218,19 @@ echo "--------------------------------------------------"
 # Some house cleaning
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets >> $wrktmp/TempTargets
+cat $wrktmp/IPtargetsv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
+cat $wrktmp/TempTargetsv6 | sort | uniq | tee $wrktmp/IPtargetsv6
+cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | sort | uniq | tee $wrktmp tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
 echo "--------------------------------------------------"
 echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 20)"
 echo "--------------------------------------------------"
-nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
-nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $targets -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -s $wrkpth/Nmap/live ]; then
     if [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -r $wrkpth/Nmap/live ]; then
         cat $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
@@ -241,6 +247,7 @@ if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wr
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
         # cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
         cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
+        cat $wrktmp tempFinal  >> $wrktmp/TempTargets
         cat $wrktmp/TempTargets | sort | uniq > $wrktmp/FinalTargets
         cat $wrktmp/WebTargets >> $wrktmp/FinalTargets
         cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
@@ -271,10 +278,12 @@ echo "--------------------------------------------------"
 echo
 echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
-nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
-if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
+if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]
+    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+elif [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 >  $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a  $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee  $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
