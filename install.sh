@@ -47,19 +47,14 @@ elif [ ! -x`which docker` ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
-
     # Add Docker PGP key:
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-
     # Configure Docker APT repository (Kali is based on Debian testing, which will be called buster upon release, and Docker now has support for it):
     echo 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable' > /etc/apt/sources.list.d/docker.list
-
     # Update APT:
     apt-get update
-
     # Uninstall older docker
     apt-get remove docker docker-engine docker.io -y
-
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
 elif [ ! -x `which ssh_scan` ]; then
@@ -86,6 +81,8 @@ elif [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     npm -v
 elif [ ! -x `which amass` ]; then
     apt install amass -y
+elif [ ! -x `which rg` ]; then
+    apt-get install ripgrep
 elif [ ! -x `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
@@ -93,11 +90,11 @@ elif [ ! -x `which go` ]; then
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
 elif [ ! -x `which httprobe` ]; then
-    $SUDOH go get -u github.com/tomnomnom/httprobe
+    $SUDOH go get -u -v github.com/tomnomnom/httprobe
 elif [ ! -x `which gospider` ]; then
-    $SUDOH go get -u github.com/jaeles-project/gospider
+    $SUDOH go get -u -v github.com/jaeles-project/gospider
 elif [ ! -x `which hakrawler` ]; then
-    $SUDOH go get github.com/hakluke/hakrawler
+    $SUDOH go get -u -v github.com/hakluke/hakrawler
 elif [ ! -x `which ffuf` ]; then
     $SUDOH go get github.com/ffuf/ffuf
 elif [ ! -x `which massdns` ]; then
@@ -107,7 +104,9 @@ elif [ ! -x `which massdns` ]; then
 elif [ ! -x `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 elif [ ! -x `which aquatone` ]; then
-    $SUDOH go get github.com/michenriksen/aquatone
+    $SUDOH go get -u -v github.com/michenriksen/aquatone
+elif [ ! -x `which gobuster` ]; then
+    $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
 # Downloading the XSStrike dependency
