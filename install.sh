@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!`which env bash
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
 #                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 #                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists, metasploit
@@ -18,32 +18,32 @@ fi
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -H"
 
-if [ ! -x /usr/bin/sublist3r ]; then
+if [ ! -x `which sublist3r` ]; then
     apt install sublist3r -y
-elif [ ! -x /usr/bin/theharvester ]; then
+elif [ ! -x `which theharvester` ]; then
     apt install theharvester -y
-elif [ ! -x /usr/bin/metagoofil ]; then
+elif [ ! -x `which metagoofil` ]; then
     apt install metagoofil -y
-elif [ ! -x /usr/bin/nikto ]; then
+elif [ ! -x `which nikto` ]; then
     apt install nikto -y
-elif [ ! -x /usr/bin/nmap ]; then
+elif [ ! -x `which nmap` ]; then
     apt install nmap -y
-elif [ ! -x /usr/bin/dnsrecon ]; then
+elif [ ! -x `which dnsrecon` ]; then
     apt install dnsrecon -y
-elif [ ! -x /usr/bin/python3 ] && [ ! -x /usr/bin/python2 ]; then
+elif [ ! -x `which python3` ] && [ ! -x `which python2` ]; then
     apt install python3 python2 -y
-elif [ ! -x /usr/bin/masscan ]; then
+elif [ ! -x `which masscan` ]; then
     apt install masscan -y
-elif [ ! -x /usr/bin/wapiti ]; then
+elif [ ! -x `which wapiti` ]; then
     apt install wapiti -y
-elif [ ! -x /usr/bin/testssl ]; then
+elif [ ! -x `which testssl` ]; then
     apt install testssl -y
-elif [ ! -d /usr/share/seclists ] && [ ! -x /usr/bin/seclists ]; then
+elif [ ! -d /usr/share/seclists ] && [ ! -x `which seclists` ]; then
     apt install seclists -y
-elif [ ! -x /usr/bin/metasploit ]; then
+elif [ ! -x `which metasploit` ]; then
     curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
-elif [ ! -x/usr/bin/docker ]; then
+elif [ ! -x`which docker` ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -62,36 +62,25 @@ elif [ ! -x/usr/bin/docker ]; then
 
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
-elif [ ! -x /usr/bin/ssh_scan ]; then
+elif [ ! -x `which ssh_scan` ]; then
     $SUDOH gem install ssh_scan
-elif [ ! -x /usr/local/bin/node ] && [ ! -x /usr/local/bin/npm ]; then
+elif [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
-
-    # Warning message to user
-    echo "Use this script if the npm_install does not work"
-    read answer #fix later
-
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
-
     # Add the location to our path so that we can call it with bash
     echo ‘export PATH=$HOME/local/bin:$PATH’ >> ~/.bashrc
-
     # Now we can start with downloading NodeJs and NPM
     git clone git://github.com/nodejs/node.git
     git clone git://github.com/npm/npm.git
-
     # Compiling NodeJS
     cd node
     bash configure –-prefix=~/local
     make install
     cd ../
-
     # Now Compiling NPM (Node Package Manager)
     cd npm
     make install
-    cd ../
-
     #Testing our installation
     node –version
     npm -v
@@ -147,12 +136,6 @@ cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
 cd /opt/
 git clone https://github.com/mrschyte/nmap-converter
 cd nmap-converter
-$SUDOH pip3 install -r requirements.txt
-
-# Downloading & installing nmaptocsv
-cd /opt/
-git clone https://github.com/maaaaz/nmaptocsv
-cd nmaptocsv
 $SUDOH pip3 install -r requirements.txt
 
 # Downloading & installing SubDomainizer
