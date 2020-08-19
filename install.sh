@@ -86,27 +86,27 @@ elif [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     npm -v
 elif [ ! -x `which amass` ]; then
     apt install amass -y
-elif [ ! -x `which go`]; then
+elif [ ! -x `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
     apt install golang-go -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
-elif [ ! -x `which httprobe`]; then
+elif [ ! -x `which httprobe` ]; then
     $SUDOH go get -u github.com/tomnomnom/httprobe
-elif [ ! -x `which gospider`]; then
+elif [ ! -x `which gospider` ]; then
     $SUDOH go get -u github.com/jaeles-project/gospider
-elif [ ! -x `which hakrawler`]; then
+elif [ ! -x `which hakrawler` ]; then
     $SUDOH go get github.com/hakluke/hakrawler
-elif [ ! -x `which ffuf`]; then
+elif [ ! -x `which ffuf` ]; then
     $SUDOH go get github.com/ffuf/ffuf
-elif [ ! -x `which massdns`]; then
+elif [ ! -x `which massdns` ]; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make install
-elif [ ! -x `which shuffledns`]; then
+elif [ ! -x `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
-elif [ ! -x `which aquatone`]; then
+elif [ ! -x `which aquatone` ]; then
     $SUDOH go get github.com/michenriksen/aquatone
 fi
 
@@ -123,7 +123,7 @@ cd /opt/
 git clone https://github.com/jtesta/ssh-audit
 cd /usr/bin/
 ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
-if [ ! -x `which ssh-audit`]; then
+if [ ! -x `which ssh-audit` ]; then
     $SUDOH pip3 install ssh-audit
 fi
 
