@@ -100,7 +100,7 @@ elif [ ! -x `which ffuf` ]; then
 elif [ ! -x `which massdns` ]; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
-    $SUDOH make install
+    $SUDOH make
 elif [ ! -x `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 elif [ ! -x `which aquatone` ]; then
