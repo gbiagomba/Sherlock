@@ -16,7 +16,7 @@ function gift_wrap()
     echo "--------------------------------------------------"
     # Generating HTML, CSV and XLSX reports
     for i in $(ls $wrkpth/Nmap/ | grep xml); then
-        xsltproc $i -o `echo $i | tr -d 'xml'`html
+        xsltproc -o `echo $i | tr -d 'xml'`html $i /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
         python /opt/nmaptocsv/nmaptocsv.py -x $i -S -d "," -n -o `echo $i | tr -d 'xml'`csv
     done
     python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/

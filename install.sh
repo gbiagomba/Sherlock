@@ -151,5 +151,13 @@ $SUDOH python3 setup.py sdist
 $SUDOH pip3 install -r requirements.txt
 $SUDOH pip3 install -e .
 
+# Downloading & installing nmap-bootstrap-xsl
+cd /opt/
+git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
+
+# Downloading & installing SubDomainizer
+ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
+ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
+
 # Done
 echo finished!

@@ -119,8 +119,7 @@ for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed.txt`; do python3 /opt/Sub
 echo
 
 # Pulling out all the web targets
-cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | tr "<BR>" "\n" | sort | uniq >> $wrktmp/TempWeb
-cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | tr " " "\n" | sort | uniq >> $wrktmp/TempWeb
+cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | sort | uniq >> $wrktmp/TempWeb
 cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
 cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/WebTargets
 cat $wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt $wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.tx $wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt $wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output.txt | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
@@ -160,9 +159,9 @@ echo
 echo "--------------------------------------------------"
 echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 20)"
 echo "--------------------------------------------------"
-nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -z `$wrktmp/tempFinal | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+    nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6
 elif [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
     cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponse
@@ -209,9 +208,9 @@ echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 elif [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
@@ -247,8 +246,8 @@ echo "--------------------------------------------------"
 echo "Performing scan using DNS Scan (9 of 20)"
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/DOMAIN ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns -iL $wrkpth/Nmap/DOMAIN --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
-    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dnsv6 -iL $wrkpth/Nmap/DOMAIN --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns -iL $wrkpth/Nmap/DOMAIN
+    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dnsv6 -iL $wrkpth/Nmap/DOMAIN
     for IP in $(cat $wrkpth/Nmap/DOMAIN); do
         echo Scanning $IP
         echo "--------------------------------------------------"
@@ -263,10 +262,10 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using SSH Audit (10 of 20)"
 echo "--------------------------------------------------"
-SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep -iw ssh | grep -iw tcp | cut -d "/" -f 1))
+SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" $NMAP_FILE | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssh | cut -d "/" -f 1 | sort | uniq)
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
-    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6 --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
     for IP in $(cat $wrkpth/Nmap/SSH); do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open/tcp//ssh" -m 1 -o | grep "ssh" -o) # Check to see if the port is open & is a web service
@@ -291,7 +290,7 @@ echo
 echo "--------------------------------------------------"
 echo "Ranking nmap output using batea (11 of 20)"
 echo "--------------------------------------------------"
-batea -v $wrkpth/Nmap/*.xml | tee -a  $wrkpth/Batea/$prj_name-batea_output.json
+batea -v $wrkpth/Nmap/*.xml | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
 echo
 
 # Combining ports
@@ -299,8 +298,8 @@ echo
 # echo "Combining ports
 # echo "--------------------------------------------------"
 # Merging HTTP and SSL ports
-HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" $NMAP_FILE | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw http | cut -d "/" -f 1 | sort | uniq)
-SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" $NMAP_FILE | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssl | cut -d "/" -f 1 | sort | uniq)
+HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up"  | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw http | cut -d "/" -f 1 | sort | uniq))
+SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssl | cut -d "/" -f 1 | sort | uniq))
 if [ ${#HTTPPort[@]} -eq 0 ] || [ ${#SSLPort[@]} -eq 0 ]; then
     echo "There are no open web or ssl ports, exiting now"
     gift_wrap
@@ -381,7 +380,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 if [ -s $wrkpth/Nmap/SSL ]; then
-    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http --stylesheet https://raw.githubusercontent.com/honze-net/nmap-bootstrap-xsl/master/nmap-bootstrap.xsl
+    nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
 fi
 echo
 
