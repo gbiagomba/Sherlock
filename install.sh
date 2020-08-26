@@ -110,7 +110,7 @@ elif [ ! -x `which gobuster` ]; then
 fi
 
 # Downloading the XSStrike dependency
-if [ ! -e /opt/XSStrike ]
+if [ ! -e /opt/XSStrike ]; then
     cd /opt/
     git clone https://github.com/s0md3v/XSStrike
     cd XSStrike/
@@ -123,7 +123,7 @@ else
 fi
 
 # Downloading the ssh-audit
-if [ ! -e /opt/ssh-audit ]
+if [ ! -e /opt/ssh-audit ]; then
     cd /opt/
     git clone https://github.com/jtesta/ssh-audit
     cd /usr/bin/
@@ -136,7 +136,7 @@ else
     git pull
 fi
 # Downloading the Vulners Nmap Script
-if [ ! -e /opt/nmap-vulners ]
+if [ ! -e /opt/nmap-vulners ]; then
     cd /opt/
     git clone https://github.com/vulnersCom/nmap-vulners
     cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
@@ -146,7 +146,7 @@ else
 fi
 
 # Downloading & installing nmap-converter
-if [ ! -e /opt/nmap-converter ]
+if [ ! -e /opt/nmap-converter ]; then
     cd /opt/
     git clone https://github.com/mrschyte/nmap-converter
     cd nmap-converter
@@ -157,7 +157,7 @@ else
 fi
 
 # Downloading & installing SubDomainizer
-if [ ! -e /opt/SubDomainizer ]
+if [ ! -e /opt/SubDomainizer ]; then
     cd /opt/
     git clone https://github.com/nsonaniya2010/SubDomainizer.git
     cd SubDomainizer
@@ -168,7 +168,7 @@ else
 fi
 
 # Downloading & installing batea
-if [ ! -e /opt/batea ]
+if [ ! -e /opt/batea ]; then
     cd /opt/
     git clone git@github.com:delvelabs/batea.git
     cd batea
@@ -181,7 +181,7 @@ else
 fi
 
 # Downloading & installing nmap-bootstrap-xsl
-if [ ! -e /opt/nmap-bootstrap-xsl ]
+if [ ! -e /opt/nmap-bootstrap-xsl ]; then
     cd /opt/
     git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
 else
@@ -190,7 +190,7 @@ else
 fi
 
 # Downloading & installing SubDomainizer
-if [ ! -e /opt/Sherlock ]
+if [ ! -e /opt/Sherlock ]; then
     ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
     ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
 else
