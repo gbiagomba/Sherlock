@@ -40,8 +40,8 @@ elif [ -z `which testssl` ]; then
     apt install testssl -y
 elif [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
     apt install seclists -y
-elif [ -z `which metasploit` ]; then
-    curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
+elif [ -z `which msfconsole` ]; then
+    cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
 elif [ -z`which docker` ]; then
     # Based on these two articles
@@ -110,54 +110,93 @@ elif [ -z `which gobuster` ]; then
 fi
 
 # Downloading the XSStrike dependency
-cd /opt/
-git clone https://github.com/s0md3v/XSStrike
-cd XSStrike/
-$SUDOH pip3 install -r requirements.txt
-cd /usr/bin/
-ln -s /opt/XSStrike/xsstrike.py ./xsstrike
-
-# Downloading the ssh-audit
-cd /opt/
-git clone https://github.com/jtesta/ssh-audit
-cd /usr/bin/
-ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
-if [ -z `which ssh-audit` ]; then
-    $SUDOH pip3 install ssh-audit
+if [ ! -e /opt/XSStrike ]
+    cd /opt/
+    git clone https://github.com/s0md3v/XSStrike
+    cd XSStrike/
+    $SUDOH pip3 install -r requirements.txt
+    cd /usr/bin/
+    ln -s /opt/XSStrike/xsstrike.py ./xsstrike
+else
+    cd /opt/XSStrike
+    git pull
 fi
 
+# Downloading the ssh-audit
+if [ ! -e /opt/ssh-audit ]
+    cd /opt/
+    git clone https://github.com/jtesta/ssh-audit
+    cd /usr/bin/
+    ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
+    if [ -z `which ssh-audit` ]; then
+        $SUDOH pip3 install ssh-audit
+    fi
+else
+    cd /opt/ssh-audit
+    git pull
+fi
 # Downloading the Vulners Nmap Script
-cd /opt/
-git clone https://github.com/vulnersCom/nmap-vulners
-cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
+if [ ! -e /opt/nmap-vulners ]
+    cd /opt/
+    git clone https://github.com/vulnersCom/nmap-vulners
+    cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
+else
+    cd /opt/nmap-vulners
+    git pull
+fi
 
 # Downloading & installing nmap-converter
-cd /opt/
-git clone https://github.com/mrschyte/nmap-converter
-cd nmap-converter
-$SUDOH pip3 install -r requirements.txt
+if [ ! -e /opt/nmap-converter ]
+    cd /opt/
+    git clone https://github.com/mrschyte/nmap-converter
+    cd nmap-converter
+    $SUDOH pip3 install -r requirements.txt
+else
+    cd /opt/nmap-converter
+    git pull
+fi
 
 # Downloading & installing SubDomainizer
-cd /opt/
-git clone https://github.com/nsonaniya2010/SubDomainizer.git
-cd SubDomainizer
-$SUDOH pip3 install -r requirements.txt
+if [ ! -e /opt/SubDomainizer ]
+    cd /opt/
+    git clone https://github.com/nsonaniya2010/SubDomainizer.git
+    cd SubDomainizer
+    $SUDOH pip3 install -r requirements.txt
+else
+    cd /opt/SubDomainizer
+    git pull
+fi
 
 # Downloading & installing batea
-cd /opt/
-git clone git@github.com:delvelabs/batea.git
-cd batea
-$SUDOH python3 setup.py sdist
-$SUDOH pip3 install -r requirements.txt
-$SUDOH pip3 install -e .
+if [ ! -e /opt/batea ]
+    cd /opt/
+    git clone git@github.com:delvelabs/batea.git
+    cd batea
+    $SUDOH python3 setup.py sdist
+    $SUDOH pip3 install -r requirements.txt
+    $SUDOH pip3 install -e .
+else
+    cd /opt/batea
+    git pull
+fi
 
 # Downloading & installing nmap-bootstrap-xsl
-cd /opt/
-git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
+if [ ! -e /opt/nmap-bootstrap-xsl ]
+    cd /opt/
+    git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
+else
+    cd /opt/nmap-bootstrap-xsl
+    git pull
+fi
 
 # Downloading & installing SubDomainizer
-ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
-ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
+if [ ! -e /opt/Sherlock ]
+    ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
+    ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
+else
+    cd /opt/Sherlock
+    git pull
+fi
 
 # Done
 echo finished!
