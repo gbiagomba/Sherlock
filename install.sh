@@ -18,32 +18,32 @@ fi
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -H"
 
-if [ ! -x `which sublist3r` ]; then
+if [ -z `which sublist3r` ]; then
     apt install sublist3r -y
-elif [ ! -x `which theharvester` ]; then
+elif [ -z `which theharvester` ]; then
     apt install theharvester -y
-elif [ ! -x `which metagoofil` ]; then
+elif [ -z `which metagoofil` ]; then
     apt install metagoofil -y
-elif [ ! -x `which nikto` ]; then
+elif [ -z `which nikto` ]; then
     apt install nikto -y
-elif [ ! -x `which nmap` ]; then
+elif [ -z `which nmap` ]; then
     apt install nmap -y
-elif [ ! -x `which dnsrecon` ]; then
+elif [ -z `which dnsrecon` ]; then
     apt install dnsrecon -y
-elif [ ! -x `which python3` ] && [ ! -x `which python2` ]; then
+elif [ -z `which python3` ] && [ -z `which python2` ]; then
     apt install python3 python2 -y
-elif [ ! -x `which masscan` ]; then
+elif [ -z `which masscan` ]; then
     apt install masscan -y
-elif [ ! -x `which wapiti` ]; then
+elif [ -z `which wapiti` ]; then
     apt install wapiti -y
-elif [ ! -x `which testssl` ]; then
+elif [ -z `which testssl` ]; then
     apt install testssl -y
-elif [ ! -d /usr/share/seclists ] && [ ! -x `which seclists` ]; then
+elif [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
     apt install seclists -y
-elif [ ! -x `which msfconsole` ]; then
+elif [ -z `which msfconsole` ]; then
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
-elif [ ! -x `which docker` ]; then
+elif [ -z `which docker` ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -54,12 +54,12 @@ elif [ ! -x `which docker` ]; then
     # Update APT:
     apt-get update
     # Uninstall older docker
-    apt-get remove docker docker-engine docker.io -y
+    apt-get remove docker docker! -engine docker.io -y
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
-elif [ ! -x `which ssh_scan` ]; then
+elif [ -z `which ssh_scan` ]; then
     $SUDOH gem install ssh_scan
-elif [ ! -x `which node` ] && [ ! -x `which npm` ]; then
+elif [ -z `which node` ] && [ -z `which npm` ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
@@ -79,33 +79,33 @@ elif [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     #Testing our installation
     node –version
     npm -v
-elif [ ! -x `which amass` ]; then
+elif [ -z `which amass` ]; then
     apt install amass -y
-elif [ ! -x `which rg` ]; then
+elif [ -z `which rg` ]; then
     apt-get install ripgrep
-elif [ ! -x `which go` ]; then
+elif [ -z `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
     apt install golang-go -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
-elif [ ! -x `which httprobe` ]; then
+elif [ -z `which httprobe` ]; then
     $SUDOH go get -u -v github.com/tomnomnom/httprobe
-elif [ ! -x `which gospider` ]; then
+elif [ -z `which gospider` ]; then
     $SUDOH go get -u -v github.com/jaeles-project/gospider
-elif [ ! -x `which hakrawler` ]; then
+elif [ -z `which hakrawler` ]; then
     $SUDOH go get -u -v github.com/hakluke/hakrawler
-elif [ ! -x `which ffuf` ]; then
+elif [ -z `which ffuf` ]; then
     $SUDOH go get github.com/ffuf/ffuf
-elif [ ! -x `which massdns` ]; then
+elif [ -z `which massdns` ]; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
-elif [ ! -x `which shuffledns` ]; then
+elif [ -z `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
-elif [ ! -x `which aquatone` ]; then
+elif [ -z `which aquatone` ]; then
     $SUDOH go get -u -v github.com/michenriksen/aquatone
-elif [ ! -x `which gobuster` ]; then
+elif [ -z `which gobuster` ]; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
@@ -128,7 +128,7 @@ if [ ! -e /opt/ssh-audit ]; then
     git clone https://github.com/jtesta/ssh-audit
     cd /usr/bin/
     ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
-    if [ ! -x `which ssh-audit` ]; then
+    if [ -z `which ssh-audit` ]; then
         $SUDOH pip3 install ssh-audit
     fi
 else
@@ -170,11 +170,11 @@ fi
 # Downloading & installing batea
 if [ ! -e /opt/batea ]; then
     cd /opt/
-    git clone git@github.com:delvelabs/batea.git
-    cd batea
+    git clone https://github.com/delvelabs/batea
+    cd batea/
     $SUDOH python3 setup.py sdist
     $SUDOH pip3 install -r requirements.txt
-    $SUDOH pip3 install -e .
+    $SUDOH pip3 install ! -e .
 else
     cd /opt/batea
     git pull
