@@ -10,7 +10,9 @@ OS_CHK=$(cat /etc/os-release | grep -o debian)
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
-elif [ "$OS_CHK" != "debian" ]; then
+fi
+
+if [ "$OS_CHK" != "debian" ]; then
     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
     exit
 fi
@@ -20,30 +22,54 @@ SUDOH="sudo -H"
 
 if [ -z `which sublist3r` ]; then
     apt install sublist3r -y
-elif [ -z `which theharvester` ]; then
+fi
+
+if [ -z `which theharvester` ]; then
     apt install theharvester -y
-elif [ -z `which metagoofil` ]; then
+fi
+
+if [ -z `which metagoofil` ]; then
     apt install metagoofil -y
-elif [ -z `which nikto` ]; then
+fi
+
+if [ -z `which nikto` ]; then
     apt install nikto -y
-elif [ -z `which nmap` ]; then
+fi
+
+if [ -z `which nmap` ]; then
     apt install nmap -y
-elif [ -z `which dnsrecon` ]; then
+fi
+
+if [ -z `which dnsrecon` ]; then
     apt install dnsrecon -y
-elif [ -z `which python3` ] && [ -z `which python2` ]; then
+fi
+
+if [ -z `which python3` ] && [ -z `which python2` ]; then
     apt install python3 python2 -y
-elif [ -z `which masscan` ]; then
+fi
+
+if [ -z `which masscan` ]; then
     apt install masscan -y
-elif [ -z `which wapiti` ]; then
+fi
+
+if [ -z `which wapiti` ]; then
     apt install wapiti -y
-elif [ -z `which testssl` ]; then
+fi
+
+if [ -z `which testssl` ]; then
     apt install testssl -y
-elif [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
+fi
+
+if [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
     apt install seclists -y
-elif [ -z `which msfconsole` ]; then
+fi
+
+if [ -z `which msfconsole` ]; then
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
-elif [ -z `which docker` ]; then
+fi
+
+if [ -z `which docker` ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -57,9 +83,13 @@ elif [ -z `which docker` ]; then
     apt-get remove docker docker! -engine docker.io -y
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
-elif [ -z `which ssh_scan` ]; then
+fi
+
+if [ -z `which ssh_scan` ]; then
     $SUDOH gem install ssh_scan
-elif [ -z `which node` ] && [ -z `which npm` ]; then
+fi
+
+if [ -z `which node` ] && [ -z `which npm` ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
@@ -79,33 +109,55 @@ elif [ -z `which node` ] && [ -z `which npm` ]; then
     #Testing our installation
     node –version
     npm -v
-elif [ -z `which amass` ]; then
+fi
+
+if [ -z `which amass` ]; then
     apt install amass -y
-elif [ -z `which rg` ]; then
+fi
+
+if [ -z `which rg` ]; then
     apt-get install ripgrep
-elif [ -z `which go` ]; then
+fi
+
+if [ -z `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
     apt install golang-go -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
-elif [ -z `which httprobe` ]; then
+fi
+
+if [ -z `which httprobe` ]; then
     $SUDOH go get -u -v github.com/tomnomnom/httprobe
-elif [ -z `which gospider` ]; then
+fi
+
+if [ -z `which gospider` ]; then
     $SUDOH go get -u -v github.com/jaeles-project/gospider
-elif [ -z `which hakrawler` ]; then
+fi
+
+if [ -z `which hakrawler` ]; then
     $SUDOH go get -u -v github.com/hakluke/hakrawler
-elif [ -z `which ffuf` ]; then
+fi
+
+if [ -z `which ffuf` ]; then
     $SUDOH go get github.com/ffuf/ffuf
-elif [ -z `which massdns` ]; then
+fi
+
+if [ -z `which massdns` ]; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
-elif [ -z `which shuffledns` ]; then
+fi
+
+if [ -z `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
-elif [ -z `which aquatone` ]; then
+fi
+
+if [ -z `which aquatone` ]; then
     $SUDOH go get -u -v github.com/michenriksen/aquatone
-elif [ -z `which gobuster` ]; then
+fi
+
+if [ -z `which gobuster` ]; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
