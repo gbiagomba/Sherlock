@@ -20,16 +20,44 @@ fi
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -H"
 
+# Doing the basics
+apt update
+apt upgrade -y
+
+# Installing main dependencies
 if [ -z `which sublist3r` ]; then
     apt install sublist3r -y
+    if [ ! -e /opt/Sublist3r ]; then
+        cd /opt/
+        git clone https://github.com/aboul3la/Sublist3r
+        cd Sublist3r/
+        $SUDOH pip3 install -r requirements.txt
+        $SUDOH python3 setup.py install
+        ln -s /opt/Sublist3r/sublist3r.py /usr/bin//sublist3r
+    else
+        cd /opt/Sublist3r
+        git pull
+    fi
 fi
 
 if [ -z `which theharvester` ]; then
     apt install theharvester -y
+    $SUDOH pip3 install theHarvester
 fi
 
 if [ -z `which metagoofil` ]; then
     apt install metagoofil -y
+    if [ ! -e /opt/metagoofil ]; then
+        cd /opt/
+        git clone https://github.com/laramies/metagoofil
+        cd metagoofil/
+        $SUDOH pip3 install -r requirements.txt
+        $SUDOH python3 setup.py install
+        ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
+    else
+        cd /opt/Sublist3r
+        git pull
+    fi
 fi
 
 if [ -z `which nikto` ]; then
@@ -56,12 +84,17 @@ if [ -z `which wapiti` ]; then
     apt install wapiti -y
 fi
 
-if [ -z `which testssl` ]; then
+if [ -z `which testssl` ] || [ -z `which testssl.sh` ]; then
     apt install testssl -y
+    cd /usr/bin/
+    curl -s https://testssl.sh/testssl.sh
 fi
 
 if [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
     apt install seclists -y
+    if [ ! -e /usr/share/seclists/ ]; then
+        cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
+    fi
 fi
 
 if [ -z `which msfconsole` ]; then
@@ -111,10 +144,6 @@ if [ -z `which node` ] && [ -z `which npm` ]; then
     npm -v
 fi
 
-if [ -z `which amass` ]; then
-    apt install amass -y
-fi
-
 if [ -z `which rg` ]; then
     apt-get install ripgrep
 fi
@@ -125,6 +154,11 @@ if [ -z `which go` ]; then
     apt install golang-go -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
+fi
+
+if [ -z `which amass` ]; then
+    apt install amass -y
+    go get -v github.com/OWASP/Amass
 fi
 
 if [ -z `which httprobe` ]; then
