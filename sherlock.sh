@@ -56,6 +56,10 @@ mkdir -p $wrkpth/EyeWitness/  $wrkpth/Batea/
 # Loadfing in support scripts
 source gift_wrapper.sh
 
+# Starting services
+service postgresql start
+service docker start
+
 # Moving back to original workspace & loading logo
 cd $pth
 echo "
@@ -156,7 +160,7 @@ cat $wrktmp/IPtargetsv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq | tee $wrktmp/IPtargetsv6
-cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | sort | uniq | tee $wrktmp/tempFinal
+cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
@@ -272,7 +276,7 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using SSH Audit (10 of 20)"
 echo "--------------------------------------------------"
-SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" $NMAP_FILE | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssh | cut -d "/" -f 1 | sort | uniq)
+SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssh | cut -d "/" -f 1 | sort | uniq))
 if [ -s $wrkpth/Nmap/SSH ]; then
     nmap -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
     nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
@@ -292,7 +296,6 @@ if [ -s $wrkpth/Nmap/SSH ]; then
             done
         fi
     done
-    service postgresql start
 fi
 echo
 
@@ -331,7 +334,6 @@ echo
 echo "--------------------------------------------------"
 echo "Performing scan using Wappalyzer (13 of 20)"
 echo "--------------------------------------------------"
-service docker start
 for web in $(cat $wrktmp/FinalTargets); do
     echo Scanning $web
     echo "--------------------------------------------------"
