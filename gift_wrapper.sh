@@ -15,7 +15,7 @@ function gift_wrap()
     echo "Gift wrapping everything and putting a bowtie on it!"
     echo "--------------------------------------------------"
     # Generating HTML, CSV and XLSX reports
-    for i in `ls $wrkpth/Nmap/ | grep xml`; then
+    for i in `ls $wrkpth/Nmap/ | grep xml`; do
         xsltproc -o `echo $i | tr -d 'xml'`html $i /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
         python /opt/nmaptocsv/nmaptocsv.py -x $i -S -d "," -n -o `echo $i | tr -d 'xml'`csv
     done

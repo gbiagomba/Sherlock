@@ -74,7 +74,9 @@ if [ -z $targets ]; then
     echo "What is the name of the targets file? The file with all the IP addresses or sites"
     read targets
     echo
-elif [ ! -e $targets ]; then
+fi
+
+if [ ! -e $targets ]; then
     echo "File not found! Try again!"
     exit
 fi
@@ -162,10 +164,14 @@ echo "--------------------------------------------------"
 nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -z `$wrktmp/tempFinal | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6
-elif [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ]; then
+fi
+
+if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweep.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
     cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponse
-elif [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweepv6.gnmap ]; then
+fi
+
+if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweepv6.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweepv6.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/livev6
     cat $wrkpth/Nmap/livev6 | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6
 fi
@@ -211,7 +217,9 @@ echo "Full TCP SYN & UDP scan on live targets"
 nmap -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nmap -6 -A -Pn -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan --script-args "userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
-elif [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
+fi
+
+if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
         cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
@@ -356,7 +364,9 @@ for web in $(cat $wrktmp/FinalTargets); do
             echo "--------------------------------------------------"
             python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
             echo "--------------------------------------------------"
-        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+        fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output.txt
@@ -409,7 +419,9 @@ for web in $(cat $wrktmp/FinalTargets); do
             echo Scanning $web:$PORTNUM
             gospider -s "http://$web:$PORTNUM" -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a | tee -a $wrkpth/PathEnum/$prj_name-$web-$PORTNUM-gospider_output.log
             hakrawler --url $web:$PORTNUM -js -linkfinder -robots -subs -urls -usewayback -insecure -outdir $wrkpth/PathEnum/Hakcrawler | tee -a $wrkpth/PathEnum/$prj_name-$web-$PORTNUM-hakrawler_output.log
-        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+        fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             gospider -s "https://$web:$PORTNUM" -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a | tee -a $wrkpth/PathEnum/$prj_name-$web-$PORTNUM-gospider_output.log
             hakrawler --url $web:$PORTNUM -js -linkfinder -robots -subs -urls -usewayback -insecure -outdir $wrkpth/PathEnum/Hakcrawler | tee -a $wrkpth/PathEnum/$prj_name-$web-$PORTNUM-hakrawler_output.log
@@ -458,7 +470,9 @@ for web in $(cat $wrktmp/FinalTargets); do
             echo "--------------------------------------------------"
             timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output.txt
             timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-         elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+         fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
             timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output.txt
