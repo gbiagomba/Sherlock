@@ -93,7 +93,7 @@ fi
 # exec >|$PWD/$prj_name-term_output.log 2>&1
 
 # Parsing the target file
-cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" > $wrktmp/WebTargets
+cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" > $wrktmp/WebTargets
 cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
 cat $pth/$targets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
@@ -107,12 +107,14 @@ echo "Performing Subdomain enum (1 of 20)"
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
 # gobuster -m dns -cn -e -i -r -t 25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-gobuster_dns_output-$web.txt" -u example.com
-for web in $(cat $wrktmp/WebTargets); do
-	sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt"
-    amass enum -brute -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt"
-    gobuster dns -i -t 25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.txt" -d $web
-    shuffledns -d cars.com -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
-done
+if [ ! -z `cat $wrktmp/WebTargets` ]; then
+    for web in $(cat $wrktmp/WebTargets); do
+        sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt"
+        amass enum -brute -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt"
+        gobuster dns -i -t 25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.txt" -d $web
+        shuffledns -d cars.com -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -o "$wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
+    done
+fi
 echo
 
 # Checking subdomains against subdomainizer
