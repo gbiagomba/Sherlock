@@ -189,6 +189,7 @@ fi
 
 if [ -z `which aquatone` ]; then
     $SUDOH go get -u -v github.com/michenriksen/aquatone
+    apt install -y chromium
 fi
 
 if [ -z `which gobuster` ]; then
@@ -283,6 +284,17 @@ else
     cd /opt/Sherlock
     git pull
 fi
+
+# Downloading & installing Arjun
+if [ ! -e /opt/Sherlock ]; then
+    cd /opt/
+    git clone https://github.com/s0md3v/Arjun
+    cd Arjun
+else
+    cd /opt/Sherlock
+    git pull
+fi
+
 
 # Done
 echo finished!
