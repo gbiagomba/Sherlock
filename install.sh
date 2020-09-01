@@ -24,85 +24,34 @@ SUDOH="sudo -H"
 apt update
 apt upgrade -y
 
-# Installing main dependencies
-if [ -z `which sublist3r` ]; then
-    apt install sublist3r -y
-    if [ ! -e /opt/Sublist3r ]; then
-        cd /opt/
-        git clone https://github.com/aboul3la/Sublist3r
-        cd Sublist3r/
-        $SUDOH pip3 install -r requirements.txt
-        $SUDOH python3 setup.py install
-        ln -s /opt/Sublist3r/sublist3r.py /usr/bin//sublist3r
-    else
-        cd /opt/Sublist3r
-        git pull
+# Installing main system dependencies
+for i in amass chromium dnsrecon golang go masscan metagoofil nikto nmap python2 python3 ripgrep seclists sublist3r testssl theharvester wapiti; do
+    if [ ! -x $i ] || [ -z `which $i` ]; then
+        apt install -y $i
     fi
-fi
+done
 
-if [ -z `which theharvester` ]; then
-    apt install theharvester -y
-    $SUDOH pip3 install theHarvester
-fi
+# Installing python dependencies
+$SUDOH pip3 install theHarvester ssh-audit
 
-if [ -z `which metagoofil` ]; then
-    apt install metagoofil -y
-    if [ ! -e /opt/metagoofil ]; then
-        cd /opt/
-        git clone https://github.com/laramies/metagoofil
-        cd metagoofil/
-        $SUDOH pip3 install -r requirements.txt
-        $SUDOH python3 setup.py install
-        ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
-    else
-        cd /opt/Sublist3r
-        git pull
-    fi
-fi
-
-if [ -z `which nikto` ]; then
-    apt install nikto -y
-fi
-
-if [ -z `which nmap` ]; then
-    apt install nmap -y
-fi
-
-if [ -z `which dnsrecon` ]; then
-    apt install dnsrecon -y
-fi
-
-if [ -z `which python3` ] && [ -z `which python2` ]; then
-    apt install python3 python2 -y
-fi
-
-if [ -z `which masscan` ]; then
-    apt install masscan -y
-fi
-
-if [ -z `which wapiti` ]; then
-    apt install wapiti -y
-fi
-
-if [ -z `which testssl` ] || [ -z `which testssl.sh` ]; then
-    apt install testssl -y
+# Installing remaining dependencies
+if [ ! -x `which testssl` ] || [ ! -x `which testssl.sh` ]; then
     cd /usr/bin/
     curl -s https://testssl.sh/testssl.sh
+    mv testssl.sh testssl
+    chmod +x testssl
 fi
 
-if [ ! -d /usr/share/seclists ] && [ -z `which seclists` ]; then
-    apt install seclists -y
-    if [ ! -e /usr/share/seclists/ ]; then
-        cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
-    fi
+if [ ! -e /usr/share/seclists/ ]; then
+    cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
 fi
 
-if [ -z `which msfconsole` ]; then
+if [ ! -x `which msfconsole` ]; then
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
 fi
 
-if [ -z `which docker` ]; then
+if [ ! -x `which docker` ]; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -113,16 +62,16 @@ if [ -z `which docker` ]; then
     # Update APT:
     apt-get update
     # Uninstall older docker
-    apt-get remove docker docker! -engine docker.io -y
+    apt-get remove  docker docker-engine docker.io containerd runc -y
     # Install Docker:
     apt-get install docker-ce docker-ce-cli containerd.io -y
 fi
 
-if [ -z `which ssh_scan` ]; then
+if [ ! -x `which ssh_scan` ]; then
     $SUDOH gem install ssh_scan
 fi
 
-if [ -z `which node` ] && [ -z `which npm` ]; then
+if [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
@@ -144,55 +93,49 @@ if [ -z `which node` ] && [ -z `which npm` ]; then
     npm -v
 fi
 
-if [ -z `which rg` ]; then
-    apt-get install ripgrep
-fi
-
-if [ -z `which go` ]; then
+if [ ! -x `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
-    apt install golang-go -y
+    apt install golang -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
 fi
 
-if [ -z `which amass` ]; then
-    apt install amass -y
-    go get -v github.com/OWASP/Amass
+if [ ! -x `which amass` ]; then
+    $SUDOH go get -v github.com/OWASP/Amass
 fi
 
-if [ -z `which httprobe` ]; then
+if [ ! -x `which httprobe` ]; then
     $SUDOH go get -u -v github.com/tomnomnom/httprobe
 fi
 
-if [ -z `which gospider` ]; then
+if [ ! -x `which gospider` ]; then
     $SUDOH go get -u -v github.com/jaeles-project/gospider
 fi
 
-if [ -z `which hakrawler` ]; then
+if [ ! -x `which hakrawler` ]; then
     $SUDOH go get -u -v github.com/hakluke/hakrawler
 fi
 
-if [ -z `which ffuf` ]; then
+if [ ! -x `which ffuf` ]; then
     $SUDOH go get github.com/ffuf/ffuf
 fi
 
-if [ -z `which massdns` ]; then
+if [ ! -x `which massdns` ]; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
 fi
 
-if [ -z `which shuffledns` ]; then
+if [ ! -x `which shuffledns` ]; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
-if [ -z `which aquatone` ]; then
+if [ ! -x `which aquatone` ]; then
     $SUDOH go get -u -v github.com/michenriksen/aquatone
-    apt install -y chromium
 fi
 
-if [ -z `which gobuster` ]; then
+if [ ! -x `which gobuster` ]; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
@@ -215,9 +158,6 @@ if [ ! -e /opt/ssh-audit ]; then
     git clone https://github.com/jtesta/ssh-audit
     cd /usr/bin/
     ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
-    if [ -z `which ssh-audit` ]; then
-        $SUDOH pip3 install ssh-audit
-    fi
 else
     cd /opt/ssh-audit
     git pull
@@ -289,12 +229,36 @@ fi
 if [ ! -e /opt/Sherlock ]; then
     cd /opt/
     git clone https://github.com/s0md3v/Arjun
-    cd Arjun
 else
-    cd /opt/Sherlock
+    cd /opt/Arjun
     git pull
 fi
 
+# Installing main dependencies
+if [ ! -e /opt/Sublist3r ]; then
+    cd /opt/
+    git clone https://github.com/aboul3la/Sublist3r
+    cd Sublist3r/
+    $SUDOH pip3 install -r requirements.txt
+    $SUDOH python3 setup.py install
+    ln -s /opt/Sublist3r/sublist3r.py /usr/bin//sublist3r
+else
+    cd /opt/Sublist3r
+    git pull
+fi
+
+# Downloading and installing metagofil
+if [ ! -e /opt/metagoofil ]; then
+    cd /opt/
+    git clone https://github.com/laramies/metagoofil
+    cd metagoofil/
+    $SUDOH pip3 install -r requirements.txt
+    $SUDOH python3 setup.py install
+    ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
+else
+    cd /opt/metagoofil
+    git pull
+fi
 
 # Done
 echo finished!
