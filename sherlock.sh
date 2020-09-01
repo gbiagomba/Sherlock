@@ -34,11 +34,6 @@ diskSize=$(df | grep /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
 targets=$1
 wrktmp=$(mktemp -d)
 
-# enabling Logging
-exec 3>&1 4>&2
-trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1>$PWD/Sherlock-$TodaysDAY-$TodaysYEAR.log 2>&1
-
 # timestamp function for future use
 function timestamp ()
 {
