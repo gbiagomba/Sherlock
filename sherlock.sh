@@ -237,9 +237,9 @@ echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args$NMAP_SCRIPTARG-iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args=$NMAP_SCRIPTARG -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args$NMAP_SCRIPTARG-iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
+    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args=$NMAP_SCRIPTARG -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
@@ -298,8 +298,8 @@ timestamp
 echo "--------------------------------------------------"
 SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssh | cut -d "/" -f 1 | sort | uniq))
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args$NMAP_SCRIPTARG-iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args$NMAP_SCRIPTARG-iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
+    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
+    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
     for IP in $(cat $wrkpth/Nmap/SSH); do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open/tcp//ssh" -m 1 -o | grep "ssh" -o) # Check to see if the port is open & is a web service
@@ -421,7 +421,7 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 if [ -s $wrkpth/Nmap/SSL ]; then
-    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args$NMAP_SCRIPTARG-iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
+    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
 fi
 echo
 
