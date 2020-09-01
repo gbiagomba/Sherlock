@@ -13,6 +13,7 @@ function gift_wrap()
     # Cleaning empty files and zipping up all content
     echo "--------------------------------------------------"
     echo "Gift wrapping everything and putting a bowtie on it!"
+    timestamp
     echo "--------------------------------------------------"
     # Generating HTML, CSV and XLSX reports
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
@@ -30,7 +31,7 @@ function gift_wrap()
     rm -rf $wrktmp/
 
     # Uninitializing variables
-    for var in API_AK API_SK HTTPPort IP NEW PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp; do
+    for var in API_AK API_SK HTTPPort IP NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
         unset $var
     done
     unset var
