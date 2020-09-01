@@ -96,7 +96,7 @@ if [ ! -e $targets ]; then
 fi
 
 echo "What is the name of the project?"
-read -p prj_name
+read prj_name
 echo
 
 if [ -z $prj_name ]; then
