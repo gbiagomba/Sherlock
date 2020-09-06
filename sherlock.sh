@@ -86,7 +86,7 @@ echo
 # Requesting target file name or checking the target file exists & requesting the project name
 if [ -z $targets ]; then
     echo "What is the name of the targets file? The file with all the IP addresses or sites"
-    read -p targets
+    read targets
     echo
 fi
 
@@ -237,9 +237,9 @@ echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args=$NMAP_SCRIPTARG -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script=$NMAP_SCRIPTS --script-args=$NMAP_SCRIPTARG -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
+    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
