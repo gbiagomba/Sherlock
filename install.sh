@@ -96,7 +96,7 @@ fi
 if [ ! -x `which go` ]; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
-    apt install golang -y
+    apt install golang golang-go -y
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
 fi
