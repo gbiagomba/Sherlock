@@ -26,7 +26,7 @@ apt upgrade -y
 
 # Installing main system dependencies
 for i in amass chromium dnsrecon golang go masscan metagoofil nikto nmap python2 python3 ripgrep seclists sublist3r testssl theharvester wapiti; do
-    if [ ! -x $i ] || [ -z `which $i` ]; then
+    if ! hash $i; then
         apt install -y $i
     fi
 done
@@ -35,7 +35,7 @@ done
 $SUDOH pip3 install theHarvester ssh-audit
 
 # Installing remaining dependencies
-if [ ! -x `which testssl` ] || [ ! -x `which testssl.sh` ]; then
+if ! hash testssl || ! hash testssl.sh; then
     cd /usr/bin/
     curl -s https://testssl.sh/testssl.sh
     mv testssl.sh testssl
@@ -46,12 +46,12 @@ if [ ! -e /usr/share/seclists/ ]; then
     cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
 fi
 
-if [ ! -x `which msfconsole` ]; then
+if ! hash msfconsole; then
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
 fi
 
-if [ ! -x `which docker` ]; then
+if ! hash docker; then
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -67,11 +67,11 @@ if [ ! -x `which docker` ]; then
     apt-get install docker-ce docker-ce-cli containerd.io -y
 fi
 
-if [ ! -x `which ssh_scan` ]; then
+if ! hash ssh_scan; then
     $SUDOH gem install ssh_scan
 fi
 
-if [ ! -x `which node` ] && [ ! -x `which npm` ]; then
+if ! hash node && ! hash npm; then
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
@@ -93,7 +93,7 @@ if [ ! -x `which node` ] && [ ! -x `which npm` ]; then
     npm -v
 fi
 
-if [ ! -x `which go` ]; then
+if ! hash go; then
     add-apt-repository ppa:longsleep/golang-backports
     apt update
     apt install golang golang-go -y
@@ -101,41 +101,41 @@ if [ ! -x `which go` ]; then
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
 fi
 
-if [ ! -x `which amass` ]; then
+if ! hash amass; then
     $SUDOH go get -v github.com/OWASP/Amass
 fi
 
-if [ ! -x `which httprobe` ]; then
+if ! hash httprobe; then
     $SUDOH go get -u -v github.com/tomnomnom/httprobe
 fi
 
-if [ ! -x `which gospider` ]; then
+if ! hash gospider; then
     $SUDOH go get -u -v github.com/jaeles-project/gospider
 fi
 
-if [ ! -x `which hakrawler` ]; then
+if ! hash hakrawler; then
     $SUDOH go get -u -v github.com/hakluke/hakrawler
 fi
 
-if [ ! -x `which ffuf` ]; then
+if ! hash ffuf; then
     $SUDOH go get github.com/ffuf/ffuf
 fi
 
-if [ ! -x `which massdns` ]; then
+if ! hash massdns; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
 fi
 
-if [ ! -x `which shuffledns` ]; then
+if ! hash shuffledns; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
-if [ ! -x `which aquatone` ]; then
+if ! hash aquatone; then
     $SUDOH go get -u -v github.com/michenriksen/aquatone
 fi
 
-if [ ! -x `which gobuster` ]; then
+if ! hash gobuster; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
@@ -226,7 +226,7 @@ else
 fi
 
 # Downloading & installing Arjun
-if [ ! -e /opt/Sherlock ]; then
+if [ ! -e /opt/Arjun ]; then
     cd /opt/
     git clone https://github.com/s0md3v/Arjun
 else
@@ -257,6 +257,17 @@ if [ ! -e /opt/metagoofil ]; then
     ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
 else
     cd /opt/metagoofil
+    git pull
+fi
+
+# Downloading and installing metagofil
+if [ ! -e /opt/vulscan ]; then
+    cd /opt/
+    git clone https://github.com/scipag/vulscan
+    cd vulscan/
+    ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan 
+else
+    cd /opt/vulscan
     git pull
 fi
 

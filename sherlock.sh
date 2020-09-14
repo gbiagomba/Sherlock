@@ -25,8 +25,8 @@ TodaysYEAR=$(date +%Y)
 wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 API_AK="" #Tenable Access Key
 API_SK="" #Tenable Secret Key
-NMAP_SCRIPTARG="userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
-NMAP_SCRIPTS="rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan"
+NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
+NMAP_SCRIPTS="rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan/vulscan.nse"
 OS_CHK=$(cat /etc/os-release | grep -o debian)
 WORDLIST="/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
 diskMax=95
@@ -70,6 +70,7 @@ source gift_wrapper.sh
 service postgresql start
 service docker start
 
+{
 # Moving back to original workspace & loading logo
 cd $pth
 echo "
@@ -117,7 +118,7 @@ echo
 
 # Using sublist3r 
 echo "--------------------------------------------------"
-echo "Performing Subdomain enum (1 of 21)"
+echo "Performing Subdomain enum (1 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
@@ -150,7 +151,7 @@ cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 
 # Using halberd
 echo "--------------------------------------------------"
-echo "Performing scan using Halberd (2 of 21)"
+echo "Performing scan using Halberd (2 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/WebTargets); do
@@ -163,7 +164,7 @@ echo
 
 echo
 echo "--------------------------------------------------"
-echo "Some house cleaning (3 of 21)"
+echo "Some house cleaning (3 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # Some house cleaning
@@ -178,7 +179,7 @@ cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTarget
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
 echo "--------------------------------------------------"
-echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 21)"
+echo "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 22)"
 timestamp
 echo "--------------------------------------------------"
 nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
@@ -199,7 +200,7 @@ echo
 
 # Combining targets
 echo "--------------------------------------------------"
-echo "Merging all targets files (5 of 21)"
+echo "Merging all targets files (5 of 22)"
 timestamp
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
@@ -220,7 +221,7 @@ echo
 # Consider switcing to unicornscan
 # unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Masscan (6 of 21)"
+echo "Performing portknocking scan using Masscan (6 of 22)"
 timestamp
 echo "--------------------------------------------------"
 masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
@@ -231,19 +232,19 @@ echo
 
 # Using Nmap
 echo "--------------------------------------------------"
-echo "Performing portknocking scan using Nmap (7 of 21)"
+echo "Performing portknocking scan using Nmap (7 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
+    nmap --min-rate 300 -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
-    for i in smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
+    for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
         cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
     done
@@ -256,10 +257,23 @@ else
 fi
 echo
 
+# Checking all the services discovery by nmap
+for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
+    echo "--------------------------------------------------"
+    echo "Performing targeted scan of $i (8 of 22)"
+    timestamp
+    echo "--------------------------------------------------"
+    PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i $i | cut -d "/" -f 1 | sort | uniq))
+    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    nmap -6 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
+    unset PORTNUM
+done
+echo
+
 # Using testssl & sslcan
 # switch back to for loop, testssl doesnt properly parse gnmap
 echo "--------------------------------------------------"
-echo "Performing scan using testssl (8 of 21)"
+echo "Performing scan using testssl (9 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # SSLCHECK=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap) # Revisit this line, there may be a logic err here
@@ -275,12 +289,10 @@ echo
 # Using DNS Recon
 # Will revise this later to account for other ports one might use for dns
 echo "--------------------------------------------------"
-echo "Performing scan using DNS Scan (9 of 21)"
+echo "Performing scan using DNS Scan (10 of 22)"
 timestamp
 echo "--------------------------------------------------"
 if [ -s $wrkpth/Nmap/DOMAIN ]; then
-    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dns -iL $wrkpth/Nmap/DOMAIN
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 -p domain --open --script=*dns* -oA $wrkpth/Nmap/$prj_name-nmap_dnsv6 -iL $wrkpth/Nmap/DOMAIN
     for IP in $(cat $wrkpth/Nmap/DOMAIN); do
         echo Scanning $IP
         echo "--------------------------------------------------"
@@ -293,13 +305,11 @@ echo
 
 # Using SSH Audit
 echo "--------------------------------------------------"
-echo "Performing scan using SSH Audit (10 of 21)"
+echo "Performing scan using SSH Audit (11 of 22)"
 timestamp
 echo "--------------------------------------------------"
-SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssh | cut -d "/" -f 1 | sort | uniq))
+SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i ssh | cut -d "/" -f 1 | sort | uniq))
 if [ -s $wrkpth/Nmap/SSH ]; then
-    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_ssh
-    nmap -6 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${SSHPort[*]} | sed 's/ /,/g')" --open --script=ssh* --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/SSH -oA $wrkpth/Nmap/$prj_name-nmap_sshv6
     for IP in $(cat $wrkpth/Nmap/SSH); do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $IP | grep "$PORTNUM/open/tcp//ssh" -m 1 -o | grep "ssh" -o) # Check to see if the port is open & is a web service
@@ -321,7 +331,7 @@ echo
 
 # Using batea
 echo "--------------------------------------------------"
-echo "Ranking nmap output using batea (11 of 21)"
+echo "Ranking nmap output using batea (12 of 22)"
 timestamp
 echo "--------------------------------------------------"
 batea -v $wrkpth/Nmap/*.xml | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
@@ -332,8 +342,8 @@ echo
 # echo "Combining ports
 # echo "--------------------------------------------------"
 # Merging HTTP and SSL ports
-HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up"  | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw http | cut -d "/" -f 1 | sort | uniq))
-SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | egrep -v "^#|Status: Up" | cut -d' ' -f4- | sed -n -e 's/Ignored.*//p' | tr ',' '\n' | sed -e 's/^[ \t]*//' | sort -n | uniq -c | sort -k 1 -r | head -n 10 | cut -d " " -f 7 | grep -iw ssl | cut -d "/" -f 1 | sort | uniq))
+HTTPPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i http | cut -d "/" -f 1 | sort | uniq))
+SSLPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i ssl | cut -d "/" -f 1 | sort | uniq))
 if [ -z ${#HTTPPort[@]} ] && [ -z ${#SSLPort[@]} ]; then
     echo "There are no open web or ssl ports, exiting now"
     gift_wrap
@@ -345,7 +355,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 
 # Using Eyewitness to take screenshots
 echo "--------------------------------------------------"
-echo "Performing scan using EyeWitness (12 of 21)"
+echo "Performing scan using EyeWitness (13 of 22)"
 timestamp
 echo "--------------------------------------------------"
 eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
@@ -354,7 +364,7 @@ echo
 
 # Using Wappalyzer
 echo "--------------------------------------------------"
-echo "Performing scan using Wappalyzer (13 of 21)"
+echo "Performing scan using Wappalyzer (14 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
@@ -368,7 +378,7 @@ echo
 
 # Using Tenable
 echo "--------------------------------------------------"
-echo "Performing scan using Tenable (14 of 21)"
+echo "Performing scan using Tenable (15 of 22)"
 timestamp
 echo "--------------------------------------------------"
 echo "Code to be added later"
@@ -378,7 +388,7 @@ echo
 
 # Using XSStrike
 echo "--------------------------------------------------"
-echo "Performing scan using XSStrike (15 of 21)"
+echo "Performing scan using XSStrike (16 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
@@ -406,14 +416,14 @@ done
 echo
 
 echo "--------------------------------------------------"
-echo "Performing scan using aquatone (16 of 21)"
+echo "Performing scan using aquatone (17 of 22)"
 timestamp
 echo "--------------------------------------------------"
 cat $wrkpth/Nmap/$prj_name-nmap_portknock.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
 
 # Testing HTTP pages further
 echo "--------------------------------------------------"
-echo "Performing scan using HTTP Audit (17 of 21)"
+echo "Performing scan using HTTP Audit (18 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
@@ -421,13 +431,13 @@ echo "--------------------------------------------------"
 # nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
 # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
 if [ -s $wrkpth/Nmap/SSL ]; then
-    nmap -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
+    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
 fi
 echo
 
 # Using nikto
 echo "--------------------------------------------------"
-echo "Performing scan using Nikto (18 of 21)"
+echo "Performing scan using Nikto (19 of 22)"
 timestamp
 echo "--------------------------------------------------"
 # for web in $(cat $wrktmp/FinalTargets); do
@@ -438,7 +448,7 @@ echo
 
 # Using gospider
 echo "--------------------------------------------------"
-echo "Performinging path traversal enumeration (19 of 21)"
+echo "Performinging path traversal enumeration (20 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
@@ -465,7 +475,7 @@ echo
 
 # Using Wapiti, arjun and ffuf
 echo "--------------------------------------------------"
-echo "Performing scan using Wapiti (20  of 21)"
+echo "Performing scan using Wapiti (21 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
@@ -490,7 +500,7 @@ echo
 
 # Using theharvester & metagoofil
 echo "--------------------------------------------------"
-echo "Performing scan using Theharvester and Metagoofil (21 of 21)"
+echo "Performing scan using Theharvester and Metagoofil (22 of 22)"
 timestamp
 echo "--------------------------------------------------"
 for web in $(cat $wrktmp/FinalTargets); do
@@ -527,3 +537,4 @@ echo
 
 # WRapping up assessment
 gift_wrap
+} | tee -a $wrkpth-`timestamp`-sherlock.log
