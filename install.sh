@@ -2,6 +2,9 @@
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
 #                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 #                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists, metasploit
+set -eux
+trap "echo Booh!" SIGINT SIGTERM
+
 
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
