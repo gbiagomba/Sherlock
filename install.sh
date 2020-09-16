@@ -23,6 +23,14 @@ fi
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -H"
 
+# Function banner
+function banner
+{
+    echo "--------------------------------------------------"
+    echo "Installing $1"
+    echo "--------------------------------------------------"
+}
+
 # Doing the basics
 apt update
 apt upgrade -y
@@ -30,33 +38,36 @@ apt upgrade -y
 # Installing main system dependencies
 for i in amass chromium dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r testssl.sh theharvester wapiti; do
     if ! hash $i; then
-        echo "--------------------------------------------------"
-        echo "Installing $i"
-        echo "--------------------------------------------------"
+        banner $i
         apt install -y $i
     fi
 done
 
 # Installing python dependencies
+banner "theHarvester & ssh-audit"
 $SUDOH pip3 install theHarvester ssh-audit
 
 # Installing remaining dependencies
 if ! hash testssl || ! hash testssl.sh; then
+    banner "testssl.sh"
     cd /usr/bin/
     curl -s -o testssl https://testssl.sh/testssl.sh
     chmod +x testssl
 fi
 
 if [ ! -e /usr/share/seclists/ ]; then
+    banner seclists
     cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
 fi
 
 if ! hash msfconsole; then
+    banner msfconsole
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
 fi
 
 if ! hash docker; then
+    banner docker
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
     # https://docs.docker.com/install/linux/docker-ce/debian/
@@ -73,10 +84,12 @@ if ! hash docker; then
 fi
 
 if ! hash ssh_scan; then
+    banner ssh_scan
     $SUDOH gem install ssh_scan
 fi
 
 if ! hash node && ! hash npm; then
+    banner "node & npm"
     # Based on the article https://relutiondev.wordpress.com/2016/01/09/installing-nodejs-and-npm-kaliubuntu/
     # Make our directory to keep it all in
     src=$(mktemp -d) && cd $src
@@ -99,6 +112,7 @@ if ! hash node && ! hash npm; then
 fi
 
 if ! hash go; then
+    banner golang
     add-apt-repository ppa:longsleep/golang-backports
     apt update
     apt install golang golang-go -y
@@ -107,45 +121,55 @@ if ! hash go; then
 fi
 
 if ! hash amass; then
+    banner amass
     $SUDOH go get -v github.com/OWASP/Amass
 fi
 
 if ! hash httprobe; then
+    banner httprobe
     $SUDOH go get -u -v github.com/tomnomnom/httprobe
 fi
 
 if ! hash gospider; then
+    banner gospider
     $SUDOH go get -u -v github.com/jaeles-project/gospider
 fi
 
 if ! hash hakrawler; then
+    banner hakrawler
     $SUDOH go get -u -v github.com/hakluke/hakrawler
 fi
 
 if ! hash ffuf; then
+    banner ffuf
     $SUDOH go get github.com/ffuf/ffuf
 fi
 
 if ! hash massdns; then
+    banner massdns
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
 fi
 
 if ! hash shuffledns; then
+    banner shuffledns
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
 if ! hash aquatone; then
+    banner aquatone
     $SUDOH go get -u -v github.com/michenriksen/aquatone
 fi
 
 if ! hash gobuster; then
+    banner gobuster
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
 # Downloading the XSStrike dependency
 if [ ! -e /opt/XSStrike ]; then
+    banner XSStrike
     cd /opt/
     git clone https://github.com/s0md3v/XSStrike
     cd XSStrike/
@@ -158,7 +182,8 @@ else
 fi
 
 # Downloading the ssh-audit
-if [ ! -e /opt/ssh-audit ]; then
+if ! hash /usr/bin/ssh-audit; then
+    banner ssh-audit
     cd /opt/
     git clone https://github.com/jtesta/ssh-audit
     cd /usr/bin/
@@ -169,6 +194,7 @@ else
 fi
 # Downloading the Vulners Nmap Script
 if [ ! -e /opt/nmap-vulners ]; then
+    banner "nmap script vulners"
     cd /opt/
     git clone https://github.com/vulnersCom/nmap-vulners
     cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
@@ -179,6 +205,7 @@ fi
 
 # Downloading & installing nmap-converter
 if [ ! -e /opt/nmap-converter ]; then
+    banner msfconsole
     cd /opt/
     git clone https://github.com/mrschyte/nmap-converter
     cd nmap-converter
@@ -190,6 +217,7 @@ fi
 
 # Downloading & installing SubDomainizer
 if [ ! -e /opt/SubDomainizer ]; then
+    banner SubDomainizer
     cd /opt/
     git clone https://github.com/nsonaniya2010/SubDomainizer.git
     cd SubDomainizer
@@ -201,6 +229,7 @@ fi
 
 # Downloading & installing batea
 if [ ! -e /opt/batea ]; then
+    banner batea
     cd /opt/
     git clone https://github.com/delvelabs/batea
     cd batea/
@@ -214,6 +243,7 @@ fi
 
 # Downloading & installing nmap-bootstrap-xsl
 if [ ! -e /opt/nmap-bootstrap-xsl ]; then
+    banner "nmap HTML report template"
     cd /opt/
     git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
 else
@@ -223,6 +253,7 @@ fi
 
 # Downloading & installing SubDomainizer
 if [ ! -e /opt/Sherlock ]; then
+    banner sherlock
     ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
     ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
 else
@@ -232,6 +263,7 @@ fi
 
 # Downloading & installing Arjun
 if [ ! -e /opt/Arjun ]; then
+    banner Arjun
     cd /opt/
     git clone https://github.com/s0md3v/Arjun
 else
@@ -241,6 +273,7 @@ fi
 
 # Installing main dependencies
 if [ ! -e /opt/Sublist3r ]; then
+    banner Sublist3r
     cd /opt/
     git clone https://github.com/aboul3la/Sublist3r
     cd Sublist3r/
@@ -254,6 +287,7 @@ fi
 
 # Downloading and installing metagofil
 if [ ! -e /opt/metagoofil ]; then
+    banner metagofil
     cd /opt/
     git clone https://github.com/laramies/metagoofil
     cd metagoofil/
@@ -267,6 +301,7 @@ fi
 
 # Downloading and installing metagofil
 if [ ! -e /opt/vulscan ]; then
+    banner vulscan
     cd /opt/
     git clone https://github.com/scipag/vulscan
     cd vulscan/
