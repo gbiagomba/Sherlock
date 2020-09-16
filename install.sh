@@ -2,7 +2,7 @@
 # Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
 #                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 #                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists, metasploit
-# set -eux
+set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
 
@@ -43,8 +43,7 @@ $SUDOH pip3 install theHarvester ssh-audit
 # Installing remaining dependencies
 if ! hash testssl || ! hash testssl.sh; then
     cd /usr/bin/
-    curl -s https://testssl.sh/testssl.sh
-    mv testssl.sh testssl
+    curl -s -o testssl https://testssl.sh/testssl.sh
     chmod +x testssl
 fi
 
