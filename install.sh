@@ -143,7 +143,12 @@ fi
 
 if ! hash ffuf; then
     banner ffuf
-    $SUDOH go get github.com/ffuf/ffuf
+    $SUDOH go get -u -v github.com/ffuf/ffuf
+fi
+
+if ! hash shuffledns; then
+    banner shuffledns
+    $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
 if ! hash massdns; then
@@ -151,11 +156,6 @@ if ! hash massdns; then
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
-fi
-
-if ! hash shuffledns; then
-    banner shuffledns
-    $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
 if ! hash aquatone; then
