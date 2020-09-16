@@ -116,7 +116,7 @@ if ! hash go; then
     banner golang
     add-apt-repository ppa:longsleep/golang-backports
     apt update
-    apt install golang golang-go -y
+    apt install  -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
 fi
