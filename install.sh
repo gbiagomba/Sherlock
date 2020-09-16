@@ -31,12 +31,13 @@ function banner
     echo "--------------------------------------------------"
 }
 
+{
 # Doing the basics
 apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in amass chromium dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r testssl.sh theharvester wapiti; do
+for i in amass chromium dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
     if ! hash $i; then
         banner $i
         apt install -y $i
@@ -313,3 +314,4 @@ fi
 
 # Done
 echo finished!
+} 2> /dev/null | tee -a /opt/sherlock_install.log

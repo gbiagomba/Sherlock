@@ -421,19 +421,19 @@ timestamp
 echo "--------------------------------------------------"
 cat $wrkpth/Nmap/$prj_name-nmap_portknock.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
 
-# Testing HTTP pages further
-echo "--------------------------------------------------"
-echo "Performing scan using HTTP Audit (18 of 22)"
-timestamp
-echo "--------------------------------------------------"
-# nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
-# nmap http scripts: http-method-tamper,http-mobileversion-checker,http-ntlm-info,http-open-redirect,http-passwd,http-referer-checker,http-rfi-spider,http-robots.txt,http-robtex-reverse-ip,http-security-headers
-# nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
-# nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
-if [ -s $wrkpth/Nmap/SSL ]; then
-    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
-fi
-echo
+# # Testing HTTP pages further
+# echo "--------------------------------------------------"
+# echo "Performing scan using HTTP Audit (18 of 22)"
+# timestamp
+# echo "--------------------------------------------------"
+# # nmap http scripts: http-backup-finder,http-cookie-flags,http-cors,http-default-accounts,http-iis-short-name-brute,http-iis-webdav-vuln,http-internal-ip-disclosure,http-ls,http-malware-host 
+# # nmap http scripts: http-method-tamper,http-mobileversion-checker,http-ntlm-info,http-open-redirect,http-passwd,http-referer-checker,http-rfi-spider,http-robots.txt,http-robtex-reverse-ip,http-security-headers
+# # nmap http scripts: http-server-header,http-slowloris-check,http-sql-injection,http-stored-xss,http-svn-enum,http-svn-info,http-trace,http-traceroute,http-unsafe-output-escaping,http-userdir-enum
+# # nmap http scripts: http-vhosts,membase-http-info,http-headers,http-methods
+# if [ -s $wrkpth/Nmap/SSL ]; then
+#     nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 -p "$(echo ${NEW[*]} | sed 's/ /,/g')" --open --script=http*,ssl*,vulners --script-args=$NMAP_SCRIPTARG -iL $wrkpth/Nmap/HTTP -oA $wrkpth/Nmap/$prj_name-nmap_http
+# fi
+# echo
 
 # Using nikto
 echo "--------------------------------------------------"
