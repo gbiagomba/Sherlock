@@ -28,7 +28,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in amass chromium dnsrecon golang go masscan metagoofil nikto nmap pipenv python2 python2-pip python3 python3-pip ripgrep seclists sublist3r testssl.sh theharvester wapiti; do
+for i in amass chromium dnsrecon golang go masscan metagoofil nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r testssl.sh theharvester wapiti; do
     if ! hash $i; then
         echo "--------------------------------------------------"
         echo "Installing $i"
