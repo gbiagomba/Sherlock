@@ -127,8 +127,8 @@ if [ ! -z $wrktmp/WebTargets ]; then
     for web in $(cat $wrktmp/WebTargets); do
         sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output.txt"
         amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output.txt"
-        gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/PathEnum/$prj_name-$web-gobuster_dns_output.txt" -d $web
-        shuffledns -d cars.com -w $WORDLIST -o "$wrkpth/PathEnum/$prj_name-$web-shuffledns_output.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
+        gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output.txt" -d $web
+        shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
     done
 fi
 echo
@@ -230,12 +230,11 @@ if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan
 fi
 echo 
 
-# Using Nmap
+# Nmap - Full TCP SYN & UDP scan on live targets
 echo "--------------------------------------------------"
 echo "Performing portknocking scan using Nmap (7 of 22)"
 timestamp
 echo "--------------------------------------------------"
-# Nmap - Full TCP SYN & UDP scan on live targets
 echo
 echo "Full TCP SYN & UDP scan on live targets"
 nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
@@ -264,7 +263,7 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name
     timestamp
     echo "--------------------------------------------------"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i $i | cut -d "/" -f 1 | sort | uniq))
-    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
     nmap -6 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
     unset PORTNUM
 done

@@ -119,6 +119,7 @@ if ! hash go; then
     apt install  -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
+    echo "PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bash
 fi
 
 if ! hash amass; then
