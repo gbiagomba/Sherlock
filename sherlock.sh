@@ -536,4 +536,4 @@ echo
 
 # WRapping up assessment
 gift_wrap
-} | tee -a $wrkpth-`timestamp`-sherlock.log
+} | tee -a $pth\$prj_name-sherlock-`timestamp`.log
