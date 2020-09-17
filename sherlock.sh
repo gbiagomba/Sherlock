@@ -32,6 +32,7 @@ WORDLIST="/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
 diskMax=95
 diskSize=$(df | grep /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
 targets=$1
+prj_name=$2
 wrktmp=$(mktemp -d)
 
 # timestamp function for future use
@@ -89,19 +90,22 @@ if [ -z $targets ]; then
     echo "What is the name of the targets file? The file with all the IP addresses or sites"
     read targets
     echo
-fi
 
-if [ ! -e $targets ]; then
-    echo "File not found! Try again!"
-    exit
+    if [ ! -r $targets ]; then
+        echo "File not found! Try again!"
+        exit
+    fi
 fi
-
-echo "What is the name of the project?"
-read prj_name
-echo
 
 if [ -z $prj_name ]; then
-    prj_name=`echo $RANDOM`
+    echo "What is the name of the project?
+    Leave blank and hit enter if you do not have one"
+    read prj_name
+    echo
+
+    if [ -z $prj_name ]; then
+        prj_name=$RANDOM
+    fi
 fi
 
 # Recording screen output
