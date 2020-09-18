@@ -21,7 +21,7 @@ cd Sherlock
 
 ## Usage
 ```
-sherlock targetfile
+sherlock targetfile projectName
 ```
 Do not worry all the prompts will be asked as the tool runs
 
@@ -32,7 +32,7 @@ cd /opt/Sherlock/
 ```
 
 ## TODO
-- [ ] Un-initialize variables
+- [x] Un-initialize variables
 - [ ] Add multi-thread parallel processing
 - [ ] Limit amount of data stored to disk, use more variables
 - [x] Add SSL (e.g., sslyze, ssltest or testssl) checking later [done]
@@ -50,7 +50,7 @@ cd /opt/Sherlock/
 - [ ] Add joomscan [Queued]
 - [ ] Add  docker run --rm asannou/droopescan scan [Queued]
 - [ ] Add function to check if the script is running on latest version [inprogress]
-- [ ] Switch sublister with subfinder [https://github.com/projectdiscovery/subfinder]
+- [x] Switch sublister with subfinder [https://github.com/projectdiscovery/subfinder]
 - [ ] Switch grep with ripgrep
 - [x] Add arjun [https://github.com/s0md3v/Arjun] [done]
 - [ ] Add exclusion list config file
