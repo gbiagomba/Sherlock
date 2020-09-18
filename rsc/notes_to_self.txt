@@ -1,0 +1,14 @@
+add to install script
+httpprobe (go get -u github.com/tomnomnom/httprobe)
+SubDomainizer (git clone https://github.com/nsonaniya2010/SubDomainizer.git)
+rg (https://github.com/BurntSushi/ripgrep)
+gospider (go get -u github.com/jaeles-project/gospider)
+hakrawler (go get github.com/hakluke/hakrawler)
+amass(https://github.com/OWASP/Amass)
+shuffledns (https://github.com/projectdiscovery/shuffledns && they will need massdns installed https://github.com/blechschmidt/massdns)
+aqautone (https://github.com/michenriksen/aquatone) -- i will ditching this
+ffuf
+
+# consider doing this
+https://github.com/x90skysn3k/brutespray <= use that to automate password cracking across multiple hosts and network services
+https://github.com/codingo/Interlace <= consider adding to expedite the speed at which scans are performed
