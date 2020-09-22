@@ -327,6 +327,9 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness (13 of 21)"
 eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
+if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
+fi
 # cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
 echo 
 
