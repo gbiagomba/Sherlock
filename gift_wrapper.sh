@@ -11,10 +11,7 @@ trap "echo Booh!" SIGINT SIGTERM
 function gift_wrap()
 {
     # Cleaning empty files and zipping up all content
-    echo "--------------------------------------------------"
-    echo "Gift wrapping everything and putting a bowtie on it!"
-    timestamp
-    echo "--------------------------------------------------"
+    Banner "Gift wrapping everything and putting a bowtie on it!"
     # Generating HTML, CSV and XLSX reports
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
         xsltproc -o `echo $i | tr -d 'xml'`html $i /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
@@ -24,14 +21,18 @@ function gift_wrap()
 
     # Empty file cleanup
     find $wrkpth -type d,f -empty | xargs rm -rf
+
+    # Converting output to HTML
+    cat $pth/$prj_name-$current_time-sherlock.txt | aha > $pth/$prj_name-$current_time-sherlock.html
+
     # Zipping the rest up
-    zip -ru9 $pth/$prj_name-$TodaysYEAR.zip $pth/$TodaysYEAR
+    zip -ru9 $pth/$prj_name-$current_time-sherlock.zip $pth/$TodaysYEAR $pth/$prj_name-$current_time-sherlock.txt $pth/$prj_name-$current_time-sherlock.html
 
     # Removing unnessary files
     rm -rf $wrktmp/
 
     # Uninitializing variables
-    for var in API_AK API_SK HTTPPort IP NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
+    for var in API_AK API_SK HTTPPort i IP NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
         unset $var
     done
     unset var
