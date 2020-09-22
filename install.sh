@@ -33,6 +33,7 @@ function banner
 
 {
 # Doing the basics
+banner "system updates"
 apt update
 apt upgrade -y
 
