@@ -37,7 +37,7 @@ prj_name=$2
 wrktmp=$(mktemp -d)
 
 # Functions
-Banner
+function Banner
 {
     echo
     echo "--------------------------------------------------"
