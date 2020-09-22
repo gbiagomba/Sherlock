@@ -37,8 +37,8 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in amass chromium dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
-    if ! hash $i; then
+for i in amass chromium dirb dirbuster dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
+    if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
     fi
@@ -119,7 +119,7 @@ if ! hash go; then
     apt install  -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
-    echo "PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bash
+    echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bash
 fi
 
 if ! hash amass; then

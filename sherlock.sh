@@ -26,7 +26,7 @@ wrkpth="$pth/$TodaysYEAR/$TodaysDAY"
 API_AK="" #Tenable Access Key
 API_SK="" #Tenable Secret Key
 NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
-NMAP_SCRIPTS="rdp-enum-encryption,ssl-enum-ciphers,vulners,vulscan/vulscan.nse"
+NMAP_SCRIPTS="vulners,vulscan/vulscan.nse"
 OS_CHK=$(cat /etc/os-release | grep -o debian)
 WORDLIST="/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
 diskMax=95
@@ -178,7 +178,7 @@ cat $wrktmp/IPtargetsv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq | tee $wrktmp/IPtargetsv6
-cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | sort | uniq | tee -a $wrktmp/tempFinal
+cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "," "\n" | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 echo
@@ -241,9 +241,9 @@ timestamp
 echo "--------------------------------------------------"
 echo
 echo "Full TCP SYN & UDP scan on live targets"
-nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
+nmap --min-rate 300 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    nmap --min-rate 300 -6 -A -P0 -R --reason --resolve-all -sSUV -T4 --open --top-ports 250 --script="$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
+    nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
@@ -267,8 +267,8 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name
     timestamp
     echo "--------------------------------------------------"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.nmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -i $i | cut -d "/" -f 1 | sort | uniq))
-    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
-    nmap -6 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
+    nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ","),$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    nmap -6 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ","),$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
     unset PORTNUM
 done
 echo
