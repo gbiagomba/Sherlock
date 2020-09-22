@@ -314,5 +314,5 @@ else
 fi
 
 # Done
-echo finished!
+banner "WE ARE FINISHED!!!"
 } 2> /dev/null | tee -a /opt/sherlock_install.log
