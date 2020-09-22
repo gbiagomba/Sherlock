@@ -1,5 +1,12 @@
 These are the sections I will clean up and add later
 
+# Using Tenable
+# Banner "Performing scan using Tenable (15 of 21)"
+# echo "Code to be added later"
+# curl -sH "X-ApiKeys: accessKey=$API_AK; secretKey=$API_SK" https://cloud.tenable.com/scans
+# curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
+# echo
+
 # # Testing HTTP pages further
 # echo "--------------------------------------------------"
 # echo "Performing scan using HTTP Audit (18 of 22)"

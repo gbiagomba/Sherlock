@@ -125,7 +125,7 @@ cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
 echo
 
 # Using sublist3r 
-Banner "Performing Subdomain enum (1 of 21)"
+Banner "Performing Subdomain enum"
 # consider replacing with  gobuster -m dns -o gobuster_output.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
 # gobuster -m dns -cn -e -i -r -t 25 -w $WORDLIST -o "$wrkpth/PathEnum/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 if [ ! -z $wrktmp/WebTargets ]; then
@@ -158,15 +158,15 @@ cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 # amass enum -brute -w /usr/local/share/sec_lists/Discovery/Web_Content/raft-large-directories.txt -d www.cars.com
 
 # Using halberd
-Banner "Performing scan using Halberd (2 of 21)"
-for web in $(cat $wrktmp/WebTargets); do
-	timeout 300 halberd $web -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-$web-halberd_output.txt
-    if [ -r $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ] && [ -s $wrkpth/Halberd/$prj_name-$web-halberd_output.txt ]; then
-        cat $wrkpth/Halberd/$prj_name-$web-halberd_output.txt | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+Banner "Performing scan using Halberd"
+cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-{}-halberd_output.txt"
+for web in $(ls $wrkpth/Halberd/); do
+    if [ ! -z $wrkpth/Halberd/$i ]; then
+        cat $wrkpth/Halberd/$i | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
 done
 
-Banner "Some house cleaning (3 of 21)"
+Banner "Some house cleaning"
 # Some house cleaning
 cat $wrktmp/WebTargets >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets >> $wrktmp/TempTargets
@@ -177,7 +177,7 @@ cat $wrktmp/TempTargetsv6 | sort | uniq | tee $wrktmp/IPtargetsv6
 cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "," "\n" | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
-Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP (4 of 21)"
+Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
 nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
 if [ -z `$wrktmp/tempFinal | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6
@@ -195,7 +195,7 @@ fi
 echo
 
 # Combining targets
-Banner "Merging all targets files (5 of 21)"
+Banner "Merging all targets files"
 if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
         # cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
@@ -214,7 +214,7 @@ echo
 # Using masscan to perform a quick port sweep
 # Consider switcing to unicornscan
 # unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
-Banner "Performing portknocking scan using Masscan (6 of 21)"
+Banner "Performing portknocking scan using Masscan"
 masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/livehosts
@@ -222,7 +222,7 @@ fi
 echo 
 
 # Nmap - Full TCP SYN & UDP scan on live targets
-Banner "Performing portknocking scan using Nmap (7 of 21)"
+Banner "Performing portknocking scan using Nmap"
 echo "Full TCP SYN & UDP scan on live targets"
 nmap --min-rate 300 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
@@ -245,7 +245,7 @@ echo
 
 # Checking all the services discovery by nmap
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
-    Banner "Performing targeted scan of $i (8 of 21)"
+    Banner "Performing targeted scan of $i"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i $i | cut -d "/" -f 1 | sort | uniq))
     nmap --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ","),$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
     nmap -6 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV -T4 --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ","),$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6 -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
@@ -255,7 +255,7 @@ echo
 
 # Using testssl & sslcan
 # switch back to for loop, testssl doesnt properly parse gnmap
-Banner "Performing scan using testssl (9 of 21)"
+Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
 testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
@@ -266,7 +266,7 @@ echo
 
 # Using DNS Recon
 # Will revise this later to account for other ports one might use for dns
-Banner "Performing scan using DNS Scan (10 of 21)"
+Banner "Performing scan using DNS Scan"
 if [ -s $wrkpth/Nmap/DOMAIN ]; then
     for IP in $(cat $wrkpth/Nmap/DOMAIN); do
         echo Scanning $IP
@@ -279,7 +279,7 @@ fi
 echo
 
 # Using SSH Audit
-Banner "Performing scan using SSH Audit (11 of 21)"
+Banner "Performing scan using SSH Audit"
 SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i ssh | cut -d "/" -f 1 | sort | uniq))
 if [ -s $wrkpth/Nmap/SSH ]; then
     for IP in $(cat $wrkpth/Nmap/SSH); do
@@ -302,7 +302,7 @@ fi
 echo
 
 # Using batea
-Banner "Ranking nmap output using batea (12 of 21)"
+Banner "Ranking nmap output using batea"
 for i in `ls $wrkpth/Nmap/ | grep -i xml`; done
     batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
 done
@@ -325,16 +325,20 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 # ./scanreport.sh -f XPC-2020Q1-nmap_portknock.gnmap -s http | grep -v Host | cut -d$'\t' -f 1 | sort | uniq
 
 # Using Eyewitness to take screenshots
-Banner "Performing scan using EyeWitness (13 of 21)"
+Banner "Performing scan using EyeWitness & aquafone"
 eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
 fi
-# cp -r /usr/share/eyewitness/$(date +%m%d%Y)* $wrkpth/EyeWitness/
+# Using aquafone
+cat $wrkpth/Nmap/$prj_name-nmap_portknock.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+    cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+fi
 echo 
 
 # Using Wappalyzer
-Banner "Performing scan using Wappalyzer (14 of 21)"
+Banner "Performing scan using Wappalyzer"
 for web in $(cat $wrktmp/FinalTargets); do
     echo Scanning $web
     echo "--------------------------------------------------"
@@ -344,15 +348,8 @@ for web in $(cat $wrktmp/FinalTargets); do
 done
 echo
 
-# Using Tenable
-# Banner "Performing scan using Tenable (15 of 21)"
-# echo "Code to be added later"
-# curl -sH "X-ApiKeys: accessKey=$API_AK; secretKey=$API_SK" https://cloud.tenable.com/scans
-# curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
-# echo
-
 # Using XSStrike
-Banner "Performing scan using XSStrike (16 of 21)"
+Banner "Performing scan using XSStrike"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
@@ -377,15 +374,8 @@ for web in $(cat $wrktmp/FinalTargets); do
 done
 echo
 
-# Using aquatone
-Banner "Performing scan using aquatone (17 of 21)"
-cat $wrkpth/Nmap/$prj_name-nmap_portknock.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-fi
-
 # Using nikto
-Banner "Performing scan using Nikto (19 of 21)"
+Banner "Performing scan using Nikto"
 nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -IgnoreCode 302,301 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
 if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -IgnoreCode 302,301 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
@@ -394,7 +384,7 @@ fi
 echo
 
 # Using gospider
-Banner "Performing path traversal enumeration (20 of 21)"
+Banner "Performing path traversal enumeration"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
@@ -418,7 +408,7 @@ done
 echo
 
 # Using Wapiti, arjun and ffuf
-Banner "Performing scan using Wapiti (21 of 21)"
+Banner "Performing scan using Wapiti, arjun, and ffuf"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
@@ -440,7 +430,7 @@ done
 echo
 
 # Using theharvester & metagoofil
-Banner "Performing scan using Theharvester and Metagoofil (22 of 21)"
+Banner "Performing scan using Theharvester and Metagoofil"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
