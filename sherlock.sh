@@ -41,7 +41,7 @@ Banner
 {
     echo
     echo "--------------------------------------------------"
-    echo "$i
+    echo "$1
     Current Time : $current_time"
     echo "--------------------------------------------------"
 }
@@ -303,7 +303,7 @@ echo
 
 # Using batea
 Banner "Ranking nmap output using batea"
-for i in `ls $wrkpth/Nmap/ | grep -i xml`; done
+for i in `ls $wrkpth/Nmap/ | grep -i xml`; do
     batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
 done
 echo
