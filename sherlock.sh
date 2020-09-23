@@ -229,10 +229,13 @@ if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-
     nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
+# Enumerating the services discovered by nmap
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
         cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -337,13 +340,19 @@ if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-
 fi
 echo 
 
+# converting HTTP targets into weblinks
+cat $wrktmp/FinalTargets | httprobe | tee -a $wrktmp/FinalWeb
+
 # Using Wappalyzer
 Banner "Performing scan using Wappalyzer"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrktmp/FinalWeb); do
     echo Scanning $web
     echo "--------------------------------------------------"
-    docker run --rm wappalyzer/cli https://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-    docker run --rm wappalyzer/cli http://$web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+    if wappalyzer; then
+        wappalyzer $web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+    elif docker; then
+        docker run --rm wappalyzer/cli $web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+    fi
     echo "--------------------------------------------------"
 done
 echo
