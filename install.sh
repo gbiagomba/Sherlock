@@ -38,7 +38,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang go masscan metagoofil msfconsole nikto nmap pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
+for i in aha amass chromium dirb dirbuster dnsrecon golang go jq masscan metagoofil msfconsole nikto nmap pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -46,11 +46,13 @@ for i in aha amass chromium dirb dirbuster dnsrecon golang go masscan metagoofil
 done
 
 # Installing python dependencies
-banner "theHarvester & ssh-audit"
-$SUDOH pip3 install theHarvester ssh-audit
+if ! hash theHarvester 2> /dev/null || ! hash ssh-audit 2> /dev/null; then
+    banner "theHarvester & ssh-audit"
+    $SUDOH pip3 install theHarvester ssh-audit
+fi
 
 # Installing remaining dependencies
-if ! hash testssl || ! hash testssl.sh; then
+if ! hash testssl 2> /dev/null || ! hash testssl.sh 2> /dev/null; then
     banner "testssl.sh"
     cd /usr/bin/
     curl -s -o testssl https://testssl.sh/testssl.sh
@@ -62,13 +64,13 @@ if [ ! -e /usr/share/seclists/ ]; then
     cd /usr/share/; wget -c https://github.com/danielmiessler/SecLists/archive/master.zip -O SecList.zip; unzip SecList.zip; rm -f SecList.zip; mv SecLists-master/ seclists/
 fi
 
-if ! hash msfconsole; then
+if ! hash msfconsole 2> /dev/null; then
     banner msfconsole
     cd `mktemp -d`; curl -s https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod 755 msfinstall && ./msfinstall
     systemctl enable postgresql
 fi
 
-if ! hash docker; then
+if ! hash docker 2> /dev/null; then
     banner docker
     # Based on these two articles
     # https://medium.com/@airman604/installing-docker-in-kali-linux-2017-1-fbaa4d1447fe
@@ -85,7 +87,7 @@ if ! hash docker; then
     apt-get install docker-ce docker-ce-cli containerd.io -y
 fi
 
-if ! hash ssh_scan; then
+if ! hash ssh_scan 2> /dev/null; then
     banner ssh_scan
     $SUDOH gem install ssh_scan
 fi
@@ -111,6 +113,12 @@ if ! hash node && ! hash npm; then
     #Testing our installation
     node –version
     npm -v
+fi
+
+# Installing wappalyzer
+if ! hash wappalyzer 2> /dev/null; then
+    banner "Wappalyzer"
+    $SUDOH npm i wappalyzer -g
 fi
 
 if ! hash go; then
