@@ -341,19 +341,39 @@ fi
 echo 
 
 # converting HTTP targets into weblinks
-cat $wrktmp/FinalTargets | httprobe | tee -a $wrktmp/FinalWeb
+# cat $wrktmp/FinalTargets | httprobe | tee -a $wrktmp/FinalWeb
 
 # Using Wappalyzer
 Banner "Performing scan using Wappalyzer"
-for web in $(cat $wrktmp/FinalWeb); do
-    echo Scanning $web
-    echo "--------------------------------------------------"
-    if wappalyzer; then
-        wappalyzer $web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-    elif docker; then
-        docker run --rm wappalyzer/cli $web | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-    fi
-    echo "--------------------------------------------------"
+for web in $(cat $wrktmp/FinalTargets); do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            if wappalyzer; then
+                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+            elif docker; then
+                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+            fi
+            echo "--------------------------------------------------"
+        fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+             if wappalyzer; then
+                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+            elif docker; then
+                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+            fi
+            echo "--------------------------------------------------"
+        fi
+    done
 done
 echo
 

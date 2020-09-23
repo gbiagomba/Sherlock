@@ -106,9 +106,8 @@ if ! hash node && ! hash npm; then
     cd node
     bash configure –-prefix=~/local
     make install
-    cd ../
     # Now Compiling NPM (Node Package Manager)
-    cd npm
+    cd ../npm
     make install
     #Testing our installation
     node –version
@@ -128,7 +127,9 @@ if ! hash go; then
     apt install  -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
-    echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bash
+    $SUDOH echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
+    $SUDOH source ~/.bashrc
+
 fi
 
 if ! hash amass; then
