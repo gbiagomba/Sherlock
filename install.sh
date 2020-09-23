@@ -21,7 +21,7 @@ if [ "$OS_CHK" != "debian" ]; then
 fi
 
 # Setting sudo to HOME variable to target user's home dir
-SUDOH="sudo -H"
+SUDOH="sudo -EH"
 
 # Function banner
 function banner

@@ -14,19 +14,19 @@ function gift_wrap()
     Banner "Gift wrapping everything and putting a bowtie on it!"
     # Generating HTML, CSV and XLSX reports
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
-        xsltproc -o `echo $i | tr -d 'xml'`html $i /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
-        python /opt/nmaptocsv/nmaptocsv.py -x $i -S -d "," -n -o `echo $i | tr -d 'xml'`csv
+        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
+        python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`csv
     done
-    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/
+    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/*.xml
 
     # Empty file cleanup
     find $wrkpth -type d,f -empty | xargs rm -rf
 
     # Converting output to HTML
-    cat $pth/$prj_name-$current_time-sherlock.txt | aha > $pth/$prj_name-$current_time-sherlock.html
+    cat $pth/$prj_name-$current_time-sherlock_output.txt | aha > $pth/$prj_name-$current_time-sherlock_output.html
 
     # Zipping the rest up
-    zip -ru9 $pth/$prj_name-$current_time-sherlock.zip $pth/$TodaysYEAR $pth/$prj_name-$current_time-sherlock.txt $pth/$prj_name-$current_time-sherlock.html
+    zip -ru9 $pth/$prj_name-$current_time-sherlock_output.zip $pth/$TodaysYEAR $pth/$prj_name-$current_time-sherlock_output.txt $pth/$prj_name-$current_time-sherlock_output.html
 
     # Removing unnessary files
     rm -rf $wrktmp/
