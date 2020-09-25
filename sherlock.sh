@@ -117,9 +117,9 @@ fi
 
 # Parsing the target file
 cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" > $wrktmp/WebTargets
-cat $pth/$targets | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
+cat $pth/$targets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
-cat $pth/$targets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+cat $pth/$targets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
 echo
@@ -147,9 +147,9 @@ echo
 for i in `ls $wrkpth/SubDomainEnum/`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
         cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | sort | uniq >> $wrktmp/TempWeb
-        cat $wrkpth/SubDomainEnum/$i | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-        cat $wrkpth/SubDomainEnum/$i | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
-        cat $wrkpth/SubDomainEnum/$i | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
+        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
     fi
 done
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
@@ -162,24 +162,25 @@ Banner "Performing scan using Halberd"
 cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-{}-halberd_output.txt"
 for web in $(ls $wrkpth/Halberd/); do
     if [ ! -z $wrkpth/Halberd/$i ]; then
-        cat $wrkpth/Halberd/$i | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+        cat $wrkpth/Halberd/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
 done
 
 Banner "Some house cleaning"
 # Some house cleaning
-cat $wrktmp/WebTargets >> $wrktmp/TempWeb
-cat $wrktmp/IPtargets >> $wrktmp/TempTargets
-cat $wrktmp/IPtargetsv6 >> $wrktmp/TempTargetsv6
-cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
-cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
-cat $wrktmp/TempTargetsv6 | sort | uniq | tee $wrktmp/IPtargetsv6
-cat  $wrktmp/TempTargets $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "," "\n" | sort | uniq | tee -a $wrktmp/tempFinal
+# PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
+cat $wrktmp/WebTargets | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
+cat $wrktmp/IPtargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+cat $wrktmp/IPtargetsv6 | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
+cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
+cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
+cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "," "\n" | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
 nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep
-if [ -z `$wrktmp/tempFinal | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/tempFinal | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6
 fi
 
@@ -195,6 +196,7 @@ fi
 echo
 
 # Combining targets
+# PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
 Banner "Merging all targets files"
 if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
     if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
@@ -202,7 +204,7 @@ if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wr
         cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
         cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
         cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | sort | uniq >> $wrktmp/FinalTargets
-        cat $wrktmp/TempTargets | sort | uniq | tee $wrktmp/IPtargets
+        cat $wrktmp/TempTargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
     fi
 fi
 echo 
@@ -225,7 +227,7 @@ echo
 Banner "Performing portknocking scan using Nmap"
 echo "Full TCP SYN & UDP scan on live targets"
 nmap --min-rate 300 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6
 fi
 
@@ -234,7 +236,7 @@ if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock.xml ] || [ -r $wrkpth/Nmap/$prj_na
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep $i | grep open | cut -d ' ' -f 2 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
         cat $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
-        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep $i | grep open | cut -d ' ' -f 2 | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
         cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
     done
 else
@@ -261,7 +263,7 @@ echo
 Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
 testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output.txt
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     testssl -6 --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
 fi
 cd $pth
@@ -330,12 +332,12 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
 eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
 fi
 # Using aquafone
 cat $wrkpth/Nmap/$prj_name-nmap_portknock.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_portknockv6.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
 fi
 echo 
@@ -406,7 +408,7 @@ echo
 # Using nikto
 Banner "Performing scan using Nikto"
 nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknock.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -IgnoreCode 302,301 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
-if [ -z `$wrktmp/FinalTargets | grep -oE "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
     nikto -C all -h $wrkpth/Nmap/$prj_name-nmap_portknockv6.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -IgnoreCode 302,301 -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output.txt
 fi
 
