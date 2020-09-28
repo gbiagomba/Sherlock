@@ -29,9 +29,9 @@ function gift_wrap()
     mv $wrkpth/$prj_name-testssl_output.* $wrkpth/SSL/
 
     # Combining nikto output
-    Banner "Now to combine nikto output"
-    cat $wrkpth/Nikto/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-nikto_output.csv
-    mv $wrkpth/$prj_name-nikto_output.csv $wrkpth/SSL/
+    # Banner "Now to combine nikto output"
+    # cat $wrkpth/Nikto/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-nikto_output.csv
+    # mv $wrkpth/$prj_name-nikto_output.csv $wrkpth/SSL/
 
     # Empty file cleanup
     find $wrkpth -type d,f -empty | xargs rm -rf
