@@ -14,7 +14,7 @@ I wrote this script because over the years I have had to do various web applicat
 ## Install
 ```
 cd /opt/
-git pull https://github.com/gbiagomba/Sherlock
+git clone https://github.com/gbiagomba/Sherlock
 cd Sherlock
 ./install.sh
 ```
