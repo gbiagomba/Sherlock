@@ -17,7 +17,8 @@ function gift_wrap()
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
         xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
-        python /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`csv
+        python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/`$i | tr -d 'xml'`csv"
+        python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/`$i | tr -d 'xml'`json"
     done
     python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/*.xml
 
@@ -37,10 +38,10 @@ function gift_wrap()
     find $wrkpth -type d,f -empty | xargs rm -rf
 
     # Converting output to HTML
-    cat $pth/$prj_name-$current_time-sherlock_output.txt | aha > $pth/$prj_name-$current_time-sherlock_output.html
+    cat $pth/$prj_name-sherlock_output-$current_time.txt | aha > $pth/$prj_name-$current_time-sherlock_output-$current_time.html
 
     # Zipping the rest up
-    zip -ru9 $pth/$prj_name-$current_time-sherlock_output.zip $pth/$TodaysYEAR $pth/$prj_name-$current_time-sherlock_output.txt $pth/$prj_name-$current_time-sherlock_output.html
+    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $pth/$prj_name-$current_time-sherlock_output.txt $pth/$prj_name-$current_time-sherlock_output.html
 
     # Removing unnessary files
     rm -rf $wrktmp/

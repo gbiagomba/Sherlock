@@ -284,7 +284,7 @@ else
 fi
 
 # Installing main dependencies
-if [ ! -e /opt/Sublist3r ]; then
+if [ ! -e /opt/Sublist3r ] && ! hash sublist3r 2> /dev/null; then
     banner Sublist3r
     cd /opt/
     git clone https://github.com/aboul3la/Sublist3r
@@ -320,6 +320,31 @@ if [ ! -e /opt/vulscan ]; then
     ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan 
 else
     cd /opt/vulscan
+    git pull
+fi
+
+# Downloading and installing metagofil
+if [ ! -e /opt/OWASP-Janus ]; then
+    banner "OWASP Janus"
+    cd /opt/
+    git clone https://github.com/gbiagomba/OWASP-Janus
+    cd OWASP-Janus/
+    ln -s /opt/OWASP-Janus/janus.sh /usr/bin/janus
+else
+    cd /opt/OWASP-Janus
+    git pull
+fi
+
+# Downloading and installing metagofil
+if [ ! -e /opt/xml2json ]; then
+    banner xml2json
+    cd /opt/
+    git clone https://github.com/gbiagomba/xml2json
+    cd xml2json/
+    $SUDOH pip3 install -r requirements.txt
+    # ln -s /opt/xml2json/xml2json.py /usr/bin/xml2json
+else
+    cd /opt/xml2json
     git pull
 fi
 
