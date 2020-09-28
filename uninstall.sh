@@ -15,6 +15,7 @@ fi
 
 # Removing the Sherlock project file and soft link
 rm /usr/bin/sherlock
+rm /usr/bin/gift_wrapper.sh
 rm /opt/Sherlock -rf
 
 # Done!
