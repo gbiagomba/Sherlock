@@ -132,28 +132,29 @@ if [ ! -z $wrktmp/WebTargets ]; then
         amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output-$current_time.txt"
         gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output-$current_time.txt" -d $web
         shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
+        fierce --domain $web --subdomain-file $WORDLIST --traverse 255 | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
     done
 fi
 echo
 
 # Checking subdomains against subdomainizer
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed.txt
-for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed.txt`; do python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null; done
+for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed.txt`; do 
+    python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
+done
 echo
 
 # Pulling out all the web targets
 for i in `ls $wrkpth/SubDomainEnum/`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
-        cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | sort | uniq >> $wrktmp/TempWeb
+        cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
     fi
 done
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
-
-# Using amass
-# amass enum -brute -w /usr/local/share/sec_lists/Discovery/Web_Content/raft-large-directories.txt -d www.cars.com
+echo
 
 # Using halberd
 Banner "Performing scan using Halberd"
@@ -163,6 +164,7 @@ for web in $(ls $wrkpth/Halberd/); do
         cat $wrkpth/Halberd/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
     fi
 done
+echo
 
 Banner "Some house cleaning"
 # Some house cleaning
@@ -256,15 +258,11 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/
 done
 echo
 
-# Using testssl & sslcan
-# switch back to for loop, testssl doesnt properly parse gnmap
-Banner "Performing scan using testssl"
-cd $wrkpth/SSL/
-testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    testssl -6 --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
-fi
-cd $pth
+# Using batea
+Banner "Ranking nmap output using batea"
+for i in `ls $wrkpth/Nmap/ | grep -i xml`; do
+    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
+done
 echo
 
 # Using DNS Recon
@@ -304,11 +302,49 @@ if [ -s $wrkpth/Nmap/SSH ]; then
 fi
 echo
 
-# Using batea
-Banner "Ranking nmap output using batea"
-for i in `ls $wrkpth/Nmap/ | grep -i xml`; do
-    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
+# Using testssl & sslcan
+# switch back to for loop, testssl doesnt properly parse gnmap
+Banner "Performing scan using testssl"
+cd $wrkpth/SSL/
+testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+    testssl -6 --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
+fi
+cd $pth
+echo
+
+# Using theharvester & metagoofil
+Banner "Performing scan using Theharvester and Metagoofil"
+for web in $(cat $wrktmp/FinalTargets); do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output-$current_time.txt
+            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+         fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output-$current_time.txt
+            timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+            echo "--------------------------------------------------"
+        fi
+    done
 done
+if [ -d $wrkpth/Harvester/Evidence/ ]; then
+    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf); do
+        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
+    done
+    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
+    rm $wrkpth/Harvester/tempusr
+fi
 echo
 
 # Combining ports
@@ -456,40 +492,6 @@ for web in $(cat $wrktmp/FinalTargets); do
         fi
     done
 done
-echo
-
-# Using theharvester & metagoofil
-Banner "Performing scan using Theharvester and Metagoofil"
-for web in $(cat $wrktmp/FinalTargets); do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output-$current_time.txt
-            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-         fi
-
-        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output-$current_time.txt
-            timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-            echo "--------------------------------------------------"
-        fi
-    done
-done
-if [ -d $wrkpth/Harvester/Evidence/ ]; then
-    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf); do
-        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
-    done
-    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
-    rm $wrkpth/Harvester/tempusr
-fi
 echo
 
 # WRapping up assessment

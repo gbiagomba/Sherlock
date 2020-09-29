@@ -47,8 +47,8 @@ done
 
 # Installing python dependencies
 if ! hash theHarvester 2> /dev/null || ! hash ssh-audit 2> /dev/null; then
-    banner "theHarvester & ssh-audit"
-    $SUDOH pip3 install theHarvester ssh-audit
+    banner "theHarvester, ssh-audit and fierce"
+    $SUDOH pip3 install fierce ssh-audit theHarvester
 fi
 
 # Installing remaining dependencies
