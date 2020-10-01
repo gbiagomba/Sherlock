@@ -33,6 +33,7 @@ diskSize=$(df | grep /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
 targets=$1
 prj_name=$2
 wrktmp=$(mktemp -d)
+IPv6="rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null | grep -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq"
 
 # Functions
 function Banner
@@ -117,7 +118,7 @@ fi
 cat $pth/$targets | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" > $wrktmp/WebTargets
 cat $pth/$targets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
 cat $pth/$targets | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
-cat $pth/$targets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+cat $pth/$targets | $IPv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
 echo
@@ -145,12 +146,12 @@ done
 echo
 
 # Pulling out all the web targets
-for i in `ls $wrkpth/SubDomainEnum/`; do
+for i in `ls $wrkpth/SubDomainEnum/ | grep "$current_time"`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
         cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
-        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+        cat $wrkpth/SubDomainEnum/$i | $IPv6 >> $wrktmp/TempTargetsv6
     fi
 done
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
@@ -171,16 +172,16 @@ Banner "Some house cleaning"
 # PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
 cat $wrktmp/WebTargets | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-cat $wrktmp/IPtargetsv6 | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" >> $wrktmp/TempTargetsv6
+cat $wrktmp/IPtargetsv6 | $IPv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
-cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | grep -iv found | sort | uniq | tee -a $wrktmp/tempFinal
+cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | grep -iv found | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
 nmap -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
-if [ ! -z `$wrktmp/tempFinal | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ ! -z `$wrktmp/tempFinal | $IPv6 ` ]; then
     nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
 fi
 
@@ -227,7 +228,7 @@ echo
 Banner "Performing portknocking scan using Nmap"
 echo "Full TCP SYN & UDP scan on live targets"
 nmap -T4 --min-rate 300 -P0 -R --reason --resolve-all -sSU  --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
-if [ ! ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
 fi
 
@@ -236,7 +237,7 @@ if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml ] || [ -r $wrkpt
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
         cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
-        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
         cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
     done
 else
@@ -260,7 +261,7 @@ echo
 
 # Using batea
 Banner "Ranking nmap output using batea"
-for i in `ls $wrkpth/Nmap/ | grep -i xml`; do
+for i in `ls $wrkpth/Nmap/ | grep -i xml | grep "$current_time"`; do
     batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
 done
 echo
@@ -306,10 +307,11 @@ echo
 # switch back to for loop, testssl doesnt properly parse gnmap
 Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
-testssl --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
-    testssl -6 --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
+testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+if [ ! -z `$wrktmp/FinalTargets | $IPv6` ]; then
+    testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
 fi
+find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
 echo
 
@@ -366,12 +368,12 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
 eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
 fi
 # Using aquafone
 cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
 fi
 echo 
@@ -425,14 +427,14 @@ for web in $(cat $wrktmp/FinalTargets); do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output-$current_time.txt
+            python3 /opt/XSStrike/xsstrike.py -u https://$web:$PORTNUM --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output-$current_time.txt
             echo "--------------------------------------------------"
         fi
 
         if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output-$current_time.txt
+            python3 /opt/XSStrike/xsstrike.py -u http://$web:$PORTNUM --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-$web-$PORTNUM-xsstrike_output-$current_time.txt
             echo "--------------------------------------------------"
         fi
     done
@@ -442,7 +444,7 @@ echo
 # Using nikto
 Banner "Performing scan using Nikto"
 nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output-$current_time.txt
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" ` ]; then
+if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output-$current_time.txt
 fi
 
@@ -496,4 +498,4 @@ echo
 
 # WRapping up assessment
 gift_wrap
-} | tee -a $pth/$prj_name-sherlock_output-$current_time.txt
+} 2> /dev/null | tee -a $pth/$prj_name-sherlock_output-$current_time.txt
