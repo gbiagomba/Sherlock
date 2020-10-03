@@ -141,7 +141,7 @@ echo
 # Checking subdomains against subdomainizer
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed.txt
 for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed.txt`; do 
-    python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
+    timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
 done
 echo
 
@@ -204,14 +204,15 @@ if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wr
         # cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
         cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
         cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
-        cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | sort | uniq >> $wrktmp/FinalTargets
+        cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
         cat $wrktmp/TempTargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
+        cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
     fi
 fi
 echo 
 
 Banner "Printing final list of targets to be used"
-cat $wrktmp/FinalTargets $wrktmp/IPtargets | sort | uniq
+cat $wrktmp/FinalTargets $wrktmp/IPtargets | tr " " "\n" | tr "," "\n" | sort | uniq
 echo
 
 # Using masscan to perform a quick port sweep

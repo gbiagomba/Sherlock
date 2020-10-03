@@ -33,10 +33,10 @@ function gift_wrap()
     find $wrkpth -type d,f -empty | xargs rm -rf
 
     # Converting output to HTML
-    cat $pth/$prj_name-sherlock_output-$current_time.txt | aha > $pth/$prj_name-$current_time-sherlock_output-$current_time.html
+    cat $pth/$prj_name-sherlock_output-$current_time.txt | aha > $pth/$prj_name-sherlock_output-$current_time.html
 
     # Zipping the rest up
-    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $pth/$prj_name-$current_time-sherlock_output.txt $pth/$prj_name-$current_time-sherlock_output.html
+    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $pth/$prj_name-sherlock_output-$current_time.txt $pth/$prj_name-sherlock_output-$current_time.html
 
     # Removing unnessary files
     rm -rf $wrktmp/
