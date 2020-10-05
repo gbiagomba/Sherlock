@@ -45,6 +45,21 @@ function Banner
     echo "--------------------------------------------------"
 }
 
+# https://bytefreaks.net/gnulinux/bash/convertandprintseconds-convert-seconds-to-minutes-hours-and-days-in-bash
+convertAndPrintSeconds() 
+{
+    local totalSeconds=$1;
+    local seconds=$((totalSeconds%60));
+    local minutes=$((totalSeconds/60%60));
+    local hours=$((totalSeconds/60/60%24));
+    local days=$((totalSeconds/60/60/24));
+    (( $days > 0 )) && printf '%d days ' $days;
+    (( $hours > 0 )) && printf '%d hours ' $hours;
+    (( $minutes > 0 )) && printf '%d minutes ' $minutes;
+    (( $days > 0 || $hours > 0 || $minutes > 0 )) && printf 'and ';
+    printf '%d seconds\n' $seconds;
+}
+
 # Ensuring system is debian based
 if [ "$OS_CHK" != "debian" ]; then
     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
@@ -219,15 +234,23 @@ echo
 # Consider switcing to unicornscan
 # unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
 Banner "Performing portknocking scan using Masscan"
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
+hostcount=$(wc -l $wrktmp/IPtargets | cut -d " " -f 4)
+let nmapTimer=((3*65535*$hostcount)/1000)*1.1
+printf "This portion of the scan will take approx "; convertAndPrintSeconds $nmapTimer
+masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only --retries 3 -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/$prj_name-livehosts-$current_time
 fi
 echo 
 
 # Nmap - Full TCP SYN & UDP scan on live targets
+# time = (max-retries * ports * hosts) / min-rate
+# -T4 has a max retry of 6
 Banner "Performing portknocking scan using Nmap"
 echo "Full TCP SYN & UDP scan on live targets"
+hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
+let nmapTimer=((6*65535*$hostcount)/300)*1.1
+printf "This portion of the scan will take approx "; convertAndPrintSeconds $nmapTimer
 nmap -T4 --min-rate 300 -P0 -R --reason --resolve-all -sSU  --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
 if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
@@ -253,8 +276,11 @@ echo
 # Checking all the services discovery by nmap
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
+    hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
+    let nmapTimer=((6*65535*$hostcount)/300)*1.1
+    printf "This portion of the scan will take approx "; convertAndPrintSeconds $nmapTimer
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i $i | cut -d "/" -f 1 | tr -d " " | sort | uniq))
-    nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    timeout $nmapTimer nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
     nmap -6 -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6 -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
     unset PORTNUM
 done
