@@ -311,7 +311,7 @@ else
     git pull
 fi
 
-# Downloading and installing metagofil
+# Downloading and installing vulscan
 if [ ! -e /opt/vulscan ]; then
     banner vulscan
     cd /opt/
@@ -323,7 +323,19 @@ else
     git pull
 fi
 
-# Downloading and installing metagofil
+# Downloading and installing brutespray
+if [ ! -e /opt/brutesprays ]; then
+    banner "brutespray"
+    cd /opt/
+    git clone https://github.com/x90skysn3k/brutespray
+    cd brutespray/
+    pip3 install -r requirements.txt
+else
+    cd /opt/brutespray/
+    git pull
+fi
+
+# Downloading and installing janus
 if [ ! -e /opt/OWASP-Janus ]; then
     banner "OWASP Janus"
     cd /opt/
@@ -335,7 +347,7 @@ else
     git pull
 fi
 
-# Downloading and installing metagofil
+# Downloading and installing xml2json
 if [ ! -e /opt/xml2json ]; then
     banner xml2json
     cd /opt/

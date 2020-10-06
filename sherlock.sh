@@ -76,11 +76,11 @@ if [[ "$diskSize" -ge "$diskMax" ]]; then
 fi
 
 # Setting Envrionment
-mkdir -p  $wrkpth/Halberd/ $wrkpth/SubDomainEnum/ $wrkpth/Harvester/ $wrkpth/Metagoofil/
-mkdir -p $wrkpth/Nikto/ $wrkpth/PathEnum/ $wrkpth/Nmap/ $wrkpth/Wappalyzer/ 
-mkdir -p $wrkpth/Masscan/ $wrkpth/WebVulnScan/ $wrkpth/SSL/ $wrkpth/XSStrike/
-mkdir -p $wrkpth/GOLismero/ $wrkpth/DNS_Recon/ $wrkpth/SSH/ $wrkpth/RetieJS/
-mkdir -p $wrkpth/EyeWitness/  $wrkpth/Batea/
+for i in Batea DNS_Recon EyeWitness GOLismero Halberd Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum Wappalyzer WebVulnScan XSStrike l00tz; do
+    if [ ! -e $wrkpth/$i ]; then
+        mkdir -p $wrkpth/$i
+    fi
+done
 
 # Loadfing in support scripts
 source gift_wrapper.sh
@@ -273,14 +273,19 @@ else
 fi
 echo
 
+# Using testssl & sslcan
+Banner "Performing scan using testssl"
+python3 /opt/brutespray/brutespray.py --file  $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap -U /usr/share/seclists/Usernames/cirt-default-usernames.txt -P /usr/share/seclists/Passwords/cirt-default-passwords.txt --threads 10 --hosts 10 -c --output $wrkpth/l00tz/
+echo
+
 # Checking all the services discovery by nmap
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
-    hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
-    let nmapTimer=((6*65535*$hostcount)/300)*1.1
-    printf "This portion of the scan will take approx "; convertAndPrintSeconds $nmapTimer
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i $i | cut -d "/" -f 1 | tr -d " " | sort | uniq))
-    timeout $nmapTimer nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
+    let nmapTimer=((6*${#PORTNUM[@]}*$hostcount)/300)*2.5
+    printf "This portion of the scan will take approx "; convertAndPrintSeconds $nmapTimer
+    nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
     nmap -6 -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6 -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
     unset PORTNUM
 done
