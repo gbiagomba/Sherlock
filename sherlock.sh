@@ -257,10 +257,10 @@ echo
 # Consider switcing to unicornscan
 # unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
 Banner "Performing portknocking scan using Masscan"
-hostcount=$(wc -l $wrktmp/IPtargets | cut -d " " -f 4)
-nmapTimer=$(expr ((3*65535*$hostcount)/1000)*1.1)
+# hostcount=$(wc -l $wrktmp/IPtargets | cut -d " " -f 4)
+# nmapTimer=$(expr ((3*65535*$hostcount)/1000)*1.1)
 # printf "This portion of the scan will take approx"
-convertAndPrintSeconds $nmapTimer
+# convertAndPrintSeconds $nmapTimer
 masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only --retries 3 -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | grep -v masscan | sort | uniq >> $wrkpth/$prj_name-livehosts-$current_time
@@ -272,10 +272,10 @@ echo
 # -T4 has a max retry of 6
 Banner "Performing portknocking scan using Nmap"
 echo "Full TCP SYN & UDP scan on live targets"
-hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
-nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
+# hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
+# nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
-convertAndPrintSeconds $nmapTimer
+# convertAndPrintSeconds $nmapTimer
 nmap -T4 --min-rate 300 -P0 -R --reason --resolve-all -sSU  --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
 if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
@@ -307,10 +307,10 @@ echo
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i $i | cut -d "/" -f 1 | tr -d " " | sort | uniq))
-    hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
-    nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
+    # hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
+    # nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
     # printf "This portion of the scan will take approx"
-convertAndPrintSeconds $nmapTimer
+    # convertAndPrintSeconds $nmapTimer
     nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
     nmap -6 -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6 -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
     unset PORTNUM
