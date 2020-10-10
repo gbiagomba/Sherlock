@@ -393,7 +393,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
-if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]
+if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
     if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
         eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
