@@ -38,7 +38,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang go jq masscan metagoofil msfconsole nikto nmap pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
+for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -358,6 +358,17 @@ if [ ! -e /opt/xml2json ]; then
 else
     cd /opt/xml2json
     git pull
+fi
+
+# Downloading and installing medusa
+if [ ! -e /opt/medusa-2.2 ] && ! hash medusa 2> /dev/null; then
+    banner medusa
+    wget -q http://foofus.net/goons/jmk/tools/medusa-2.2.tar.gz -O - | sudo tar -xvz
+    cd medusa*
+    ./configure
+    make 
+    make install
+    medusa -q
 fi
 
 # Done

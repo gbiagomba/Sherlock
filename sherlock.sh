@@ -177,8 +177,8 @@ fi
 echo
 
 # Checking subdomains against subdomainizer
-cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed.txt
-for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed.txt`; do 
+cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
+for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do 
     timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
 done
 echo
@@ -223,29 +223,29 @@ if [ ! -z `$wrktmp/tempFinal | $IPv6 ` ]; then
     nmap -6 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -T5 -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
 fi
 
+# Nmap - Grabing live hosts
+Banner "Grabbing livehosts from pingsweep"
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ]; then
-    cat $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live
-    cat $wrkpth/Nmap/live | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponse
+    cat $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live-$current_time
+    cat $wrkpth/Nmap/live-$current_time | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponselive-$current_time
 fi
 
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap | grep Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/livev6
-    cat $wrkpth/Nmap/livev6 | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6
+    cat $wrkpth/Nmap/livev6 | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6live-$current_time
 fi
 echo
 
 # Combining targets
 # PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
 Banner "Merging all targets files"
-if [ -s $wrkpth/Masscan/live ] || [ -s $wrkptWebTargetsh/Nmap/live ] || [ -s $wrktmp/TempTargets ] || [ -s $wrktmp/WebTargets ]; then
-    if [ -r $wrkpth/Masscan/live ] || [ -r $wrkpth/Nmap/live ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
-        # cat $wrkpth/Masscan/live | sort | uniq > $wrktmp/TempTargets
-        cat $wrkpth/Nmap/live | sort | uniq >> $wrktmp/TempTargets
-        cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
-        cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
-        cat $wrktmp/TempTargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
-        cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
-    fi
+if [ -r $wrkpth/Masscan/live-$current_time ] || [ -r $wrkpth/Nmap/live-$current_time ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
+    # cat $wrkpth/Masscan/live-$current_time | sort | uniq > $wrktmp/TempTargets
+    cat $wrkpth/Nmap/live-$current_time | sort | uniq >> $wrktmp/TempTargets
+    cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
+    cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
+    cat $wrktmp/TempTargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
+    cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
 fi
 echo 
 
@@ -267,27 +267,27 @@ if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ] && [ 
 fi
 echo 
 
-# Nmap - Full TCP SYN & UDP scan on live targets
+# Nmap - Full TCP SYN & UDP scan on live-$current_time targets
 # time = (max-retries * ports * hosts) / min-rate
 # -T4 has a max retry of 6
 Banner "Performing portknocking scan using Nmap"
-echo "Full TCP SYN & UDP scan on live targets"
+echo "Full TCP SYN & UDP scan on live-$current_time targets"
 # hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300 -P0 -R --reason --resolve-all -sSU  --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
+nmap -T4 --min-rate 300p -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
 if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-    nmap --min-rate 300 -6 -P0 -R --reason --resolve-all -sSU -T4 --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
+    nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
 fi
 
 # Enumerating the services discovered by nmap
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`
-        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
-        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | grep -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | grep -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $i | grep open | cut -d ' ' -f 2 | grep -iv nmap | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep -E "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | grep -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -307,28 +307,30 @@ echo
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i $i | cut -d "/" -f 1 | tr -d " " | sort | uniq))
-    # hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'` | cut -d " " -f 4)
+    # hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time | cut -d " " -f 4)
     # nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
     # printf "This portion of the scan will take approx"
     # convertAndPrintSeconds $nmapTimer
-    nmap -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'` -oA $wrkpth/Nmap/$prj_name-nmap_$i
-    nmap -6 -T4 --min-rate 300 -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-v6 -oA $wrkpth/Nmap/$prj_name-nmap_$i-v6
-    unset PORTNUM
+    nmap -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    if [ ! -z `echo $i | tr '[:lower:]' '[:upper:]' | $IPv6` ]; then
+        nmap -6 -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | grep $i | grep -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6 -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
+   fi
 done
+unset PORTNUM
 echo
 
 # Using batea
 Banner "Ranking nmap output using batea"
 for i in `ls $wrkpth/Nmap/ | grep -i xml | grep "$current_time"`; do
-    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output.json 2> /dev/null
+    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output-$current_time.json 2> /dev/null
 done
 echo
 
 # Using DNS Recon
 # Will revise this later to account for other ports one might use for dns
 Banner "Performing scan using DNS Scan"
-if [ -s $wrkpth/Nmap/DOMAIN ]; then
-    for IP in $(cat $wrkpth/Nmap/DOMAIN); do
+if [ -s $wrkpth/Nmap/DOMAIN-$current_time ]; then
+    for IP in $(cat $wrkpth/Nmap/DOMAIN-$current_time); do
         echo Scanning $IP
         echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output-$current_time.txt
@@ -340,9 +342,9 @@ echo
 
 # Using SSH Audit
 Banner "Performing scan using SSH Audit"
-SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i ssh | cut -d "/" -f 1 | tr -d " " | sort | uniq))
-if [ -s $wrkpth/Nmap/SSH ]; then
-    for IP in $(cat $wrkpth/Nmap/SSH); do
+if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
+    SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep Ports | cut -d ":" -f 3 | tr "," "\n" | grep -iv nmap | grep -i ssh | cut -d "/" -f 1 | tr -d " " | sort | uniq))
+    for IP in $(cat $wrkpth/Nmap/SSH-$current_time); do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $IP | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $IP | grep "$PORTNUM/open/tcp//ssh" -m 1 -o | grep "ssh" -o) # Check to see if the port is open & is a web service
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $IP | grep "$PORTNUM/filtered/tcp//ssh" -m 1 -o | grep "ssh" -o) # Check to see if the port is filtered & is a web service
@@ -350,9 +352,9 @@ if [ -s $wrkpth/Nmap/SSH ]; then
             for PORTNUM in ${SSHPort[*]}; do
                 echo Scanning $IP
                 echo "--------------------------------------------------"
-                ssh-audit -n $IP -p  $PORTNUM | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output.html
+                ssh-audit -n $IP -p  $PORTNUM | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output-$current_time.html
                 echo "--------------------------------------------------"
-                docker run --rm mozilla/ssh_scan -t $IP -p $PORTNUM -o $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-scan_output.json
+                ssh_scan -t $IP -p $PORTNUM -o $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-scan_output-$current_time.json
                 echo "--------------------------------------------------"
                 msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set RPORT $PORTNUM; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
             done
@@ -373,40 +375,6 @@ find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
 echo
 
-# Using theharvester & metagoofil
-Banner "Performing scan using Theharvester and Metagoofil"
-for web in $(cat $wrktmp/FinalTargets); do
-    for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output-$current_time.txt
-            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-         fi
-
-        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
-            echo Scanning $web:$PORTNUM
-            echo "--------------------------------------------------"
-            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output-$current_time.txt
-            timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
-            echo "--------------------------------------------------"
-        fi
-    done
-done
-if [ -d $wrkpth/Harvester/Evidence/ ]; then
-    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf); do
-        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
-    done
-    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
-    rm $wrkpth/Harvester/tempusr
-fi
-echo
-
 # Combining ports
 # echo "--------------------------------------------------"
 # echo "Combining ports
@@ -425,19 +393,53 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
-eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
-if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
-fi
-# Using aquafone
-cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-    cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]
+    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
+    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
+        eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
+    fi
+    # Using aquafone
+    cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
+        cat $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+    fi
 fi
 echo 
 
-# converting HTTP targets into weblinks
-# cat $wrktmp/FinalTargets | httprobe | tee -a $wrktmp/FinalWeb
+# Using theharvester & metagoofil
+# look into the conditional
+Banner "Performing scan using Theharvester and Metagoofil"
+for web in $(cat $wrktmp/FinalTargets); do
+    for PORTNUM in ${NEW[*]}; do
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//http" -m 1 -o | grep "http" -o) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/open/tcp//ssl" | grep "ssl" -o) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap | grep $web | grep "$PORTNUM/filtered/tcp//ssl" | grep "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            timeout 900 theHarvester -d http://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_http_output-$current_time.txt
+            timeout 900 metagoofil -d http://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_http_output-$current_time.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+         fi
+
+        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+            echo Scanning $web:$PORTNUM
+            echo "--------------------------------------------------"
+            timeout 900 theHarvester -d https://$web:$PORTNUM -l 500 -b all | tee $wrkpth/Harvester/$prj_name-$web-$PORTNUM-harvester_https_output-$current_time.txt
+            timeout 900 metagoofil -d https://$web:$PORTNUM -l 500 -o $wrkpth/Metagoofil/Evidence -f $wrkpth/Metagoofil/$prj_name-$web-$PORTNUM-metagoofil_https_output-$current_time.html -t pdf,doc,xls,ppt,odp,od5,docx,xlsx,pptx
+            echo "--------------------------------------------------"
+        fi
+    done
+done
+if [ -d $wrkpth/Harvester/Evidence/ ]; then
+    for files in $(ls $wrkpth/Harvester/Evidence/ | grep pdf); do
+        pdfinfo $files.pdf | grep Author | cut -d " " -f 10 | tee -a $wrkpth/Harvester/tempusr
+    done
+    cat $wrkpth/Harvester/tempusr | sort | uniq > $wrkpth/Harvester/Usernames
+    rm $wrkpth/Harvester/tempusr
+fi
+echo
 
 # Using Wappalyzer
 Banner "Performing scan using Wappalyzer"
@@ -451,26 +453,23 @@ for web in $(cat $wrktmp/FinalTargets); do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            if wappalyzer; then
-                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-            elif docker; then
-                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+            if hash wappalyzer 2> /dev/null; then
+                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+            elif hash docker 2> /dev/null; then
+                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
             fi
-            echo "--------------------------------------------------"
-        fi
-
-        if [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
+        elif [ "$STAT1" == "Up" ] && [ "$STAT4" == "ssl" ] && [ "$STAT5" == "ssl" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-             if wappalyzer; then
-                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
-            elif docker; then
-                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output.json
+             if hash wappalyzer 2> /dev/null; then
+                wappalyzer $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+            elif hash docker 2> /dev/null; then
+                docker run --rm wappalyzer/cli $web:$PORTNUM | python -m json.tool | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
             fi
-            echo "--------------------------------------------------"
         fi
     done
 done
+find $wrkpth/Wappalyzer/ -type f -size -1k -delete
 echo
 
 # Using XSStrike
@@ -497,6 +496,7 @@ for web in $(cat $wrktmp/FinalTargets); do
         fi
     done
 done
+find $wrkpth/XSStrike/ -type f -size -1k -delete
 echo
 
 # Using nikto
@@ -505,7 +505,6 @@ nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap -ou
 if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output-$current_time.txt
 fi
-
 echo
 
 # Using gospider
@@ -542,8 +541,8 @@ for web in $(cat $wrktmp/FinalTargets); do
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "open" ] || [ "$STAT3" == "filtered" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
-            wapiti -u "http://$web:$PORTNUM/" -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_http_result.html -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_result.log
-            wapiti -u "https://$web:$PORTNUM/" -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_https_result.html -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_result.log
+            wapiti -u "http://$web:$PORTNUM/" -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_result.log
+            wapiti -u "https://$web:$PORTNUM/" -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_https_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_result.log
             pythoon3 /opt/Arjun/arjun.py -u "https://$web:$PORTNUM/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-arjun_https_output-$current_time.txt 2> /dev/null
             pythoon3 /opt/Arjun/arjun.py -u "http://$web:$PORTNUM/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-arjun_http_output-$current_time.txt 2> /dev/null
             ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w  $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-ffuf_https_output -c -u "https://$web:$PORTNUM/FUZZ"
