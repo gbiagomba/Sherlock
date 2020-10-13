@@ -5,9 +5,9 @@
 # set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
-
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
+current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
 # Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
@@ -177,6 +177,16 @@ fi
 if ! hash gobuster; then
     banner gobuster
     $SUDOH go get -u -v github.com/OJ/gobuster
+fi
+
+if ! hash nuclei; then
+    banner nuclei
+    $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+    git clone https://github.com/projectdiscovery/nuclei-templates.git /opt/nuclei-templates/
+    if ! hash nuclei; then
+        cd /opt/
+        git clone https://github.com/projectdiscovery/nuclei.git; cd nuclei/v2/cmd/nuclei/; go build; mv nuclei /usr/bin/; nuclei -h
+    fi
 fi
 
 # Downloading the XSStrike dependency
@@ -373,4 +383,4 @@ fi
 
 # Done
 banner "WE ARE FINISHED!!!"
-} 2> /dev/null | tee -a /opt/sherlock_install.log
+} 2> /dev/null | tee -a /opt/sherlock_install-$current_time.log

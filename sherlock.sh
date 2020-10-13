@@ -276,9 +276,9 @@ echo "Full TCP SYN & UDP scan on live-$current_time targets"
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300p -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
+nmap -T4 --min-rate 1000p -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time
 if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-    nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
+    nmap -T4 --min-rate 1000p -6 -P0 -R --reason --resolve-all -sSUV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknockv6-$current_time
 fi
 
 # Enumerating the services discovered by nmap
@@ -300,7 +300,7 @@ echo
 
 # Using testssl & sslcan
 Banner "Performing scan using testssl"
-python3 /opt/brutespray/brutespray.py --file  $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap -U /usr/share/seclists/Usernames/cirt-default-usernames.txt -P /usr/share/seclists/Passwords/cirt-default-passwords.txt --threads 10 --hosts 10 -c --output $wrkpth/l00tz/
+python3 /opt/brutespray/brutespray.py --file $wrkpth/Nmap/$prj_name-nmap_portknock-$current_time.gnmap -U /usr/share/seclists/Usernames/cirt-default-usernames.txt -P /usr/share/seclists/Passwords/cirt-default-passwords.txt --threads 10 --hosts 10 -c --output $wrkpth/l00tz
 echo
 
 # Checking all the services discovery by nmap

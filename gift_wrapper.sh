@@ -11,7 +11,7 @@ function gift_wrap()
         python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/$i.csv"
         python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/$i.json"
     done
-    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output.xlsx" $wrkpth/Nmap/*.xml
+    python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output-$current_time.xlsx" $wrkpth/Nmap/*.xml
     echo
 
     # Combining testssl scans
