@@ -5,9 +5,9 @@
 # set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
-
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
+current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
 # Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
@@ -38,7 +38,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang go jq masscan metagoofil msfconsole nikto nmap pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester wapiti; do
+for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -47,8 +47,8 @@ done
 
 # Installing python dependencies
 if ! hash theHarvester 2> /dev/null || ! hash ssh-audit 2> /dev/null; then
-    banner "theHarvester & ssh-audit"
-    $SUDOH pip3 install theHarvester ssh-audit
+    banner "theHarvester, ssh-audit and fierce"
+    $SUDOH pip3 install fierce ssh-audit theHarvester
 fi
 
 # Installing remaining dependencies
@@ -179,6 +179,16 @@ if ! hash gobuster; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
+if ! hash nuclei; then
+    banner nuclei
+    $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+    git clone https://github.com/projectdiscovery/nuclei-templates.git /opt/nuclei-templates/
+    if ! hash nuclei; then
+        cd /opt/
+        git clone https://github.com/projectdiscovery/nuclei.git; cd nuclei/v2/cmd/nuclei/; go build; mv nuclei /usr/bin/; nuclei -h
+    fi
+fi
+
 # Downloading the XSStrike dependency
 if [ ! -e /opt/XSStrike ]; then
     banner XSStrike
@@ -284,7 +294,7 @@ else
 fi
 
 # Installing main dependencies
-if [ ! -e /opt/Sublist3r ]; then
+if [ ! -e /opt/Sublist3r ] && ! hash sublist3r 2> /dev/null; then
     banner Sublist3r
     cd /opt/
     git clone https://github.com/aboul3la/Sublist3r
@@ -311,7 +321,7 @@ else
     git pull
 fi
 
-# Downloading and installing metagofil
+# Downloading and installing vulscan
 if [ ! -e /opt/vulscan ]; then
     banner vulscan
     cd /opt/
@@ -323,6 +333,54 @@ else
     git pull
 fi
 
+# Downloading and installing brutespray
+if [ ! -e /opt/brutesprays ]; then
+    banner "brutespray"
+    cd /opt/
+    git clone https://github.com/x90skysn3k/brutespray
+    cd brutespray/
+    pip3 install -r requirements.txt
+else
+    cd /opt/brutespray/
+    git pull
+fi
+
+# Downloading and installing janus
+if [ ! -e /opt/OWASP-Janus ]; then
+    banner "OWASP Janus"
+    cd /opt/
+    git clone https://github.com/gbiagomba/OWASP-Janus
+    cd OWASP-Janus/
+    ln -s /opt/OWASP-Janus/janus.sh /usr/bin/janus
+else
+    cd /opt/OWASP-Janus
+    git pull
+fi
+
+# Downloading and installing xml2json
+if [ ! -e /opt/xml2json ]; then
+    banner xml2json
+    cd /opt/
+    git clone https://github.com/gbiagomba/xml2json
+    cd xml2json/
+    $SUDOH pip3 install -r requirements.txt
+    # ln -s /opt/xml2json/xml2json.py /usr/bin/xml2json
+else
+    cd /opt/xml2json
+    git pull
+fi
+
+# Downloading and installing medusa
+if [ ! -e /opt/medusa-2.2 ] && ! hash medusa 2> /dev/null; then
+    banner medusa
+    wget -q http://foofus.net/goons/jmk/tools/medusa-2.2.tar.gz -O - | sudo tar -xvz
+    cd medusa*
+    ./configure
+    make 
+    make install
+    medusa -q
+fi
+
 # Done
 banner "WE ARE FINISHED!!!"
-} 2> /dev/null | tee -a /opt/sherlock_install.log
+} 2> /dev/null | tee -a /opt/sherlock_install-$current_time.log
