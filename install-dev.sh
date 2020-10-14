@@ -6,18 +6,12 @@
 trap "echo Booh!" SIGINT SIGTERM
 
 # Setting up variables
-OS_CHK=$(cat /etc/os-release | grep -o debian)
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
 # Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
-fi
-
-if [ "$OS_CHK" != "debian" ]; then
-    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-    exit
 fi
 
 # Setting sudo to HOME variable to target user's home dir
@@ -31,6 +25,37 @@ function banner
     echo "--------------------------------------------------"
 }
 
+# Figuring out installer
+if ! hash apt 2> /dev/null; then
+    PKG_MNGR_INSTALLER="apt install -y"
+    PKG_MNGR_UPDATE="apt update"
+    PKG_MNGR_UPGRADE="apt upgrade -y"
+elif ! hash snap 2> /dev/null; then
+    PKG_MNGR_INSTALLER="snap install"
+    PKG_MNGR_UPDATE=$PKG_MNGR_UPGRADE
+    PKG_MNGR_UPGRADE="snap refresh"
+elif ! hash brew 2> /dev/null; then
+    PKG_MNGR_INSTALLER="brew install"
+    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPGRADE="brew upgrade"
+elif ! hash pacman 2> /dev/null; then
+    PKG_MNGR_INSTALLER="pacman install"
+    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPGRADE=
+elif ! hash emerge 2> /dev/null; then
+    PKG_MNGR_INSTALLER="emerge install"
+    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPGRADE=
+elif ! hash dnf 2> /dev/null; then
+    PKG_MNGR_INSTALLER="dnf install"
+    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPGRADE=
+elif ! hash zypper 2> /dev/null; then
+    PKG_MNGR_INSTALLER="zypper install"
+    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPGRADE=
+fi
+
 {
 # Doing the basics
 banner "system updates"
@@ -38,10 +63,10 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs npm openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
-        apt install -y $i
+        $PKG_MNGR_INSTALLER $i
     fi
 done
 
@@ -383,4 +408,4 @@ fi
 
 # Done
 banner "WE ARE FINISHED!!!"
-} 2> /dev/null | tee -a $PWD/sherlock_install-$current_time.log
+} 2> /dev/null | tee -a /opt/sherlock_install-$current_time.log
