@@ -28,7 +28,7 @@ API_SK="" #Tenable Secret Key
 NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
 NMAP_SCRIPTS="vulners,vulscan/vulscan.nse"
 OS_CHK=$(cat /etc/os-release | rg -o debian)
-WORDLIST="/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
+WORDLIST="/opt/Sherlock/rsc/subdomains.list"
 diskMax=95
 diskSize=$(df | rg /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
 targets=$1
@@ -156,7 +156,7 @@ fi
 # Parsing the target file
 cat $pth/$targets | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" > $wrktmp/WebTargets
 cat $pth/$targets | rg --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
-cat $pth/$targets | rg --engine -o -e '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
+cat $pth/$targets | grep -oe '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
 cat $pth/$targets | $IPv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
