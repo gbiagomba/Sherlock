@@ -46,10 +46,12 @@ for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq ma
 done
 
 # Installing python dependencies
-if ! hash theHarvester 2> /dev/null || ! hash ssh-audit 2> /dev/null; then
-    banner "theHarvester, ssh-audit and fierce"
-    $SUDOH pip3 install fierce ssh-audit theHarvester
-fi
+for i in fierce ssh-audit theHarvester; do
+    if ! hash $i 2> /dev/null; then
+        banner "$i"
+        $SUDOH pip3 install $i
+    fi
+done
 
 # Installing remaining dependencies
 if ! hash testssl 2> /dev/null || ! hash testssl.sh 2> /dev/null; then
@@ -162,8 +164,9 @@ if ! hash shuffledns; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
-if ! hash massdns; then
+if ! hash massdns && [ ! -e /opt/massdns ]; then
     banner massdns
+    cd /opt/
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make

@@ -172,7 +172,7 @@ if [ ! -z $wrktmp/WebTargets ]; then
         amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output-$current_time.txt"
         gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output-$current_time.txt" -d $web
         shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
-        fierce --domain $web --subdomain-file $WORDLIST --traverse 255 | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
+        fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
     done
 fi
 echo
@@ -187,7 +187,7 @@ echo
 # Pulling out all the web targets
 for i in `ls $wrkpth/SubDomainEnum/ | rg "$current_time"`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
-        cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq >> $wrktmp/TempWeb
+        cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | tr -d "{" | tr -d ":" | tr -d "}" | sort | uniq >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | $IPv6 >> $wrktmp/TempTargetsv6
@@ -281,12 +281,12 @@ nmap -T4 --min-rate 300p -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrkt
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
     nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-    nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
+    nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 fi
 
 # Enumerating the services discovered by nmap
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
-    for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
+    for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6
@@ -307,7 +307,7 @@ python3 /opt/brutespray/brutespray.py --file $wrkpth/Nmap/$prj_name-nmap_portkno
 echo
 
 # Checking all the services discovery by nmap
-for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
+for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i $i | cut -d "/" -f 1 | tr -d " " | sort | uniq))
     # hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time | cut -d " " -f 4)
