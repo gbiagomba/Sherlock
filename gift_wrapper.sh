@@ -7,7 +7,7 @@ function gift_wrap()
     # Generating HTML, CSV and XLSX reports
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
-        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
+        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
         python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/$i.csv"
         python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/$i.json"
     done

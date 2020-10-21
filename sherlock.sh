@@ -220,20 +220,22 @@ cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
 nmap -T5 --min-rate 300 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PR -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
-if [ ! -z `$wrktmp/tempFinal | $IPv6 ` ]; then
-    nmap -6 -T5 --min-rate 300 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PR -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
-fi
+
+# Nmap - IPv6 Pingsweep using TCP SYN, and UDP
+Banner "Nmap - IPv6 Pingsweep using TCP SYN, and UDP"
+nmap -6 -T5 --min-rate 300 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
+
 
 # Nmap - Grabing live hosts
 Banner "Grabbing livehosts from pingsweep"
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap | rg Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/live-$current_time
-    cat $wrkpth/Nmap/live-$current_time | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponselive-$current_time
+    cat $wrkpth/Nmap/live-$current_time | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponse-live-$current_time
 fi
 
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ]; then
     cat $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap | rg Up | cut -d ' ' -f 2 >> $wrkpth/Nmap/livev6
-    cat $wrkpth/Nmap/livev6 | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6live-$current_time
+    cat $wrkpth/Nmap/livev6 | sort | uniq > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6-live-$current_time
 fi
 echo
 
@@ -279,18 +281,18 @@ echo "Full TCP SYN & UDP scan on live-$current_time targets"
 # convertAndPrintSeconds $nmapTimer
 nmap -T4 --min-rate 300p -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
-if [ ! ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-    nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-    nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
-fi
+
+# Scanning for IPv6
+nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -315,9 +317,7 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrk
     # printf "This portion of the scan will take approx"
     # convertAndPrintSeconds $nmapTimer
     nmap -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i
-    if [ ! -z `echo $i | tr '[:lower:]' '[:upper:]' | $IPv6` ]; then
-        nmap -6 -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time-v6 -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
-   fi
+    nmap -6 -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
 done
 unset PORTNUM
 echo
@@ -366,18 +366,6 @@ if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
 fi
 echo
 
-# Using testssl & sslcan
-# switch back to for loop, testssl doesnt properly parse gnmap
-Banner "Performing scan using testssl"
-cd $wrkpth/SSL/
-testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-if [ ! -z `$wrktmp/FinalTargets | $IPv6` ]; then
-    testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
-fi
-find $wrkpth/SSL/ -type f -size -1k -delete
-cd $pth
-echo
-
 # Combining ports
 # echo "--------------------------------------------------"
 # echo "Combining ports
@@ -408,6 +396,16 @@ if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$curren
     fi
 fi
 echo 
+
+# Using testssl & sslcan
+# switch back to for loop, testssl doesnt properly parse gnmap
+Banner "Performing scan using testssl"
+cd $wrkpth/SSL/
+testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
+find $wrkpth/SSL/ -type f -size -1k -delete
+cd $pth
+echo
 
 # Using theharvester & metagoofil
 # look into the conditional

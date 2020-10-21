@@ -136,7 +136,7 @@ fi
 
 if ! hash amass; then
     banner amass
-    $SUDOH go get -v github.com/OWASP/Amass
+    $SUDOH go get -u -v github.com/OWASP/Amass
 fi
 
 if ! hash httprobe; then
@@ -312,7 +312,7 @@ fi
 
 # Downloading and installing metagofil
 if [ ! -e /opt/metagoofil ]; then
-    banner metagofil
+    banner metagoofil
     cd /opt/
     git clone https://github.com/laramies/metagoofil
     cd metagoofil/
