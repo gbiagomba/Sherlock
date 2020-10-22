@@ -49,7 +49,7 @@ function gift_wrap()
     echo
 
     # Uninitializing variables
-    for var in API_AK API_SK HTTPPort i IP NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
+    for var in API_AK API_SK current_time GRAB_FQDN GRAB_IPV4 GRAB_IPV4CIDR HTTPPort i IP IPV6 NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
         unset $var
     done
     unset var

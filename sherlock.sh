@@ -19,22 +19,25 @@ fi
 # https://www.regextester.com/95064
 
 # Declaring variables
-current_time=$(date "+%Y.%m.%d-%H.%M.%S")
-pth=$(pwd)
+pth=$PWD
 wrkpth="$PWD/Sherlock"
+# KNOWN_UDP_PORTS="0,1,5,7,9,11,13,17,18,19,20,21-23,25-26,37,42,43,47,49,51,52,53,54,56,58,61,67–74,79-81,82,83,88,90,95,101,102,104,105,106,107,108,109,110-111,113,115,117,118,119,120,123,126,135-139,143-144,152,153,156,158,161-162,170,177,179,194,199,201,209,210,213,218,220,225–241,249–255,259,262,264,280,311,318,319,320,350,351,356,366,369,370,371,376,383,384,387,388,389,399,401,427,433,434,443-445,464,465,475,497,500,502,504,510,513-515,517,518,520,521,524,525,530,532,533,542,543-544,546,547,548,550,554,560,561,563,587,593,623,626,631,635,636,639,641,643,646,651,653,655,657,660,666,688,690,694,698,749,750,751,752,753,754,760,800,802,829,830,831,832,833,848,853,861,862,873,897,898,902,953,989,990,991,992,993,994,995,996-999,1011–1020,1022-1023,1024,1025-1030,1058,1059,1080,1085,1098,1099,1110,1113,1119,1167,1194,1198,1214,1218,1220,1234,1241,1270,1293,1311,1314,1341,1344,1352,1360,1414,1417,1418,1419,1420,1433-1434,1481,1494,1503,1512,1513,1521,1524,1527,1533,1534,1540,1541,1542,1545,1547,1550,1560–1590,1604,1626,1627,1628,1629,1645-1646,1701,1707,1716,1718-1720,1723,1755,1761,1801,1812-1813,1863,1880,1883,1900,1935,1965,1967,1970,1972,1984,1985,1998,2000-2001,2010,2033,2048-2049,2056,2080,2083,2086,2102,2103,2104,2121,2123,2142,2152,2159,2181,2210,2211-2223,2240,2261,2262,2302,2303,2305,2375,2376,2377,2379,2380,2389,2399,2401,2404,2427,2447,2459,2483,2484,2500,2501,2535,2541,2546–2548,2593,2599,2628,2638,2710,2717,2727,2775,2809,2811,2944,2945,2947,2948,2949,2967,3000,3020,3050,3052,3074,3128,3225,3233,3260,3268,3269,3283,3290,3305,3306,3323,3332,3351,3386,3389,3396,3412,3455,3456,3478,3479,3480,3483,3493,3516,3527,3544,3632,3645,3659,3667,3689,3690,3702,3703,3724,3725,3749,3768,3784,3785,3799,3804,3826,3830,3856,3880,3960,3962,3978,3979,3986,3999,4000,4018,4045,4069,4070,4089,4090,4093,4096,4105,4111,4116,4172,4198,4226,4244,4303,4444,4486,4488,4500,4534,4569,4662,4672,4730,4739,4753,4789,4791,4840,4843,4847,4894,4899,4944,4950,5000–5500,5554,5555,5556,5568,5631,5632,5666,5671,5672,5683,5684,5722,5741,5742,5800,5900,5931,5938,5984,6000–6063,6110,6111,6112,6244,6255,6257,6260,6343,6346,6347,6350,6444,6445,6464,6502,6515,6619,6622,6646,6653,6679,6771,6881–6968,6969,6970–6999,7000,7002,7004,7023,7070,7262,7272,7312,7400,7401,7402,7542,7547,7575,7624,7655,7707–7788,7880,7946,8000,8008-8010,8042,8074,8080-8081,8089,8090,8091,8092,8116,8194–8195,8222,8243,8280,8303,8443,8448,8530,8531,8580,8765,8767,8834,8840,8883,8887,8888,8889,8983,8997,8998,8999,9001,9080,9100,9101,9102,9103,9119,9200,9303,9309,9389,9392,9418,9535,9536,9600,9669,9675,9676,9695,9785,9800,9899,9987,9993,9999–20000,20031,20560,20582,20583,20595,20808,23513,24441,24465,24554,25575,25826,26000,27000–27015,27015–27030,27031,27036,27037,27960–27969,28015,28016,28770–28771,28785–28786,28852,28910,28960,29000,29070,29900–29901,29920,30000,30033,30718,31337,31416,32137,32768-32769,32771,32815,33281,33434,33848,34000,34197,37008,40000,41121,41794,41795,41796,41797,43594–43595,44818,47808–47823,49151-49157,49156,49181-49182,49185-49186,49188,49190-49194,49200-49201,60000–61000,64738,65024"
 API_AK="" #Tenable Access Key
 API_SK="" #Tenable Secret Key
-# KNOWN_UDP_PORTS="0,1,5,7,9,11,13,17,18,19,20,21-23,25-26,37,42,43,47,49,51,52,53,54,56,58,61,67–74,79-81,82,83,88,90,95,101,102,104,105,106,107,108,109,110-111,113,115,117,118,119,120,123,126,135-139,143-144,152,153,156,158,161-162,170,177,179,194,199,201,209,210,213,218,220,225–241,249–255,259,262,264,280,311,318,319,320,350,351,356,366,369,370,371,376,383,384,387,388,389,399,401,427,433,434,443-445,464,465,475,497,500,502,504,510,513-515,517,518,520,521,524,525,530,532,533,542,543-544,546,547,548,550,554,560,561,563,587,593,623,626,631,635,636,639,641,643,646,651,653,655,657,660,666,688,690,694,698,749,750,751,752,753,754,760,800,802,829,830,831,832,833,848,853,861,862,873,897,898,902,953,989,990,991,992,993,994,995,996-999,1011–1020,1022-1023,1024,1025-1030,1058,1059,1080,1085,1098,1099,1110,1113,1119,1167,1194,1198,1214,1218,1220,1234,1241,1270,1293,1311,1314,1341,1344,1352,1360,1414,1417,1418,1419,1420,1433-1434,1481,1494,1503,1512,1513,1521,1524,1527,1533,1534,1540,1541,1542,1545,1547,1550,1560–1590,1604,1626,1627,1628,1629,1645-1646,1701,1707,1716,1718-1720,1723,1755,1761,1801,1812-1813,1863,1880,1883,1900,1935,1965,1967,1970,1972,1984,1985,1998,2000-2001,2010,2033,2048-2049,2056,2080,2083,2086,2102,2103,2104,2121,2123,2142,2152,2159,2181,2210,2211-2223,2240,2261,2262,2302,2303,2305,2375,2376,2377,2379,2380,2389,2399,2401,2404,2427,2447,2459,2483,2484,2500,2501,2535,2541,2546–2548,2593,2599,2628,2638,2710,2717,2727,2775,2809,2811,2944,2945,2947,2948,2949,2967,3000,3020,3050,3052,3074,3128,3225,3233,3260,3268,3269,3283,3290,3305,3306,3323,3332,3351,3386,3389,3396,3412,3455,3456,3478,3479,3480,3483,3493,3516,3527,3544,3632,3645,3659,3667,3689,3690,3702,3703,3724,3725,3749,3768,3784,3785,3799,3804,3826,3830,3856,3880,3960,3962,3978,3979,3986,3999,4000,4018,4045,4069,4070,4089,4090,4093,4096,4105,4111,4116,4172,4198,4226,4244,4303,4444,4486,4488,4500,4534,4569,4662,4672,4730,4739,4753,4789,4791,4840,4843,4847,4894,4899,4944,4950,5000–5500,5554,5555,5556,5568,5631,5632,5666,5671,5672,5683,5684,5722,5741,5742,5800,5900,5931,5938,5984,6000–6063,6110,6111,6112,6244,6255,6257,6260,6343,6346,6347,6350,6444,6445,6464,6502,6515,6619,6622,6646,6653,6679,6771,6881–6968,6969,6970–6999,7000,7002,7004,7023,7070,7262,7272,7312,7400,7401,7402,7542,7547,7575,7624,7655,7707–7788,7880,7946,8000,8008-8010,8042,8074,8080-8081,8089,8090,8091,8092,8116,8194–8195,8222,8243,8280,8303,8443,8448,8530,8531,8580,8765,8767,8834,8840,8883,8887,8888,8889,8983,8997,8998,8999,9001,9080,9100,9101,9102,9103,9119,9200,9303,9309,9389,9392,9418,9535,9536,9600,9669,9675,9676,9695,9785,9800,9899,9987,9993,9999–20000,20031,20560,20582,20583,20595,20808,23513,24441,24465,24554,25575,25826,26000,27000–27015,27015–27030,27031,27036,27037,27960–27969,28015,28016,28770–28771,28785–28786,28852,28910,28960,29000,29070,29900–29901,29920,30000,30033,30718,31337,31416,32137,32768-32769,32771,32815,33281,33434,33848,34000,34197,37008,40000,41121,41794,41795,41796,41797,43594–43595,44818,47808–47823,49151-49157,49156,49181-49182,49185-49186,49188,49190-49194,49200-49201,60000–61000,64738,65024"
+GRAB_FQDN=$(rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)")
+GRAB_IPV4=$(rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+GRAB_IPV4CIDR=$(rg --auto-hybrid-regex --engine -o -e "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}")
+IPv6=$(rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq)
 NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
 NMAP_SCRIPTS="vulners,vulscan/vulscan.nse"
 OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
+current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 diskMax=95
 diskSize=$(df | rg /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
-targets=$1
 prj_name=$2
+targets=$1
 wrktmp=$(mktemp -d)
-IPv6=$(rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq)
 
 # Functions
 function Banner
@@ -154,9 +157,9 @@ fi
 # exec >|$PWD/$prj_name-term_output.log 2>&1
 
 # Parsing the target file
-cat $pth/$targets | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" > $wrktmp/WebTargets
-cat $pth/$targets | rg --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" > $wrktmp/TempTargets
-cat $pth/$targets | grep -oe '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}'  >> $wrktmp/TempTargets
+cat $pth/$targets | $GRAB_FQDN >$wrktmp/WebTargets
+cat $pth/$targets | $GRAB_IPV4 > $wrktmp/TempTargets
+cat $pth/$targets | $GRAB_IPV4CIDR >> $wrktmp/TempTargets
 cat $pth/$targets | $IPv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq > $wrktmp/IPtargetsv6
@@ -188,8 +191,8 @@ echo
 for i in `ls $wrkpth/SubDomainEnum/ | rg "$current_time"`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
         cat $wrkpth/SubDomainEnum/$i | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | tr -d "{" | tr -d ":" | tr -d "}" | sort | uniq >> $wrktmp/TempWeb
-        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
-        cat $wrkpth/SubDomainEnum/$i | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
+        cat $wrkpth/SubDomainEnum/$i | $GRAB_IPV4 >> $wrktmp/TempTargets
+        cat $wrkpth/SubDomainEnum/$i | $GRAB_FQDN >> $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | $IPv6 >> $wrktmp/TempTargetsv6
     fi
 done
@@ -201,7 +204,7 @@ Banner "Performing scan using Halberd"
 cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-{}-halberd_output-$current_time.txt"
 for web in $(ls $wrkpth/Halberd/); do
     if [ ! -z $wrkpth/Halberd/$i ]; then
-        cat $wrkpth/Halberd/$i | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+        cat $wrkpth/Halberd/$i | $GRAB_IPV4 >> $wrktmp/TempTargets
     fi
 done
 echo
@@ -209,8 +212,8 @@ echo
 Banner "Some house cleaning"
 # Some house cleaning
 # PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
-cat $wrktmp/WebTargets | rg --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info)" >> $wrktmp/TempWeb
-cat $wrktmp/IPtargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" >> $wrktmp/TempTargets
+cat $wrktmp/WebTargets | $GRAB_FQDN >> $wrktmp/TempWeb
+cat $wrktmp/IPtargets | $GRAB_IPV4 >> $wrktmp/TempTargets
 cat $wrktmp/IPtargetsv6 | $IPv6 >> $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq > $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq > $wrktmp/IPtargets
@@ -247,7 +250,7 @@ if [ -r $wrkpth/Masscan/live-$current_time ] || [ -r $wrkpth/Nmap/live-$current_
     cat $wrkpth/Nmap/live-$current_time | sort | uniq >> $wrktmp/TempTargets
     cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
     cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
-    cat $wrktmp/TempTargets | rg --engine -i -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
+    cat $wrktmp/TempTargets | $GRAB_IPV4 | sort | uniq | tee $wrktmp/IPtargets
     cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
 fi
 echo 
@@ -290,9 +293,9 @@ nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-al
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | $GRAB_FQDN | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | $IPv6 | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg --engine -i -e  "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv)" | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | $GRAB_FQDN | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -348,9 +351,9 @@ Banner "Performing scan using SSH Audit"
 if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
     SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i ssh | cut -d "/" -f 1 | tr -d " " | sort | uniq))
     for IP in $(cat $wrkpth/Nmap/SSH-$current_time); do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/open/tcp//ssh" -m 1 -o | rg "ssh" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/filtered/tcp//ssh" -m 1 -o | rg "ssh" -o) # Check to see if the port is filtered & is a web service
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/open/tcp//ssh" -o | rg "ssh" -o | sort | uniq) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/filtered/tcp//ssh" -o | rg "ssh" -o | sort | uniq) # Check to see if the port is filtered & is a web service
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "ssh" ] || [ "$STAT3" == "ssh" ]; then
             for PORTNUM in ${SSHPort[*]}; do
                 echo Scanning $IP
@@ -364,6 +367,31 @@ if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
         fi
     done
 fi
+echo
+
+# Using Eyewitness to take screenshots
+Banner "Performing scan using EyeWitness & aquafone"
+if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
+    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
+    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
+        eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
+    fi
+    # Using aquafone
+    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 # -ports xlarge
+    fi
+fi
+echo 
+
+# Using testssl & sslcan
+# switch back to for loop, testssl doesnt properly parse gnmap
+Banner "Performing scan using testssl"
+cd $wrkpth/SSL/
+testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
+find $wrkpth/SSL/ -type f -size -1k -delete
+cd $pth
 echo
 
 # Combining ports
@@ -382,41 +410,16 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort | uniq) # Wi
 # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
 # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
 
-# Using Eyewitness to take screenshots
-Banner "Performing scan using EyeWitness & aquafone"
-if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
-    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitness/
-    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-        eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt --resolve -d $wrkpth/EyeWitnessv6/
-    fi
-    # Using aquafone
-    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-    if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
-    fi
-fi
-echo 
-
-# Using testssl & sslcan
-# switch back to for loop, testssl doesnt properly parse gnmap
-Banner "Performing scan using testssl"
-cd $wrkpth/SSL/
-testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
-find $wrkpth/SSL/ -type f -size -1k -delete
-cd $pth
-echo
-
 # Using theharvester & metagoofil
 # look into the conditional
 Banner "Performing scan using Theharvester and Metagoofil"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is filtered & ssl enabled
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
@@ -446,11 +449,11 @@ echo
 Banner "Performing scan using Wappalyzer"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is filtered & ssl enabled
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
@@ -477,11 +480,11 @@ echo
 Banner "Performing scan using XSStrike"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is filtered & ssl enabled
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             echo "--------------------------------------------------"
@@ -512,11 +515,11 @@ echo
 Banner "Performing path traversal enumeration"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" -m 1 -o | rg "http" -o) # Check to see if the port is filtered & is a web service
-        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o) # Check to see if the port is open & ssl enabled
-        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o) # Check to see if the port is filtered & ssl enabled
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
+        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
+        STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
+        STAT5=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is filtered & ssl enabled
         if [ "$STAT1" == "Up" ] && [ "$STAT2" == "http" ] || [ "$STAT3" == "http" ]; then
             echo Scanning $web:$PORTNUM
             gospider -s "http://$web:$PORTNUM" -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a | tee -a $wrkpth/PathEnum/$prj_name-$web-$PORTNUM-gospider_output.log
