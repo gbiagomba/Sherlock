@@ -5,7 +5,7 @@
 #              of a web application assessment (specficailly recon).\n
 
 # for debugging purposes
-# set -eux
+set -eux
 trap "echo Booh!" SIGINT SIGTERM
 
 # Checking if the user is root
