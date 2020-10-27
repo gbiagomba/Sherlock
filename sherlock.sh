@@ -449,7 +449,7 @@ echo
 Banner "Performing scan using Wappalyzer"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
         STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
@@ -480,7 +480,7 @@ echo
 Banner "Performing scan using XSStrike"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
         STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
@@ -515,7 +515,7 @@ echo
 Banner "Performing path traversal enumeration"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq)) # Check to make sure the host is in fact up
+        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
         STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/filtered/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is filtered & is a web service
         STAT4=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//ssl" | rg "ssl" -o | sort | uniq) # Check to see if the port is open & ssl enabled
