@@ -384,6 +384,15 @@ if [ ! -e /opt/medusa-2.2 ] && ! hash medusa 2> /dev/null; then
     medusa -q
 fi
 
+# Downloading and installing theHarvester
+if [ ! -e /opt/theHarvester] && ! hash theHarvester 2> /dev/null; then
+    banner medusa
+    git clone https://github.com/laramies/theHarvester.git
+    cd theHarvester
+    pip3 install -r requirements/base.txt
+    ln -s /opt/theHarvester/theHarvester.py /usr/bin/theharvester
+fi
+
 # Done
 banner "WE ARE FINISHED!!!"
 } 2> /dev/null | tee -a $PWD/sherlock_install-$current_time.log
