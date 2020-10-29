@@ -290,6 +290,7 @@ nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSV --open -p- -iL $w
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
+# Fix the grepping
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
@@ -306,11 +307,6 @@ else
 fi
 echo
 
-# Using testssl & sslcan
-Banner "Performing scan using testssl"
-python3 /opt/brutespray/brutespray.py --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap -U /usr/share/seclists/Usernames/cirt-default-usernames.txt -P /usr/share/seclists/Passwords/cirt-default-passwords.txt --threads 10 --hosts 10 -c --output $wrkpth/l00tz
-echo
-
 # Checking all the services discovery by nmap
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do
     Banner "Performing targeted scan of $i"
@@ -323,13 +319,6 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrk
     nmap -6 -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
 done
 unset PORTNUM
-echo
-
-# Using batea
-Banner "Ranking nmap output using batea"
-for i in `ls $wrkpth/Nmap/ | rg -i xml | rg "$current_time"`; do
-    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output-$current_time.json 2> /dev/null
-done
 echo
 
 # Using DNS Recon
@@ -358,7 +347,7 @@ if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
             for PORTNUM in ${SSHPort[*]}; do
                 echo Scanning $IP
                 echo "--------------------------------------------------"
-                ssh-audit -n $IP -p  $PORTNUM | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output-$current_time.html
+                ssh-audit -n -p  $PORTNUM $IP | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output-$current_time.html
                 echo "--------------------------------------------------"
                 ssh_scan -t $IP -p $PORTNUM -o $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-scan_output-$current_time.json
                 echo "--------------------------------------------------"
@@ -369,15 +358,22 @@ if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
 fi
 echo
 
+# Using batea
+Banner "Ranking nmap output using batea"
+for i in `ls $wrkpth/Nmap/ | rg -i xml | rg "$current_time"`; do
+    batea -v $wrkpth/Nmap/$i | tee -a  $wrkpth/Batea/$prj_name-batea_output-$current_time.json 2> /dev/null
+done
+echo
+
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
 if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
-    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt -d $wrkpth/EyeWitness/
+    eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitness/
     if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-        eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 25 --no-prompt -d $wrkpth/EyeWitnessv6/
+        eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitnessv6/
     fi
     # Using aquafone
-    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -ports xlarge -threads 10
+    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10
     if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 # -ports xlarge
     fi
@@ -392,6 +388,11 @@ testssl --append --assume-http --csv --full --html --json-pretty --log --paralle
 testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6.txt
 find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
+echo
+
+# Using brutespray
+Banner "Performing scan using brutespray"
+python3 /opt/brutespray/brutespray.py --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap -U /usr/share/seclists/Usernames/cirt-default-usernames.txt -P /usr/share/seclists/Passwords/cirt-default-passwords.txt --threads 10 --hosts 10 -c --output $wrkpth/l00tz
 echo
 
 # Combining ports
@@ -411,7 +412,6 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort -n | uniq) #
 # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
 
 # Using theharvester & metagoofil
-# look into the conditional
 Banner "Performing scan using Theharvester and Metagoofil"
 for web in $(cat $wrktmp/FinalTargets); do
     for PORTNUM in ${NEW[*]}; do
