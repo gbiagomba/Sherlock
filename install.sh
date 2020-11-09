@@ -8,6 +8,7 @@ trap "echo Booh!" SIGINT SIGTERM
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+wrkpth="$PWD"
 
 # Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
@@ -199,8 +200,7 @@ if [ ! -e /opt/XSStrike ]; then
     git clone https://github.com/s0md3v/XSStrike
     cd XSStrike/
     $SUDOH pip3 install -r requirements.txt
-    cd /usr/bin/
-    ln -s /opt/XSStrike/xsstrike.py ./xsstrike
+    ln -s /opt/XSStrike/xsstrike.py /usr/bin/xsstrike
 else
     cd /opt/XSStrike
     git pull

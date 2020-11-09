@@ -282,12 +282,12 @@ echo "Full TCP SYN & UDP scan on live-$current_time targets"
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300p -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
+nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 
 # Scanning for IPv6
-nmap -T4 --min-rate 300p -6 -P0 -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -P0 -R --reason --resolve-all -sUV --open --top-ports 1000 -P0 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
 # Fix the grepping
@@ -313,8 +313,8 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrk
     # nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
     # printf "This portion of the scan will take approx"
     # convertAndPrintSeconds $nmapTimer
-    nmap -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i
-    nmap -6 -T4 --min-rate 300p -A -P0 -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
+    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i
+    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
 done
 unset PORTNUM
 echo
@@ -371,9 +371,9 @@ if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$curren
         eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitnessv6/
     fi
     # Using aquafone
-    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10
+    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 -ports xlarge
     if [ ! -z `$wrktmp/FinalTargets | $IPv6 ` ]; then
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 # -ports xlarge
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 -ports xlarge
     fi
 fi
 echo 
