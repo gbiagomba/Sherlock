@@ -4,7 +4,9 @@ function gift_wrap()
     Banner "Gift wrapping everything and putting a bowtie on it!"
     echo
 
-    # Generating HTML, CSV and XLSX reports
+    # Generating HTML, CSV and XLSX reports from nmap
+    # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
+    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
         xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl

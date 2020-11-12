@@ -62,7 +62,7 @@ convertAndPrintSeconds()
     # (( $minutes > 0 )) && printf '%d minutes ' $minutes;
     # (( $days > 0 || $hours > 0 || $minutes > 0 )) && printf 'and ';
     # printf '%d seconds\n' $seconds;
-        num=$1
+    num=$1
     min=0
     hour=0
     day=0
@@ -153,9 +153,6 @@ if [ -z $prj_name ]; then
     fi
 fi
 
-# Recording screen output
-# exec >|$PWD/$prj_name-term_output.log 2>&1
-
 # Parsing the target file
 cat $pth/$targets | $GRAB_FQDN >$wrktmp/WebTargets
 cat $pth/$targets | $GRAB_IPV4 > $wrktmp/TempTargets
@@ -167,8 +164,6 @@ echo
 
 # Using sublist3r 
 Banner "Performing Subdomain enum"
-# consider replacing with  gobuster -m dns -o gobuster_output-$current_time.txt -u example.com -t 50 -w "/usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt"
-# gobuster -m dns -cn -e -i -r -t 25 -w $WORDLIST -o "$wrkpth/PathEnum/$prj_name-gobuster_dns_output-$web.txt" -u example.com
 if [ ! -z $wrktmp/WebTargets ]; then
     for web in $(cat $wrktmp/WebTargets); do
         sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output-$current_time.txt"
@@ -211,7 +206,6 @@ echo
 
 Banner "Some house cleaning"
 # Some house cleaning
-# PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
 cat $wrktmp/WebTargets | $GRAB_FQDN >> $wrktmp/TempWeb
 cat $wrktmp/IPtargets | $GRAB_IPV4 >> $wrktmp/TempTargets
 cat $wrktmp/IPtargetsv6 | $IPv6 >> $wrktmp/TempTargetsv6
@@ -242,27 +236,14 @@ if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ] || [ -r $w
 fi
 echo
 
-# Combining targets
-# PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
-Banner "Merging all targets files"
-if [ -r $wrkpth/Masscan/live-$current_time ] || [ -r $wrkpth/Nmap/live-$current_time ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
-    # cat $wrkpth/Masscan/live-$current_time | sort | uniq > $wrktmp/TempTargets
-    cat $wrkpth/Nmap/live-$current_time | sort | uniq >> $wrktmp/TempTargets
-    cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
-    cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
-    cat $wrktmp/TempTargets | $GRAB_IPV4 | sort | uniq | tee $wrktmp/IPtargets
-    cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
-fi
-echo 
-
 Banner "Printing final list of targets to be used"
 cat $wrktmp/FinalTargets $wrktmp/IPtargets | tr " " "\n" | tr "," "\n" | sort | uniq
 echo
 
 # Using masscan to perform a quick port sweep
+Banner "Performing portknocking scan using Masscan"
 # Consider switcing to unicornscan
 # unicornscan -i eth1 -Ir 160 -E 192.168.1.0/24:1-4000 gateway:a
-Banner "Performing portknocking scan using Masscan"
 # hostcount=$(wc -l $wrktmp/IPtargets | cut -d " " -f 4)
 # nmapTimer=$(expr ((3*65535*$hostcount)/1000)*1.1)
 # printf "This portion of the scan will take approx"
@@ -274,20 +255,19 @@ fi
 echo 
 
 # Nmap - Full TCP SYN & UDP scan on live-$current_time targets
+Banner "Performing portknocking scan using Nmap"
 # time = (max-retries * ports * hosts) / min-rate
 # -T4 has a max retry of 6
-Banner "Performing portknocking scan using Nmap"
-echo "Full TCP SYN & UDP scan on live-$current_time targets"
 # hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
+nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 
 # Scanning for IPv6
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 -iL $wrktmp/FinalTargets -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
 # Fix the grepping
@@ -406,8 +386,6 @@ if [ -z ${#HTTPPort[@]} ] && [ -z ${#SSLPort[@]} ]; then
     exit
 fi
 NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort -n | uniq) # Will need testing
-# Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
-# ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
 
 # Using theharvester & metagoofil
 Banner "Performing scan using Theharvester and Metagoofil"

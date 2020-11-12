@@ -7,6 +7,19 @@ These are the sections I will clean up and add later
 # curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
 # echo
 
+# Combining targets
+# PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
+# Banner "Merging all targets files"
+# if [ -r $wrkpth/Masscan/live-$current_time ] || [ -r $wrkpth/Nmap/live-$current_time ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
+#     # cat $wrkpth/Masscan/live-$current_time | sort | uniq > $wrktmp/TempTargets
+#     cat $wrkpth/Nmap/live-$current_time | sort | uniq >> $wrktmp/TempTargets
+#     cat $wrktmp/tempFinal  >> $wrktmp/TempTargets
+#     cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq >> $wrktmp/FinalTargets
+#     cat $wrktmp/TempTargets | $GRAB_IPV4 | sort | uniq | tee $wrktmp/IPtargets
+#     cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | $IPv6 >> $wrktmp/FinalTargets
+# fi
+# echo 
+
 # # Testing HTTP pages further
 # echo "--------------------------------------------------"
 # echo "Performing scan using HTTP Audit (18 of 22)"
