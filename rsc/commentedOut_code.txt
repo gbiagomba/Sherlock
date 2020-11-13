@@ -7,6 +7,72 @@ These are the sections I will clean up and add later
 # curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
 # echo
 
+# Conditional statements
+# reference: https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/21128172
+# https://stackoverflow.com/questions/14447406/bash-shell-script-check-for-a-flag-and-grab-its-value
+# https://jonalmeida.com/posts/2013/05/26/different-ways-to-implement-flags-in-bash/
+# while test $# -gt 0; do
+#   case "$1" in
+#     -h|--help)
+#       echo "$package - attempt to capture frames"
+#       echo " "
+#       echo "$package [options] application [arguments]"
+#       echo " "
+#       echo "options:"
+#       echo "-h, --help                show brief help"
+#       echo "-a, --action=ACTION       specify an action to use"
+#       echo "-o, --output-dir=DIR      specify a directory to store output in"
+#       exit 0
+#       ;;
+#     -a)
+#       shift
+#       if test $# -gt 0; then
+#         export PROCESS=$1
+#       else
+#         echo "no process specified"
+#         exit 1
+#       fi
+#       shift
+#       ;;
+#     --action*)
+#       export PROCESS=`echo $1 | sed -e 's/^[^=]*=//g'`
+#       shift
+#       ;;
+#     -o)
+#       shift
+#       if test $# -gt 0; then
+#         export OUTPUT=$1
+#       else
+#         echo "no output dir specified"
+#         exit 1
+#       fi
+#       shift
+#       ;;
+#     --output-dir*)
+#       export OUTPUT=`echo $1 | sed -e 's/^[^=]*=//g'`
+#       shift
+#       ;;
+#     *)
+#       break
+#       ;;
+#   esac
+# done
+
+# while getopts ":p:n:m:h" opt; do
+#     case $opt in
+#         p) XML_PATH="$OPTARG"
+#         ;;
+#         n) TN="$OPTARG"
+#         ;;
+#         m) MODE="$OPTARG"
+#         ;;
+#         h) echo "$helper";exit
+#         ;;
+#         \?) echo "Invalid option -$OPTARG" >&2;exit 1
+#         ;;
+#     esac
+# done
+
 # Combining targets
 # PUT IN ADDITIONAL FILTERS FOR IPV4, V6, ETC.
 # Banner "Merging all targets files"
