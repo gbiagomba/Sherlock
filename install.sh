@@ -258,9 +258,14 @@ if [ ! -e /opt/batea ]; then
     cd /opt/
     git clone https://github.com/delvelabs/batea
     cd batea/
-    $SUDOH python3 setup.py sdist
-    $SUDOH pip3 install -r requirements.txt
-    $SUDOH pip3 install ! -e .
+    python3 setup.py sdist
+    pip3 install -r requirements.txt
+    pip3 install -e .
+    python3 -m venv batea/
+    source batea/bin/activate
+    pip3 install -r requirements-dev.txt
+    pip3 install -e .
+    pytest
 else
     cd /opt/batea
     git pull
