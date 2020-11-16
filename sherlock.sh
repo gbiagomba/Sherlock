@@ -551,4 +551,4 @@ echo
 
 # WRapping up assessment
 gift_wrap
-} 2> /dev/null | tee -a $pth/$prj_name-sherlock_output-$current_time.txt
+} 2> /dev/null | tee -a $wrkpth/$prj_name-sherlock_output-$current_time.txt

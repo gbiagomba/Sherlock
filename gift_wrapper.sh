@@ -37,12 +37,12 @@ function gift_wrap()
 
     # Converting output to HTML
     Banner "Generating html report"
-    cat $pth/$prj_name-sherlock_output-$current_time.txt | aha > $pth/$prj_name-sherlock_output-$current_time.html
+    cat $wrkpth/$prj_name-sherlock_output-$current_time.txt | aha > $wrkpth/$prj_name-sherlock_output-$current_time.html
     echo
 
     # Zipping the rest up
     Banner "Compressing the files"
-    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $pth/$prj_name-sherlock_output-$current_time.txt $pth/$prj_name-sherlock_output-$current_time.html $wrkpth/
+    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $wrkpth/$prj_name-sherlock_output-$current_time.txt $wrkpth/$prj_name-sherlock_output-$current_time.html $wrkpth/
     echo
 
     # Removing unnessary files
