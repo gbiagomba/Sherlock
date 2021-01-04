@@ -142,7 +142,7 @@ echo
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
 for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do 
     timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
-    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time |  | favfreak -o $wrkpth/output
+    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time |  | favfreak -o $wrkpth/FavFreak
 done
 echo
 
@@ -213,14 +213,14 @@ if [ -r $wrkpth/$prj_name-livehosts-$current_time ] || [ -r $wrkpth/Nmap/live-$c
     # cat $wrkpth/Masscan/live-$current_time | sort | uniq | tee -a $wrktmp/TempTargets
     cat $wrkpth/Nmap/live-$current_time | sort | uniq | tee -a $wrktmp/TempTargets
     cat $wrktmp/tempFinal | tee -a $wrktmp/TempTargets
-    cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq | tee -a $wrktmp/FinalTargets
+    cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets | tr " " "\n" | tr "," "\n"  | sort | uniq | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
     cat $wrktmp/TempTargets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort | uniq | tee $wrktmp/IPtargets
-    cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/FinalTargets
+    cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
 fi
 echo 
 
 Banner "Printing final list of targets to be used"
-cat $wrktmp/FinalTargets $wrktmp/IPtargets | tr " " "\n" | tr "," "\n" | sort | uniq | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
+cat $wrkpth/$prj_name-FinalTargets-$current_time.list $wrktmp/IPtargets | tr " " "\n" | tr "," "\n" | sort | uniq | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
 echo
 
 # Using masscan to perform a quick port sweep
@@ -241,7 +241,7 @@ echo
 Banner "Performing portknocking scan using Nmap"
 # time = (max-retries * ports * hosts) / min-rate
 # -T4 has a max retry of 6
-# hostcount=$(wc -l $wrktmp/FinalTargets | cut -d " " -f 4)
+# hostcount=$(wc -l $wrkpth/$prj_name-FinalTargets-$current_time.list | cut -d " " -f 4)
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
@@ -332,12 +332,12 @@ echo
 Banner "Performing scan using EyeWitness & aquafone"
 if [ ! -z $wrkpth/Nmap/$prj_name-HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitness/
-    if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
+    if [ ! -z `$wrkpth/$prj_name-FinalTargets-$current_time.list | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
         eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitnessv6/
     fi
     # Using aquafone
     cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 # -ports xlarge
-    if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
+    if [ ! -z `$wrkpth/$prj_name-FinalTargets-$current_time.list | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatonev6/ -threads 10 # -ports xlarge
     fi
 fi
@@ -374,7 +374,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort -n | uniq) #
 
 # Using theharvester & metagoofil
 Banner "Performing scan using Theharvester and Metagoofil"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
@@ -408,7 +408,7 @@ echo
 
 # Using Wappalyzer
 Banner "Performing scan using Wappalyzer"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
@@ -439,7 +439,7 @@ echo
 
 # Using XSStrike
 Banner "Performing scan using XSStrike"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
@@ -467,14 +467,14 @@ echo
 # Using nikto
 Banner "Performing scan using Nikto"
 nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output-$current_time.txt
-if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
+if [ ! -z `$wrkpth/$prj_name-FinalTargets-$current_time.list | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
     nikto -C all -host $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap -output $wrkpth/Nikto/$prj_name-nikto_output.csv -Display 1,2,3,4,E,P -maxtime 90m | tee $wrkpth/Nikto/$prj_name-nikto_output-$current_time.txt
 fi
 echo
 
 # Using gospider
 Banner "Performing path traversal enumeration"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open/tcp//http" | rg "http" -o | sort | uniq) # Check to see if the port is open & is a web service
@@ -498,7 +498,7 @@ echo
 
 # Using Wapiti, arjun and ffuf
 Banner "Performing scan using Wapiti, arjun, and ffuf"
-for web in $(cat $wrktmp/FinalTargets); do
+for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
     for PORTNUM in ${NEW[*]}; do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "Status: Up" -m 1 -o | cut -c 9-10) # Check to make sure the host is in fact up
         STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $web | rg "$PORTNUM/open" -m 1 -o | rg "open" -o) # Check to see if the port is open & is a web service
