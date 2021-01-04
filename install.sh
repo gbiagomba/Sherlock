@@ -271,6 +271,19 @@ else
     git pull
 fi
 
+# Download and install favfreak
+if [ ! -e /opt/FavFreak ]; then
+    git clone https://github.com/devanshbatham/FavFreak
+    cd FavFreak
+    virtualenv -p python3 env
+    source env/bin/activate
+    python3 -m pip install mmh3
+    ln -s /opt/FavFreak/favfreak.py /usr/bin/favfreak
+else
+    cd /opt/FavFreak
+    git pull
+fi
+
 # Downloading & installing nmap-bootstrap-xsl
 if [ ! -e /opt/nmap-bootstrap-xsl ]; then
     banner "nmap HTML report template"

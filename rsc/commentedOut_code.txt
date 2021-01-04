@@ -7,6 +7,44 @@ These are the sections I will clean up and add later
 # curl -sH "X-ApiKeys:accessKey=$API_AK;secretKey=$API_SK" -H 'Content-Type: application/json' -d '{"uuid": "$Template-UUID", , "settings": { "name": "new_scan", "file_targets": "'"$wrkpth/targets"'",  "folder_id":"264" } }'  https://cloud.tenable.com/scans | python -m json.tool
 # echo
 
+# https://bytefreaks.net/gnulinux/bash/convertandprintseconds-convert-seconds-to-minutes-hours-and-days-in-bash
+convertAndPrintSeconds() 
+{
+    # local totalSeconds=$1;
+    # local seconds=$((totalSeconds%60));
+    # local minutes=$((totalSeconds/60%60));
+    # local hours=$((totalSeconds/60/60%24));
+    # local days=$((totalSeconds/60/60/24));
+    # (( $days > 0 )) && printf '%d days ' $days;
+    # (( $hours > 0 )) && printf '%d hours ' $hours;
+    # (( $minutes > 0 )) && printf '%d minutes ' $minutes;
+    # (( $days > 0 || $hours > 0 || $minutes > 0 )) && printf 'and ';
+    # printf '%d seconds\n' $seconds;
+    num=$1
+    min=0
+    hour=0
+    day=0
+    if((num>59));then
+        ((sec=num%60))
+        ((num=num/60))
+        if((num>59));then
+            ((min=num%60))
+            ((num=num/60))
+            if((num>23));then
+                ((hour=num%24))
+                ((day=num/24))
+            else
+                ((hour=num))
+            fi
+        else
+            ((min=num))
+        fi
+    else
+        ((sec=num))
+    fi
+    echo "$day"d "$hour"h "$min"m "$sec"s
+}
+
 # Conditional statements
 # reference: https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/21128172
 # https://stackoverflow.com/questions/14447406/bash-shell-script-check-for-a-flag-and-grab-its-value

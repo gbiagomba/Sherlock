@@ -33,8 +33,8 @@ NMAP_SCRIPTS="vulners,vulscan/vulscan.nse"
 OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
-diskMax=95
-diskSize=$(df | rg /dev/sda1 | cut -d " " -f 13 | cut -d "%" -f 1)
+diskMax=90
+diskSize=$(df -kh $PWD | grep -iv filesystem | cut -d " " -f 16 | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
 wrktmp=$(mktemp -d)
@@ -47,44 +47,6 @@ function Banner
     echo "$1
     Current Time : $current_time"
     echo "--------------------------------------------------"
-}
-
-# https://bytefreaks.net/gnulinux/bash/convertandprintseconds-convert-seconds-to-minutes-hours-and-days-in-bash
-convertAndPrintSeconds() 
-{
-    # local totalSeconds=$1;
-    # local seconds=$((totalSeconds%60));
-    # local minutes=$((totalSeconds/60%60));
-    # local hours=$((totalSeconds/60/60%24));
-    # local days=$((totalSeconds/60/60/24));
-    # (( $days > 0 )) && printf '%d days ' $days;
-    # (( $hours > 0 )) && printf '%d hours ' $hours;
-    # (( $minutes > 0 )) && printf '%d minutes ' $minutes;
-    # (( $days > 0 || $hours > 0 || $minutes > 0 )) && printf 'and ';
-    # printf '%d seconds\n' $seconds;
-    num=$1
-    min=0
-    hour=0
-    day=0
-    if((num>59));then
-        ((sec=num%60))
-        ((num=num/60))
-        if((num>59));then
-            ((min=num%60))
-            ((num=num/60))
-            if((num>23));then
-                ((hour=num%24))
-                ((day=num/24))
-            else
-                ((hour=num))
-            fi
-        else
-            ((min=num))
-        fi
-    else
-        ((sec=num))
-    fi
-    echo "$day"d "$hour"h "$min"m "$sec"s
 }
 
 # Ensuring system is debian based
@@ -176,10 +138,11 @@ if [ ! -z $wrktmp/WebTargets ]; then
 fi
 echo
 
-# Checking subdomains against subdomainizer
+# Checking subdomains against subdomainizer & favfreak
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
 for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do 
     timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
+    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time |  | favfreak -o $wrkpth/output
 done
 echo
 
@@ -190,6 +153,8 @@ for i in `ls $wrkpth/SubDomainEnum/ | rg "$current_time"`; do
         cat $wrkpth/SubDomainEnum/$i | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
         cat $wrkpth/SubDomainEnum/$i | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
         cat $wrkpth/SubDomainEnum/$i | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
+        cat $wrkpth/SubDomainEnum/$i | rg -a --auto-hybrid-regex -e '\b(https?|ftp|sql|mysql|mssql|ftp|sftp|ftps|pop3|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]' -o | sort | uniq | tee -a $wrktmp/TempWeb
+        cat $wrkpth/SubDomainEnum/$i | rg --auto-hybrid-regex -e '(http|https|sql|mysql|mssql|ftp|sftp|ftps|pop3|file|ssh|smtp|sip|imap|rtp|ntp)://[^/"]+' -o | cut -d ":" -f 3 | cut -d "/" -f 3 | sort | uniq | tee -a $wrktmp/TempWeb
     fi
 done
 cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
@@ -201,6 +166,7 @@ cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -
 for web in $(ls $wrkpth/Halberd/); do
     if [ ! -z $wrkpth/Halberd/$i ]; then
         cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
+        cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
     fi
 done
 echo
@@ -209,11 +175,12 @@ Banner "Some house cleaning"
 # Some house cleaning
 cat $wrktmp/WebTargets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
 cat $wrktmp/IPtargets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
-cat $wrktmp/IPtargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
+cat $wrktmp/IPtargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
+cat $wrktmp/IPtargetsv6 | rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
 cat $wrktmp/TempWeb | sort | uniq | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort | uniq | tee -a $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort | uniq | tee -a $wrktmp/IPtargetsv6
-cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | rg -iv found | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq | tee -a $wrktmp/tempFinal
+cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | rg -iv found | grep -vi "SOA:" | grep -vi "NS:" | rg -iv "Zone:" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort | uniq | tee -a $wrktmp/tempFinal
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
@@ -279,18 +246,20 @@ Banner "Performing portknocking scan using Nmap"
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
 nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
+nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sTV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 
 # Scanning for GRAB_IPV6
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sTV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
 # Fix the grepping
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort | uniq`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort | uniq | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -309,8 +278,8 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrk
     # nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
     # printf "This portion of the scan will take approx"
     # convertAndPrintSeconds $nmapTimer
-    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i
-    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i
+    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i-$current_time
+    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i-$current_time
 done
 unset PORTNUM
 echo
@@ -318,8 +287,8 @@ echo
 # Using DNS Recon
 # Will revise this later to account for other ports one might use for dns
 Banner "Performing scan using DNS Scan"
-if [ -s $wrkpth/Nmap/DOMAIN-$current_time ]; then
-    for IP in $(cat $wrkpth/Nmap/DOMAIN-$current_time); do
+if [ -s $wrkpth/Nmap/$prj_name-DOMAIN-$current_time ]; then
+    for IP in $(cat $wrkpth/Nmap/$prj_name-DOMAIN-$current_time); do
         echo Scanning $IP
         echo "--------------------------------------------------"
         dnsrecon -d $IP -a | tee -a $wrkpth/DNS_Recon/$prj_name-$IP-$web-DNSRecon_output-$current_time.txt
@@ -331,7 +300,7 @@ echo
 
 # Using SSH Audit
 Banner "Performing scan using SSH Audit"
-if [ -s $wrkpth/Nmap/SSH-$current_time ]; then
+if [ -s $wrkpth/Nmap/$prj_name-SSH-$current_time ]; then
     SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i ssh | cut -d "/" -f 1 | tr -d " " | sort | uniq))
     for IP in $(cat $wrkpth/Nmap/SSH-$current_time); do
         STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "Status: Up" -o | cut -c 9-10 | sort | uniq) # Check to make sure the host is in fact up
@@ -361,15 +330,15 @@ echo
 
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
-if [ ! -z $wrkpth/Nmap/HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
+if [ ! -z $wrkpth/Nmap/$prj_name-HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitness/
     if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
         eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitnessv6/
     fi
     # Using aquafone
-    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 -ports xlarge
+    cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 # -ports xlarge
     if [ ! -z `$wrktmp/FinalTargets | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq ` ]; then
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatone/ -threads 10 -ports xlarge
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatonev6/ -threads 10 # -ports xlarge
     fi
 fi
 echo 
