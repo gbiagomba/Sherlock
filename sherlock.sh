@@ -34,7 +34,7 @@ OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 diskMax=90
-diskSize=$(df -kh $PWD | grep -iv filesystem | cut -d " " -f 16 | cut -d "%" -f 1)
+diskSize=$(df -kh $PWD | grep -iv filesystem | cut -d " " -f 15 | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
 wrktmp=$(mktemp -d)
@@ -142,7 +142,7 @@ echo
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
 for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do 
     timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
-    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time |  | favfreak -o $wrkpth/FavFreak
+    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
 done
 echo
 
