@@ -47,7 +47,7 @@ for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq ma
 done
 
 # Installing python dependencies
-for i in fierce ssh-audit theHarvester; do
+for i in fierce dirbpy ssh-audit theHarvester; do
     if ! hash $i 2> /dev/null; then
         banner "$i"
         $SUDOH pip3 install $i
