@@ -117,7 +117,7 @@ fi
 
 # Parsing the target file
 Banner "Parsing the target file"
-cat $pth/$targets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/WebTargets
+cat $pth/$targets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys|\.tv)" | tee -a $wrktmp/WebTargets
 cat $pth/$targets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
 cat $pth/$targets | grep -e "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}" | tee -a $wrktmp/TempTargets
 cat $pth/$targets | rg --auto-hybrid-regex --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
@@ -184,12 +184,11 @@ cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | 
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
-nmap -T5 --min-rate 300 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PR -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
+nmap -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PR -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
 
 # Nmap - IPv6 Pingsweep using TCP SYN, and UDP
 Banner "Nmap - GRAB_IPV6 Pingsweep using TCP SYN, and UDP"
-nmap -6 -T5 --min-rate 300 -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
-
+nmap -6 -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
 
 # Nmap - Grabing live hosts
 Banner "Grabbing livehosts from pingsweep"
@@ -231,7 +230,7 @@ Banner "Performing portknocking scan using Masscan"
 # nmapTimer=$(expr ((3*65535*$hostcount)/1000)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-masscan -iL $wrktmp/IPtargets -p 0-65535 --rate 1000 --open-only --retries 3 -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
+masscan --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ] && [ -s "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort | uniq | tee -a $wrkpth/$prj_name-livehosts-$current_time
 fi
@@ -245,14 +244,14 @@ Banner "Performing portknocking scan using Nmap"
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
-nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sTV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
+nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
+nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 
 # Scanning for GRAB_IPV6
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sTV --open -p- --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time
-nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script targets-xml,vulners --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time
+nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
 # Fix the grepping
@@ -366,8 +365,8 @@ echo
 # switch back to for loop, testssl doesnt properly parse gnmap
 Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
-testssl --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-testssl -6 --append --assume-http --csv --full --html --json-pretty --log --parallel --sneaky --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
+testssl --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+testssl -6 --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
 find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
 echo
