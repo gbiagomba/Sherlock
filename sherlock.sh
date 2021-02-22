@@ -29,12 +29,12 @@ API_SK="" #Tenable Secret Key
 # GRAB_IPV4CIDR=$(grep -e "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}")
 # GRAB_IPV6=(rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq)
 NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-usernames.txt,passdb=/usr/share/seclists/Passwords/cirt-default-passwords.txt,unpwdb.timelimit=15m,brute.firstOnly"
-NMAP_SCRIPTS="vulners,vulscan/vulscan,vuln,auth,brute"
+NMAP_SCRIPTS="vulners,vulscan/vulscan,vuln,auth,brute,targets-xml"
 OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 diskMax=90
-diskSize=$(df -kh $PWD | grep -iv filesystem | cut -d " " -f 15 | cut -d "%" -f 1)
+diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'%)
 prj_name=$2
 targets=$1
 wrktmp=$(mktemp -d)
@@ -117,7 +117,7 @@ fi
 
 # Parsing the target file
 Banner "Parsing the target file"
-cat $pth/$targets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys|\.tv)" | tee -a $wrktmp/WebTargets
+cat $pth/$targets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys|\.ie)" | tee -a $wrktmp/WebTargets
 cat $pth/$targets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
 cat $pth/$targets | grep -e "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\/[0-9]\{1,\}" | tee -a $wrktmp/TempTargets
 cat $pth/$targets | rg --auto-hybrid-regex --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort | uniq | tee -a $wrktmp/TempTargetsv6
@@ -129,11 +129,11 @@ echo
 Banner "Performing Subdomain enum"
 if [ ! -z $wrktmp/WebTargets ]; then
     for web in $(cat $wrktmp/WebTargets); do
-        sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output-$current_time.txt"
-        amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output-$current_time.txt"
-        gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output-$current_time.txt" -d $web
-        shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
-        fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
+        Banner "with sublist3r"; sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output-$current_time.txt"
+        Banner "with amass"; amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output-$current_time.txt"
+        Banner "with gobuster"; gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output-$current_time.txt" -d $web
+        Banner "with shuffledns"; shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
+        Banner "with fierce"; fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
     done
 fi
 echo
