@@ -39,7 +39,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -294,8 +294,8 @@ else
     git pull
 fi
 
-# Downloading & installing SubDomainizer
-if [ ! -e /opt/Sherlock ]; then
+# Linking sherlock
+if [ -e /opt/Sherlock ]; then
     banner sherlock
     ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
     ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
@@ -404,11 +404,26 @@ fi
 
 # Downloading and installing theHarvester
 if [ ! -e /opt/theHarvester] && ! hash theHarvester 2> /dev/null; then
-    banner medusa
+    banner theHarvester
     git clone https://github.com/laramies/theHarvester.git
-    cd theHarvester
+    cd /opt/theHarvester
     pip3 install -r requirements/base.txt
     ln -s /opt/theHarvester/theHarvester.py /usr/bin/theharvester
+else
+    cd /opt/theHarvester
+    git pull
+fi
+
+# Downloading and installing searchsploit
+if [ ! -e /opt/exploit-database ] && ! hash searchsploit 2> /dev/null; then
+    banner searchsploit
+    git clone https://github.com/offensive-security/exploit-database.git
+    cd /opt/exploit-database/
+    ln -s /opt/exploit-database/searchsploit /usr/bin/searchsploit
+else
+    searchsploit -u
+    cd /opt/exploit-database/
+    git pull
 fi
 
 # Done

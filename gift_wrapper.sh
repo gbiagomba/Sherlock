@@ -12,6 +12,7 @@ function gift_wrap()
         xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
         python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/$i.csv"
         python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/$i.json"
+        searchsploit --nmap $wrkpth/Nmap/$i | tee -a "$wrkpth/$prj_name-searchsploit_output-$current_time.txt"
     done
     python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output-$current_time.xlsx" $wrkpth/Nmap/*.xml
     echo
