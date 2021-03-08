@@ -39,7 +39,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -295,7 +295,7 @@ else
 fi
 
 # Linking sherlock
-if [ -e /opt/Sherlock ]; then
+if [ -x sherlock ]; then
     banner sherlock
     ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
     ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
@@ -355,12 +355,13 @@ else
 fi
 
 # Downloading and installing brutespray
-if [ ! -e /opt/brutesprays ]; then
+if ! hash brutespray 2> /dev/null; then
     banner "brutespray"
     cd /opt/
     git clone https://github.com/x90skysn3k/brutespray
     cd brutespray/
     pip3 install -r requirements.txt
+    ln -s /opt/brutespray/brutespray.py /usr/bin/brutespray
 else
     cd /opt/brutespray/
     git pull
