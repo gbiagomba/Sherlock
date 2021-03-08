@@ -8,6 +8,7 @@ trap "echo Booh!" SIGINT SIGTERM
 # Setting up variables
 OS_CHK=$(cat /etc/os-release | grep -o debian)
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+wrkpth="$PWD"
 
 # Checking user is root & Ensuring system is debian based
 if [ "$EUID" -ne 0 ]
@@ -38,7 +39,7 @@ apt update
 apt upgrade -y
 
 # Installing main system dependencies
-for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         apt install -y $i
@@ -46,10 +47,12 @@ for i in aha amass chromium dirb dirbuster dnsrecon golang git git-core go jq ma
 done
 
 # Installing python dependencies
-if ! hash theHarvester 2> /dev/null || ! hash ssh-audit 2> /dev/null; then
-    banner "theHarvester, ssh-audit and fierce"
-    $SUDOH pip3 install fierce ssh-audit theHarvester
-fi
+for i in fierce dirbpy ssh-audit theHarvester; do
+    if ! hash $i 2> /dev/null; then
+        banner "$i"
+        $SUDOH pip3 install $i
+    fi
+done
 
 # Installing remaining dependencies
 if ! hash testssl 2> /dev/null || ! hash testssl.sh 2> /dev/null; then
@@ -134,7 +137,7 @@ fi
 
 if ! hash amass; then
     banner amass
-    $SUDOH go get -v github.com/OWASP/Amass
+    $SUDOH go get -u -v github.com/OWASP/Amass
 fi
 
 if ! hash httprobe; then
@@ -162,8 +165,9 @@ if ! hash shuffledns; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
-if ! hash massdns; then
+if ! hash massdns && [ ! -e /opt/massdns ]; then
     banner massdns
+    cd /opt/
     git clone https://github.com/blechschmidt/massdns.git
     cd massdns
     $SUDOH make
@@ -196,8 +200,7 @@ if [ ! -e /opt/XSStrike ]; then
     git clone https://github.com/s0md3v/XSStrike
     cd XSStrike/
     $SUDOH pip3 install -r requirements.txt
-    cd /usr/bin/
-    ln -s /opt/XSStrike/xsstrike.py ./xsstrike
+    ln -s /opt/XSStrike/xsstrike.py /usr/bin/xsstrike
 else
     cd /opt/XSStrike
     git pull
@@ -255,11 +258,29 @@ if [ ! -e /opt/batea ]; then
     cd /opt/
     git clone https://github.com/delvelabs/batea
     cd batea/
-    $SUDOH python3 setup.py sdist
-    $SUDOH pip3 install -r requirements.txt
-    $SUDOH pip3 install ! -e .
+    python3 setup.py sdist
+    pip3 install -r requirements.txt
+    pip3 install -e .
+    python3 -m venv batea/
+    source batea/bin/activate
+    pip3 install -r requirements-dev.txt
+    pip3 install -e .
+    pytest
 else
     cd /opt/batea
+    git pull
+fi
+
+# Download and install favfreak
+if [ ! -e /opt/FavFreak ]; then
+    git clone https://github.com/devanshbatham/FavFreak
+    cd FavFreak
+    virtualenv -p python3 env
+    source env/bin/activate
+    python3 -m pip install mmh3
+    ln -s /opt/FavFreak/favfreak.py /usr/bin/favfreak
+else
+    cd /opt/FavFreak
     git pull
 fi
 
@@ -273,8 +294,8 @@ else
     git pull
 fi
 
-# Downloading & installing SubDomainizer
-if [ ! -e /opt/Sherlock ]; then
+# Linking sherlock
+if [ -x sherlock ]; then
     banner sherlock
     ln -s /opt/Sherlock/sherlock.sh /usr/bin/sherlock
     ln -s /opt/Sherlock/gift_wrapper.sh /usr/bin/gift_wrapper.sh
@@ -309,7 +330,7 @@ fi
 
 # Downloading and installing metagofil
 if [ ! -e /opt/metagoofil ]; then
-    banner metagofil
+    banner metagoofil
     cd /opt/
     git clone https://github.com/laramies/metagoofil
     cd metagoofil/
@@ -334,12 +355,13 @@ else
 fi
 
 # Downloading and installing brutespray
-if [ ! -e /opt/brutesprays ]; then
+if ! hash brutespray 2> /dev/null; then
     banner "brutespray"
     cd /opt/
     git clone https://github.com/x90skysn3k/brutespray
     cd brutespray/
     pip3 install -r requirements.txt
+    ln -s /opt/brutespray/brutespray.py /usr/bin/brutespray
 else
     cd /opt/brutespray/
     git pull
@@ -381,6 +403,30 @@ if [ ! -e /opt/medusa-2.2 ] && ! hash medusa 2> /dev/null; then
     medusa -q
 fi
 
+# Downloading and installing theHarvester
+if [ ! -e /opt/theHarvester] && ! hash theHarvester 2> /dev/null; then
+    banner theHarvester
+    git clone https://github.com/laramies/theHarvester.git
+    cd /opt/theHarvester
+    pip3 install -r requirements/base.txt
+    ln -s /opt/theHarvester/theHarvester.py /usr/bin/theharvester
+else
+    cd /opt/theHarvester
+    git pull
+fi
+
+# Downloading and installing searchsploit
+if [ ! -e /opt/exploit-database ] && ! hash searchsploit 2> /dev/null; then
+    banner searchsploit
+    git clone https://github.com/offensive-security/exploit-database.git
+    cd /opt/exploit-database/
+    ln -s /opt/exploit-database/searchsploit /usr/bin/searchsploit
+else
+    searchsploit -u
+    cd /opt/exploit-database/
+    git pull
+fi
+
 # Done
 banner "WE ARE FINISHED!!!"
-} 2> /dev/null | tee -a /opt/sherlock_install-$current_time.log
+} 2> /dev/null | tee -a $PWD/sherlock_install-$current_time.log

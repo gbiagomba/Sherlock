@@ -8,7 +8,7 @@ amass(https://github.com/OWASP/Amass)
 shuffledns (https://github.com/projectdiscovery/shuffledns && they will need massdns installed https://github.com/blechschmidt/massdns)
 aqautone (https://github.com/michenriksen/aquatone) -- i will ditching this
 ffuf
+brutespray (https://github.com/x90skysn3k/brutespray) - use that to automate password cracking across multiple hosts and network services
 
 # consider doing this
-https://github.com/x90skysn3k/brutespray <= use that to automate password cracking across multiple hosts and network services
 https://github.com/codingo/Interlace <= consider adding to expedite the speed at which scans are performed

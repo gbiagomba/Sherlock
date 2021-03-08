@@ -4,12 +4,15 @@ function gift_wrap()
     Banner "Gift wrapping everything and putting a bowtie on it!"
     echo
 
-    # Generating HTML, CSV and XLSX reports
+    # Generating HTML, CSV and XLSX reports from nmap
+    # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
+    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
-        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/`echo $i | tr -d 'xml'`html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
+        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
         python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/$i.csv"
         python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/$i.json"
+        searchsploit --nmap $wrkpth/Nmap/$i | tee -a "$wrkpth/$prj_name-searchsploit_output-$current_time.txt"
     done
     python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output-$current_time.xlsx" $wrkpth/Nmap/*.xml
     echo
@@ -35,12 +38,12 @@ function gift_wrap()
 
     # Converting output to HTML
     Banner "Generating html report"
-    cat $pth/$prj_name-sherlock_output-$current_time.txt | aha > $pth/$prj_name-sherlock_output-$current_time.html
+    cat $wrkpth/$prj_name-sherlock_output-$current_time.txt | aha > $wrkpth/$prj_name-sherlock_output-$current_time.html
     echo
 
     # Zipping the rest up
     Banner "Compressing the files"
-    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $pth/$prj_name-sherlock_output-$current_time.txt $pth/$prj_name-sherlock_output-$current_time.html $wrkpth/
+    zip -ru9 $pth/$prj_name-sherlock_output-$current_time.zip $wrkpth/$prj_name-sherlock_output-$current_time.txt $wrkpth/$prj_name-sherlock_output-$current_time.html $wrkpth/
     echo
 
     # Removing unnessary files
@@ -49,7 +52,7 @@ function gift_wrap()
     echo
 
     # Uninitializing variables
-    for var in API_AK API_SK HTTPPort i IP NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
+    for var in API_AK API_SK current_time GRAB_FQDN GRAB_IPV4 GRAB_IPV4CIDR HTTPPort i IP IPV6 NEW NMAP_SCRIPTS NMAP_SCRIPTARG PORTNUM OS_CHK prj_name pth SSHPort SSLPort SSLCHECK STAT1 STAT2 STAT3 STAT4 STAT5 targets TodaysDAY TodaysYEAR web wrkpth wrktmp WORDLIST; do
         unset $var
     done
     unset var
