@@ -34,7 +34,7 @@ OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 diskMax=90
-diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'%)
+diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'% | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
 wrktmp=$(mktemp -d)
@@ -58,7 +58,7 @@ fi
 # Checking system resources (HDD space)
 if [[ "$diskSize" -ge "$diskMax" ]]; then
 	clear
-	echo 
+	echo
 	echo "You are using $diskSize% and I am concerned you might run out of space"
 	echo "Remove some files and try again, you will thank me later, trust me :)"
 	exit
@@ -82,7 +82,7 @@ service docker start
 # Moving back to original workspace & loading logo
 cd $pth
 echo "
- _____  _               _            _    _ 
+ _____  _               _            _    _
 / ____ | |             | |          | |  | |
 | (___ | |__   ___ _ __| | ___   ___| | _| |
 \___  \| '_ \ / _ \ '__| |/ _ \ / __| |/ / |
@@ -132,15 +132,15 @@ if [ ! -z $wrktmp/WebTargets ]; then
         Banner "with sublist3r"; sublist3r -d $web -v -t 25 -o "$wrkpth/SubDomainEnum/$prj_name-$web-sublist3r_output-$current_time.txt"
         Banner "with amass"; amass enum -brute -w $WORDLIST -d $web -ip -o "$wrkpth/SubDomainEnum/$prj_name-$web-amass_output-$current_time.txt"
         Banner "with gobuster"; gobuster dns -i -t 25 -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-gobuster_dns_output-$current_time.txt" -d $web
-        Banner "with shuffledns"; shuffledns -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
-        Banner "with fierce"; fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json" 
+        Banner "with shuffledns"; shuffledns -t 25 -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
+        Banner "with fierce"; fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json"
     done
 fi
 echo
 
 # Checking subdomains against subdomainizer & favfreak
 cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
-for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do 
+for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do
     timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
     cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
 done
@@ -184,22 +184,22 @@ cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | 
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
-nmap -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PE -PM -PP -PO -PR -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
+nmap -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PE -PM -PP -PO -PR -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
 
 # Nmap - IPv6 Pingsweep using TCP SYN, and UDP
 Banner "Nmap - GRAB_IPV6 Pingsweep using TCP SYN, and UDP"
-nmap -6 -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PS"21-23,25,53,80,88,110,111,135,139,443,445,3389,8080" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
+nmap -6 -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
 
 # Nmap - Grabing live hosts
 Banner "Grabbing livehosts from pingsweep"
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap ]; then
-    cat $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap | rg Up | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/live-$current_time
-    cat $wrkpth/Nmap/live-$current_time | sort -u > $wrkpth/Nmap/$prj_name-nmap_pingresponse-live-$current_time
+    cat $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.gnmap | rg Up | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/live-$current_time.list
+    cat $wrkpth/Nmap/live-$current_time.list | sort -u > $wrkpth/Nmap/$prj_name-nmap_pingresponse-live-$current_time.list
 fi
 
 if [ -s $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ] || [ -r $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap ]; then
-    cat $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap | rg Up | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/$prj_name-livev6-$current_time
-    cat $wrkpth/Nmap/$prj_name-livev6-$current_time | sort -u > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6-live-$current_time
+    cat $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.gnmap | rg Up | cut -d ' ' -f 2 | tee -a $wrkpth/Nmap/$prj_name-livev6-$current_time.list
+    cat $wrkpth/Nmap/$prj_name-livev6-$current_time.list | sort -u > $wrkpth/Nmap/$prj_name-nmap_pingresponsev6-live-$current_time.list
 fi
 echo
 
@@ -208,15 +208,15 @@ Banner "Merging all targets files"
 # cat $wrktmp/WebTargets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
 # cat $wrktmp/IPtargets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
 # cat $wrktmp/IPtargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort -u | tee -a $wrktmp/TempTargetsv6
-if [ -r $wrkpth/$prj_name-livehosts-$current_time ] || [ -r $wrkpth/Nmap/live-$current_time ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
+if [ -r $wrkpth/$prj_name-livehosts-$current_time.list ] || [ -r $wrkpth/Nmap/live-$current_time.list ] || [ -r $wrktmp/TempTargets ] || [ -r $wrktmp/WebTargets ]; then
     # cat $wrkpth/Masscan/live-$current_time | sort -u | tee -a $wrktmp/TempTargets
-    cat $wrkpth/Nmap/live-$current_time | sort -u | tee -a $wrktmp/TempTargets
+    cat $wrkpth/Nmap/live-$current_time.list | sort -u | tee -a $wrktmp/TempTargets
     cat $wrktmp/tempFinal | tee -a $wrktmp/TempTargets
     cat $wrktmp/WebTargets $wrktmp/tempFinal $wrktmp/TempTargets tee $wrktmp/IPtargets $wrktmp/IPtargetsv6 | tr " " "\n" | tr "," "\n"  | sort -u | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
     cat $wrktmp/TempTargets | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u | tee $wrktmp/IPtargets
     cat $wrktmp/IPtargetsv6 $wrktmp/TempTargetsv6 | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort -u | tee -a $wrkpth/$prj_name-FinalTargets-$current_time.list
 fi
-echo 
+echo
 
 # Using masscan to perform a quick port sweep
 Banner "Performing portknocking scan using Masscan"
@@ -229,11 +229,11 @@ Banner "Performing portknocking scan using Masscan"
 masscan --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
 masscan --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargetsv6 -oL $wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ]; then
-    cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort -u | tee -a $wrkpth/$prj_name-livehosts-$current_time
+    cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort -u | tee -a $wrkpth/$prj_name-livehosts-$current_time.list
 elif [ -r "$wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list" ]; then
-    cat $wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort -u | tee -a $wrkpth/$prj_name-livehosts-$current_time
+    cat $wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort -u | tee -a $wrkpth/$prj_name-livehosts-$current_time.list
 fi
-echo 
+echo
 
 # Nmap - Full TCP SYN & UDP scan on live-$current_time targets
 Banner "Performing portknocking scan using Nmap"
@@ -256,8 +256,8 @@ nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-al
 # Fix the grepping
 if [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml ] || [ -r $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap ]; then
     for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort -u`; do # smtp domain telnet microsoft-ds netbios-ssn http ssh ssl ms-wbt-server imap; do
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort -u | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
-        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort -u | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | rg open | cut -d ' ' -f 2 | rg -iv nmap | sort -u | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time.list
+        cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time.gnmap | rg $i | cut -d " " -f 3 | cut -d "(" -f 2 | cut -d ")" -f 1 | rg -iv nmap | sort -u | tee -a $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time.list
     done
 else
     echo "Something want wrong, ethier the nmap output files do not exist or it is were empty
@@ -276,8 +276,8 @@ for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time $w
     # nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
     # printf "This portion of the scan will take approx"
     # convertAndPrintSeconds $nmapTimer
-    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time -oA $wrkpth/Nmap/$prj_name-nmap_$i-$current_time
-    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time -oA $wrkpth/Nmap/$prj_name-nmapv6_$i-$current_time
+    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmap_$i-$current_time
+    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmapv6_$i-$current_time
 done
 unset PORTNUM
 echo
@@ -347,7 +347,7 @@ NEW=$(echo "${HTTPPort[@]}" "${SSLPort[@]}" | awk '/^[0-9]/' | sort -n | uniq) #
 
 # Using Eyewitness to take screenshots
 Banner "Performing scan using EyeWitness & aquafone"
-if [ ! -z $wrkpth/Nmap/$prj_name-HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then 
+if [ ! -z $wrkpth/Nmap/$prj_name-HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTTPS-$current_time]; then
     eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitness/
     if [ ! -z `$wrkpth/$prj_name-FinalTargets-$current_time.list | rg --engine -i -o -e "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" 2> /dev/null || rg --auto-hybrid-regex -o -e "((([0-9a-fA-F]){1,4})\\:){7}([0-9a-fA-F]){1,4}" 2> /dev/null | rg -iv "FE80:" | cut -d ":" -f 2-9 | sort -u ` ]; then
         eyewitness -x $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml --resolve --web --prepend-https --threads 10 --no-prompt -d $wrkpth/EyeWitnessv6/
@@ -358,7 +358,7 @@ if [ ! -z $wrkpth/Nmap/$prj_name-HTTP-$current_time ] || [ ! -z $wrkpth/Nmap/HTT
         cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.xml | aquatone -nmap -out $wrkpth/Aquatonev6/ -threads 10 # -ports xlarge
     fi
 fi
-echo 
+echo
 
 # Using testssl & sslcan
 # switch back to for loop, testssl doesnt properly parse gnmap
@@ -508,8 +508,8 @@ for web in $(cat $wrkpth/$prj_name-FinalTargets-$current_time.list); do
             wapiti -u "https://$web:$PORTNUM/" -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_https_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-wapiti_result-$current_time.log
             pythoon3 /opt/Arjun/arjun.py -u "https://$web:$PORTNUM/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-arjun_https_output-$current_time.txt 2> /dev/null
             pythoon3 /opt/Arjun/arjun.py -u "http://$web:$PORTNUM/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-arjun_http_output-$current_time.txt 2> /dev/null
-            ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w  $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-ffuf_https_output -c -u "https://$web:$PORTNUM/FUZZ"
-            ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w  $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-ffuf_http_output -c -u "http://$web:$PORTNUM/FUZZ"
+            ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-ffuf_https_output -c -u "https://$web:$PORTNUM/FUZZ"
+            ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-$web-$PORTNUM-ffuf_http_output -c -u "http://$web:$PORTNUM/FUZZ"
             echo "--------------------------------------------------"
         fi
     done

@@ -6,7 +6,7 @@ function gift_wrap()
 
     # Generating HTML, CSV and XLSX reports from nmap
     # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
-    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
+    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort -u
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
         xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
@@ -19,15 +19,16 @@ function gift_wrap()
 
     # Combining testssl scans
     Banner "Next we are going to combine all the testssl csv files into one"
-    # sed -i '$(head $wrkpth/SSL/*.csv | sort | uniq)' $wrkpth/$prj_name-testssl_output.csv
-    cat $wrkpth/SSL/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-testssl_output.csv
+    # sed -i '$(head $wrkpth/SSL/*.csv | sort -u)' $wrkpth/$prj_name-testssl_output.csv
+    cat $wrkpth/SSL/*.csv | sort -u | tee -a $wrkpth/$prj_name-testssl_output.csv
     cat $wrkpth/SSL/*.json | tee -a $wrkpth/$prj_name-testssl_output-$current_time.json
+    cat $wrkpth/Nmap/*.csv | sort -u | tee -a $wrkpth/$prj_name-nmap_output.csv
     mv $wrkpth/$prj_name-testssl_output.* $wrkpth/SSL/
     echo
 
     # Combining nikto scans
     Banner "Now we are goingt o combine all the nikto csv files into one"
-    cat $wrkpth/nikto/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-nikto_output.csv
+    cat $wrkpth/nikto/*.csv | sort -u | tee -a $wrkpth/$prj_name-nikto_output.csv
     mv $wrkpth/$prj_name-nikto_output.csv $wrkpth/Nikto/
     echo
 

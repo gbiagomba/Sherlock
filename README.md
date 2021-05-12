@@ -38,17 +38,12 @@ cd /opt/Sherlock/
 - [x] Add DNS recon [done]
 - [x] Add SSH audit [done]
 - [x] Add XSSTrike [done]
-- [ ] Add FTP testing [inprogress]
-- [ ] Add SMTP testing [inprogress]
-- [ ] Add SMB testing [inprogress]
-- [ ] Add RDP testing [inprogress]
-- [ ] Add DB/SQL testing [inprogress]
 - [ ] Add Tenable API scanning/support [Queued]
 - [ ] Add joomscan [Queued]
 - [ ] Add  docker run --rm asannou/droopescan scan [Queued]
 - [ ] Add function to check if the script is running on latest version [inprogress]
 - [x] Switch sublister with subfinder [https://github.com/projectdiscovery/subfinder]
-- [ ] Switch grep with ripgrep [inprogress]
+- [x] Switch grep with ripgrep [done]
 - [x] Add arjun [https://github.com/s0md3v/Arjun] [done]
 - [ ] Add exclusion list config file
 
