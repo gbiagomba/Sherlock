@@ -36,7 +36,7 @@ elif ! hash snap 2> /dev/null; then
     PKG_MNGR_UPGRADE="snap refresh"
 elif ! hash brew 2> /dev/null; then
     PKG_MNGR_INSTALLER="brew install"
-    PKG_MNGR_UPDATE=
+    PKG_MNGR_UPDATE="brew update"
     PKG_MNGR_UPGRADE="brew upgrade"
 elif ! hash pacman 2> /dev/null; then
     PKG_MNGR_INSTALLER="pacman install"

@@ -6,28 +6,34 @@ function gift_wrap()
 
     # Generating HTML, CSV and XLSX reports from nmap
     # Consider using the below script to parse for ports (https://github.com/superkojiman/scanreport)
-    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort | uniq
+    # ./scanreport.sh -f XPC-2020Q1-nmap_portknock_tcp.gnmap -s http | rg -v Host | cut -d$'\t' -f 1 | sort -u
     Banner "But first we need to make all those nmap results nice and purtty like"
     for i in `ls $wrkpth/Nmap/ | grep xml`; do
-        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/$i.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
-        python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/$i.csv"
-        python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/$i.json"
+        xsltproc $wrkpth/Nmap/$i -o $wrkpth/Nmap/`echo $i | cut -d "." -f 1`.html /opt/nmap-bootstrap-xsl/nmap-bootstrap.xsl
+        python3 /opt/nmaptocsv/nmaptocsv.py -x $wrkpth/Nmap/$i -S -d "," -n -o "$wrkpth/Nmap/`echo $i | cut -d "." -f 1`.csv"
+        python3 /opt/xml2json/xml2json.py $wrkpth/Nmap/$i | tee "$wrkpth/Nmap/`echo $i | cut -d "." -f 1`.json"
         searchsploit --nmap $wrkpth/Nmap/$i | tee -a "$wrkpth/$prj_name-searchsploit_output-$current_time.txt"
     done
     python3 /opt/nmap-converter/nmap-converter.py -o "$wrkpth/Nmap/$prj_name-nmap_output-$current_time.xlsx" $wrkpth/Nmap/*.xml
     echo
 
+    # Feeding nmap output to NVD
+    Banner "Next we are going to feed nmp cpe data to the NVD"
+    for i in `cat $wrkpth/Nmap/*.nmap | rg "cpe:" | tr " " "\n" | sort -u`; do echo "Checking $i"; curl -kLs https://services.nvd.nist.gov/rest/json/cpes/1.0?cpeMatchString=$i| jq; echo; done | tee -a "$wrkpth/$prj_name-nmap-nvd-cpe_output-$current_time.json"
+    echo
+
     # Combining testssl scans
     Banner "Next we are going to combine all the testssl csv files into one"
-    # sed -i '$(head $wrkpth/SSL/*.csv | sort | uniq)' $wrkpth/$prj_name-testssl_output.csv
-    cat $wrkpth/SSL/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-testssl_output.csv
+    # sed -i '$(head $wrkpth/SSL/*.csv | sort -u)' $wrkpth/$prj_name-testssl_output.csv
+    cat $wrkpth/SSL/*.csv | sort -u | tee -a $wrkpth/$prj_name-testssl_output.csv
     cat $wrkpth/SSL/*.json | tee -a $wrkpth/$prj_name-testssl_output-$current_time.json
+    cat $wrkpth/Nmap/*.csv | sort -u | tee -a $wrkpth/$prj_name-nmap_output.csv
     mv $wrkpth/$prj_name-testssl_output.* $wrkpth/SSL/
     echo
 
     # Combining nikto scans
     Banner "Now we are goingt o combine all the nikto csv files into one"
-    cat $wrkpth/nikto/*.csv | sort | uniq | tee -a $wrkpth/$prj_name-nikto_output.csv
+    cat $wrkpth/nikto/*.csv | sort -u | tee -a $wrkpth/$prj_name-nikto_output.csv
     mv $wrkpth/$prj_name-nikto_output.csv $wrkpth/Nikto/
     echo
 

@@ -364,3 +364,8 @@ echo
 #     sniper -w $prj_name -f $wrkpth/FinalTargets -m nuke
 # done
 # echo
+
+# hostcount=$(wc -l $wrktmp/`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time | cut -d " " -f 4)
+# nmapTimer=$(expr ((6*${#PORTNUM[@]}*$hostcount)/300)*2.5)
+# printf "This portion of the scan will take approx"
+# convertAndPrintSeconds $nmapTimer
