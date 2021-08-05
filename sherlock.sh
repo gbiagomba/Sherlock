@@ -296,22 +296,15 @@ echo
 Banner "Performing scan using SSH Audit"
 if [ -s $wrkpth/Nmap/$prj_name-SSH-$current_time ]; then
     SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i ssh | cut -d "/" -f 1 | tr -d " " | sort -u))
-    for IP in $(cat $wrkpth/Nmap/SSH-$current_time); do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "Status: Up" -o | cut -c 9-10 | sort -u) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/open/tcp//ssh" -o | rg "ssh" -o | sort -u) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/filtered/tcp//ssh" -o | rg "ssh" -o | sort -u) # Check to see if the port is filtered & is a web service
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "ssh" ] || [ "$STAT3" == "ssh" ]; then
-            for PORTNUM in ${SSHPort[*]}; do
-                echo Scanning $IP
-                echo "--------------------------------------------------"
-                ssh-audit -n -p $PORTNUM $IP | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output-$current_time.html
-                echo "--------------------------------------------------"
-                ssh_scan -t $IP -p $PORTNUM -o $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-scan_output-$current_time.json
-                echo "--------------------------------------------------"
-                # msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set RPORT $PORTNUM; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
-            done
-        fi
-    done
+        for PORTNUM in ${SSHPort[*]}; do
+            echo Scanning $IP
+            echo "--------------------------------------------------"
+            ssh-audit -n -p $PORTNUM -T $wrkpth/Nmap/SSH-$current_time | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$PORTNUM-ssh-audit_output-$current_time.html
+            echo "--------------------------------------------------"
+            ssh_scan -f $wrkpth/Nmap/SSH-$current_time -p $PORTNUM -o $wrkpth/SSH/$prj_name-$PORTNUM-ssh-scan_output-$current_time.json
+            echo "--------------------------------------------------"
+            # msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set RPORT $PORTNUM; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+        done
 fi
 echo
 
