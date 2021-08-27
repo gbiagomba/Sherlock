@@ -183,6 +183,11 @@ if ! hash gobuster; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
+if ! hash goverview; then
+    banner goverview
+    $SUDOH go get github.com/j3ssie/goverview
+fi
+
 if ! hash nuclei; then
     banner nuclei
     $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei

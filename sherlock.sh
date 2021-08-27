@@ -413,9 +413,14 @@ echo
 Banner "Performing scan using XSStrike"
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
-    python3 /opt/XSStrike/xsstrike.py -u https://$web --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-xsstrike_output-$current_time.txt
+    python3 /opt/XSStrike/xsstrike.py -u $web --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-xsstrike_output-$current_time.txt
 done
 find $wrkpth/XSStrike/ -type f -size -1k -delete
+echo
+
+# Using Goverview
+Banner "Getting an overfiew of URLs"
+cat $wrkpth/$prj_name-web_targets-$current_time.list | goverview probe -N -L -j -c 25 | tee -a -a $wrkpth/PathEnum/$prj_name-goverview_output-$current_time.json
 echo
 
 # Using gospider
@@ -434,12 +439,9 @@ Banner "Performing scan using nuclei, Wapiti, arjun, and ffuf"
 nuclei -t /opt/nuclei-templates/cves/ -t /opt/nuclei-templates/exposures/ -t /opt/nuclei-templates/misconfiguration/ -t /opt/nuclei-templates/vulnerabilities/ -t /opt/nuclei-templates/takeovers/ -update-templates -l $wrkpth/Aquatone/aquatone_urls.txt -o $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out -severity critical,high,medium -exclude dos
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
-    wapiti -u "$web/" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
-    wapiti -u "https://$web/" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_https_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
-    pythoon3 /opt/Arjun/arjun.py -u "https://$web/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_https_output-$current_time.txt 2> /dev/null
-    pythoon3 /opt/Arjun/arjun.py -u "$web/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_http_output-$current_time.txt 2> /dev/null
-    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_https_output -c -u "https://$web/FUZZ"
-    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_http_output -c -u "$web/FUZZ"
+    wapiti -u "$web" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
+    pythoon3 /opt/Arjun/arjun.py -u "$web" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_output-$current_time.txt 2> /dev/null
+    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_output -c -u "$web/FUZZ"
 done
 echo
 
