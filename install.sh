@@ -47,7 +47,7 @@ for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang 
 done
 
 # Installing python dependencies
-for i in fierce dirbpy ssh-audit theHarvester; do
+for i in dnsrecon fierce dirbpy ssh-audit theHarvester uro; do
     if ! hash $i 2> /dev/null; then
         banner "$i"
         $SUDOH pip3 install $i
@@ -196,6 +196,11 @@ if ! hash nuclei; then
         cd /opt/
         git clone https://github.com/projectdiscovery/nuclei.git; cd nuclei/v2/cmd/nuclei/; go build; mv nuclei /usr/bin/; nuclei -h
     fi
+fi
+
+if ! hash urinteresting; then
+    banner urinteresting
+    $SUDOH go get -u github.com/tomnomnom/hacks/urinteresting
 fi
 
 # Downloading the XSStrike dependency

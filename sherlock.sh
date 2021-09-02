@@ -65,7 +65,7 @@ if [[ "$diskSize" -ge "$diskMax" ]]; then
 fi
 
 # Setting Envrionment
-for i in Batea DNS_Recon EyeWitness GOLismero Halberd Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum Wappalyzer WebVulnScan XSStrike l00tz; do
+for i in Batea DNS_Recon EyeWitness GOLismero Halberd Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum SQLMap Wappalyzer WebVulnScan XSStrike l00tz; do
     if [ ! -e $wrkpth/$i ]; then
         mkdir -p $wrkpth/$i
     fi
@@ -401,9 +401,9 @@ Banner "Performing scan using Wappalyzer"
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
     if hash wappalyzer 2> /dev/null; then
-        wappalyzer $web | jq | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
-    elif hash docker 2> /dev/null; then
-        docker run --rm wappalyzer/cli $web | jq | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+        wappalyzer $web -r -D 3 -m 50 --pretty | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+    elif hash docker && [ -z $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json ] 2> /dev/null; then
+        docker run --rm wappalyzer/cli $web -r -D 3 -m 50 --pretty | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_output-$current_time.json
     fi
 done
 find $wrkpth/Wappalyzer/ -type f -size -1k -delete
@@ -417,6 +417,12 @@ for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
 done
 find $wrkpth/XSStrike/ -type f -size -1k -delete
 echo
+
+# Using sqlmap & uro
+Banner "Parsing wappalyzer using uro"
+cat $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json | jq '.urls' | cut -d \" -f 2 | sort -u | egrep -iv "status|\}|\{" | tee -a $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list
+Banner "Scanning for SQLi using SQLMap"
+sqlmap -m "$wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list" --level=5 --risk=3 -a --os-shell --batch --disable-coloring --output-dir=$wrkpth/SQLMap/ --results-file=$wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.csv | tee -a $wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.log
 
 # Using Goverview
 Banner "Getting an overfiew of URLs"
@@ -434,14 +440,18 @@ for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
 done
 echo
 
-# Using Wapiti, arjun and ffuf
+# Using Nuclei, Wapiti, arjun and ffuf
 Banner "Performing scan using nuclei, Wapiti, arjun, and ffuf"
-nuclei -t /opt/nuclei-templates/cves/ -t /opt/nuclei-templates/exposures/ -t /opt/nuclei-templates/misconfiguration/ -t /opt/nuclei-templates/vulnerabilities/ -t /opt/nuclei-templates/takeovers/ -update-templates -l $wrkpth/Aquatone/aquatone_urls.txt -o $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out -severity critical,high,medium -exclude dos
+if nuclei 2> /dev/null; then 
+    nuclei -t technologies/ -t network/ -t miscellaneous/ -t iot/ -t headless/ -t file/ -t exposed-panels/ -t dns/ -t default-logins/ -t cnvd/ -t cves/ -t exposures/ -t misconfiguration/ -t vulnerabilities/ -t takeovers/ -t fuzzing/ -l $wrkpth/$prj_name-web_targets-$current_time.list -o $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out -severity critical,high,medium,info -exclude dos
+elif docker 2> /dev/null && [ `wc -l $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out | cut -d ' ' -f 8` eq 0 ]; then
+    docker run --rm -it -v "$PWD:/media/Project" projectdiscovery/nuclei -t technologies/ -t network/ -t miscellaneous/ -t iot/ -t headless/ -t file/ -t exposed-panels/ -t dns/ -t default-logins/ -t cnvd/ -t cves/ -t exposures/ -t misconfiguration/ -t vulnerabilities/ -t takeovers/ -t fuzzing/ -severity critical,high,medium,info -exclude dos -c 25 -nc -l /media/Project/Sherlock/$prj_name-web_targets.list -o /media/Project/Sherlock/WebVulnScan/$prj_name-nuclei_output-$current_time.out -vv | tee -a $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.txt
+fi
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
     wapiti -u "$web" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
     pythoon3 /opt/Arjun/arjun.py -u "$web" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_output-$current_time.txt 2> /dev/null
-    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_output -c -u "$web/FUZZ"
+    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w /usr/share/seclists/Fuzzing/fuzz-Bo0oM.txt -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_output -c -u "$web/FUZZ"
 done
 echo
 
