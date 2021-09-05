@@ -165,6 +165,12 @@ if ! hash shuffledns; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
+if ! hash dalfox; then
+    banner dalfox
+    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    if ! hash dalfox; then sudo snap install dalfox; fi
+fi
+
 if ! hash massdns && [ ! -e /opt/massdns ]; then
     banner massdns
     cd /opt/
@@ -434,6 +440,15 @@ if [ ! -e /opt/exploit-database ] && ! hash searchsploit 2> /dev/null; then
 else
     searchsploit -u
     cd /opt/exploit-database/
+    git pull
+fi
+
+# Downloading and installing xss-payload-list
+if [ ! -e /opt/xss-payload-list ]; then
+    banner xss-payload-list
+    git clone https://github.com/payloadbox/xss-payload-list
+else
+    cd /opt/xss-payload-list/
     git pull
 fi
 
