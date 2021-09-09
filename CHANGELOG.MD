@@ -1,4 +1,4 @@
-# v1.18.1
+ # v1.18.1
 * Made changes to the SSH securitty checks
 
 # v1.18.0
@@ -12,3 +12,8 @@
 * added sqlmap, goverview and dalfox to sherlock
 * fixed some logic errors as well
 
+# v1.19.2
+* Changed gospider and dirbpy to load in the target file (its more efficient this way)
+* Fixed dirbpy execution, it was a typo which explains why it never ran
+* Moved path enum to execute after wappalyzerm this is helpful for feeding the next round fo tools
+* Updated install script to reflect the new tools added

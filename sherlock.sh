@@ -409,6 +409,17 @@ done
 find $wrkpth/Wappalyzer/ -type f -size -1k -delete
 echo
 
+# Using gospider, hakrawler, gobuster, dirdby
+Banner "Performing path traversal enumeration"
+gospider -S $wrkpth/$prj_name-web_targets-$current_time.list -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a -s $wrkpth/PathEnum/$prj_name-gospider_output-$current_time.log
+dirdpy -f /usr/share/seclists/Discovery/Web-Content/common.txt -t 10 --hosts-file $wrkpth/$prj_name-web_targets-$current_time.list | tee -a $wrkpth/PathEnum/$prj_name-dirbpy_output-$current_time.log
+for web in $(cat $wrkpth/$prj_name-web_targets-$current_time.list); do
+    echo "--------------------------Scanning $web------------------------"
+    hakrawler --url $web -js -linkfinder -robots -subs -urls -usewayback -insecure -depth 10 -outdir $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-Hakcrawler-$current_time | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-hakrawler_output.log
+    gobuster dir -t 10 -w /usr/share/seclists/Discovery/Web-Content/common.txt -o $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gobuster-$current_time -k --wildcard -u "$web"
+done
+echo
+
 # Using XSStrike
 Banner "Performing scan using XSStrike"
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
@@ -432,17 +443,6 @@ echo
 # Using Dalfox
 Banner "Scanning using dalfox"
 dalfox file $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list -F --mass --custom-payload /opt/xss-payload-list/Intruder/xss-payload-list.txt -o $wrkpth/XSStrike/$prj_name-dalfox_output-$current_time.out
-echo
-
-# Using gospider, hakrawler, gobuster, dirdby
-Banner "Performing path traversal enumeration"
-for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
-    echo "--------------------------Scanning $web------------------------"
-    gospider -s "$web" -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gospider_output-$current_time.log
-    hakrawler --url $web -js -linkfinder -robots -subs -urls -usewayback -insecure -depth 10 -outdir $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-Hakcrawler-$current_time | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-hakrawler_output.log
-    gobuster dir -t 10 -w /usr/share/seclists/Discovery/Web-Content/common.txt -o $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gobuster-$current_time -k --wildcard -u "$web"
-    dirdby -f /usr/share/seclists/Discovery/Web-Content/common.txt -t 10 -u "$web" | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-dirbpy_output-$current_time.log
-done
 echo
 
 # Using Nuclei, Wapiti, arjun and ffuf
