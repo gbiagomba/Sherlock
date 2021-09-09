@@ -17,3 +17,6 @@
 * Fixed dirbpy execution, it was a typo which explains why it never ran
 * Moved path enum to execute after wappalyzerm this is helpful for feeding the next round fo tools
 * Updated install script to reflect the new tools added
+
+# v1.19.3
+* Added more banners in install script
