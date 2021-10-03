@@ -65,7 +65,7 @@ if [[ "$diskSize" -ge "$diskMax" ]]; then
 fi
 
 # Setting Envrionment
-for i in Batea DNS_Recon EyeWitness GOLismero Halberd Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum Wappalyzer WebVulnScan XSStrike l00tz; do
+for i in Batea DNS_Recon EyeWitness GOLismero Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum SQLMap Wappalyzer WebVulnScan XSStrike l00tz; do
     if [ ! -e $wrkpth/$i ]; then
         mkdir -p $wrkpth/$i
     fi
@@ -138,14 +138,6 @@ if [ ! -z $wrktmp/WebTargets ]; then
 fi
 echo
 
-# Checking subdomains against subdomainizer & favfreak
-cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
-for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do
-    timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
-    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
-done
-echo
-
 # Pulling out all the web targets
 for i in `ls $wrkpth/SubDomainEnum/ | rg "$current_time"`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
@@ -160,17 +152,6 @@ done
 cat $wrktmp/TempWeb | sort -u | tee -a $wrktmp/WebTargets
 echo
 
-# Using halberd
-Banner "Performing scan using Halberd"
-cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-{}-halberd_output-$current_time.txt"
-for web in $(ls $wrkpth/Halberd/); do
-    if [ ! -z $wrkpth/Halberd/$i ]; then
-        cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
-        cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
-    fi
-done
-echo
-
 Banner "Some house cleaning"
 # Some house cleaning
 cat $wrktmp/WebTargets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
@@ -181,6 +162,15 @@ cat $wrktmp/TempWeb | sort -u | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort -u | tee -a $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort -u | tee -a $wrktmp/IPtargetsv6
 cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | rg -iv found | grep -vi "SOA:" | grep -vi "NS:" | rg -iv "Zone:" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort -u | tee -a $wrktmp/tempFinal
+
+# Checking subdomains against subdomainizer & favfreak
+cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
+for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do
+    timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
+    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
+done
+echo
+
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
@@ -296,22 +286,15 @@ echo
 Banner "Performing scan using SSH Audit"
 if [ -s $wrkpth/Nmap/$prj_name-SSH-$current_time ]; then
     SSHPort=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i ssh | cut -d "/" -f 1 | tr -d " " | sort -u))
-    for IP in $(cat $wrkpth/Nmap/SSH-$current_time); do
-        STAT1=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "Status: Up" -o | cut -c 9-10 | sort -u) # Check to make sure the host is in fact up
-        STAT2=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/open/tcp//ssh" -o | rg "ssh" -o | sort -u) # Check to see if the port is open & is a web service
-        STAT3=$(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg $IP | rg "$PORTNUM/filtered/tcp//ssh" -o | rg "ssh" -o | sort -u) # Check to see if the port is filtered & is a web service
-        if [ "$STAT1" == "Up" ] && [ "$STAT2" == "ssh" ] || [ "$STAT3" == "ssh" ]; then
-            for PORTNUM in ${SSHPort[*]}; do
-                echo Scanning $IP
-                echo "--------------------------------------------------"
-                ssh-audit -n -p $PORTNUM $IP | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-audit_output-$current_time.html
-                echo "--------------------------------------------------"
-                ssh_scan -t $IP -p $PORTNUM -o $wrkpth/SSH/$prj_name-$IP:$PORTNUM-ssh-scan_output-$current_time.json
-                echo "--------------------------------------------------"
-                # msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set RPORT $PORTNUM; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
-            done
-        fi
-    done
+        for PORTNUM in ${SSHPort[*]}; do
+            echo Scanning $IP
+            echo "--------------------------------------------------"
+            ssh-audit -n -p $PORTNUM -T $wrkpth/Nmap/SSH-$current_time | aha -t "SSH Audit" > $wrkpth/SSH/$prj_name-$PORTNUM-ssh-audit_output-$current_time.html
+            echo "--------------------------------------------------"
+            ssh_scan -f $wrkpth/Nmap/SSH-$current_time -p $PORTNUM -o $wrkpth/SSH/$prj_name-$PORTNUM-ssh-scan_output-$current_time.json
+            echo "--------------------------------------------------"
+            # msfconsole -q -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS file:$wrkpth/Nmap/SSH; set RPORT $PORTNUM; set USER_FILE /usr/share/seclists/Usernames/cirt-default-usernames.txt; set THREADS 25; exploit; exit -y" 2> /dev/null | tee -a $wrkpth/SSH/$prj_name-ssh-msf-$web.txt
+        done
 fi
 echo
 
@@ -408,45 +391,68 @@ Banner "Performing scan using Wappalyzer"
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
     if hash wappalyzer 2> /dev/null; then
-        wappalyzer $web | jq | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
-    elif hash docker 2> /dev/null; then
-        docker run --rm wappalyzer/cli $web | jq | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+        wappalyzer $web -r -D 3 -m 50 --pretty | tee -a $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json
+    elif hash docker && [ -z $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json ] 2> /dev/null; then
+        docker run --rm wappalyzer/cli $web -r -D 3 -m 50 --pretty | tee -a $wrkpth/Wappalyzer/$prj_name-wappalyzer_output-$current_time.json
     fi
 done
 find $wrkpth/Wappalyzer/ -type f -size -1k -delete
+echo
+
+# Using gospider, hakrawler, gobuster, dirdby
+Banner "Performing path traversal enumeration"
+gospider -S $wrkpth/$prj_name-web_targets-$current_time.list -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a -s $wrkpth/PathEnum/$prj_name-gospider_output-$current_time.log
+dirdpy -f /usr/share/seclists/Discovery/Web-Content/common.txt -t 10 --hosts-file $wrkpth/$prj_name-web_targets-$current_time.list | tee -a $wrkpth/PathEnum/$prj_name-dirbpy_output-$current_time.log
+cat $wrkpth/$prj_name-web_targets-$current_time.list | page-fetch -c 10 --exclude image/ -o $wrkpth/PathEnum/$prj_name-page_fetch_output-$current_time.log
+for web in $(cat $wrkpth/$prj_name-web_targets-$current_time.list); do
+    echo "--------------------------Scanning $web------------------------"
+    hakrawler --url $web -js -linkfinder -robots -subs -urls -usewayback -insecure -depth 10 -outdir $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-Hakcrawler-$current_time | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-hakrawler_output.log
+    gobuster dir -t 10 -w /usr/share/seclists/Discovery/Web-Content/common.txt -o $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gobuster-$current_time -k --wildcard -u "$web"
+done
 echo
 
 # Using XSStrike
 Banner "Performing scan using XSStrike"
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
-    python3 /opt/XSStrike/xsstrike.py -u https://$web --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-xsstrike_output-$current_time.txt
+    python3 /opt/XSStrike/xsstrike.py -u $web --crawl -t 10 -l 10 | tee -a $wrkpth/XSStrike/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-xsstrike_output-$current_time.txt
 done
 find $wrkpth/XSStrike/ -type f -size -1k -delete
 echo
 
-# Using gospider
-Banner "Performing path traversal enumeration"
-for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
-    echo "--------------------------Scanning $web------------------------"
-    gospider -s "$web" -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gospider_output-$current_time.log
-    hakrawler --url $web -js -linkfinder -robots -subs -urls -usewayback -insecure -outdir $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-Hakcrawler-$current_time | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-hakrawler_output.log
-    gobuster dir -t 10 -w /usr/share/seclists/Discovery/Web-Content/common.txt -o $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-gobuster-$current_time -k --wildcard -u "$web"
-    dirdby -f /usr/share/seclists/Discovery/Web-Content/common.txt -t 10 -u "$web" | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-dirbpy_output-$current_time.log
-done
+# Using page-fetch
+Banner "Parsing wappalyzer using uro"
+cat $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json | jq '.urls' | cut -d \" -f 2 | sort -u | egrep -iv "status|\}|\{" | tee -a $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list
 echo
 
-# Using Wapiti, arjun and ffuf
+# Using sqlmap
+Banner "Scanning for SQLi using SQLMap"
+sqlmap -m "$wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list" --level=5 --risk=3 -a --os-shell --batch --disable-coloring --output-dir=$wrkpth/SQLMap/ --results-file=$wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.csv | tee -a $wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.log
+echo 
+
+# Using Goverview & page-fetch
+Banner "Using Goverview & page-fetch"
+cat $wrkpth/$prj_name-web_targets-$current_time.list | goverview probe -N -L -j -c 25 | tee -a -a $wrkpth/PathEnum/$prj_name-goverview_output-$current_time.json
+cat $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list | page-fetch -c 10 -o $wrkpth/PathEnum/$prj_name-pagefetch_output-$current_time.txt
+echo
+
+# Using Dalfox
+Banner "Scanning using dalfox"
+dalfox file $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list -F --mass --custom-payload /opt/xss-payload-list/Intruder/xss-payload-list.txt -o $wrkpth/XSStrike/$prj_name-dalfox_output-$current_time.out
+echo
+
+# Using Nuclei, Wapiti, arjun and ffuf
 Banner "Performing scan using nuclei, Wapiti, arjun, and ffuf"
-nuclei -t /opt/nuclei-templates/cves/ -t /opt/nuclei-templates/exposures/ -t /opt/nuclei-templates/misconfiguration/ -t /opt/nuclei-templates/vulnerabilities/ -t /opt/nuclei-templates/takeovers/ -update-templates -l $wrkpth/Aquatone/aquatone_urls.txt -o $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out -severity critical,high,medium -exclude dos
+if nuclei 2> /dev/null; then 
+    nuclei -t technologies/ -t network/ -t miscellaneous/ -t iot/ -t headless/ -t file/ -t exposed-panels/ -t dns/ -t default-logins/ -t cnvd/ -t cves/ -t exposures/ -t misconfiguration/ -t vulnerabilities/ -t takeovers/ -t fuzzing/ -l $wrkpth/$prj_name-web_targets-$current_time.list -o $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out -severity critical,high,medium,info -exclude dos
+elif docker 2> /dev/null && [ `wc -l $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out | cut -d ' ' -f 8` eq 0 ]; then
+    docker run --rm -it -v "$PWD:/media/Project" projectdiscovery/nuclei -t technologies/ -t network/ -t miscellaneous/ -t iot/ -t headless/ -t file/ -t exposed-panels/ -t dns/ -t default-logins/ -t cnvd/ -t cves/ -t exposures/ -t misconfiguration/ -t vulnerabilities/ -t takeovers/ -t fuzzing/ -severity critical,high,medium,info -exclude dos -c 25 -nc -l /media/Project/Sherlock/$prj_name-web_targets.list -o /media/Project/Sherlock/WebVulnScan/$prj_name-nuclei_output-$current_time.out -vv | tee -a $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.txt
+fi
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
-    wapiti -u "$web/" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
-    wapiti -u "https://$web/" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_https_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
-    pythoon3 /opt/Arjun/arjun.py -u "https://$web/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_https_output-$current_time.txt 2> /dev/null
-    pythoon3 /opt/Arjun/arjun.py -u "$web/" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_http_output-$current_time.txt 2> /dev/null
-    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_https_output -c -u "https://$web/FUZZ"
-    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w $WORDLIST -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_http_output -c -u "$web/FUZZ"
+    wapiti -u "$web" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
+    pythoon3 /opt/Arjun/arjun.py -u "$web" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_output-$current_time.txt 2> /dev/null
+    ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w /usr/share/seclists/Fuzzing/fuzz-Bo0oM.txt -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_output -c -u "$web/FUZZ"
 done
 echo
 

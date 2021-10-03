@@ -25,7 +25,8 @@ function gift_wrap()
     # Combining testssl scans
     Banner "Next we are going to combine all the testssl csv files into one"
     # sed -i '$(head $wrkpth/SSL/*.csv | sort -u)' $wrkpth/$prj_name-testssl_output.csv
-    cat $wrkpth/SSL/*.csv | sort -u | tee -a $wrkpth/$prj_name-testssl_output.csv
+    cat $wrkpth/SSL/*.csv | sort -u | tr -d \" | tr "/" "," | tee -a $wrkpth/$prj_name-testssl_output.csv
+    for i in `cat $wrkpth/SSL/*.csv | cut -d "," -f 6 | tr " " "\n" | grep -i "cve-" | tr -d \" | sort -u`; do curl -kLs https://services.nvd.nist.gov/rest/json/cve/1.0/$i| jq; echo; done | tee $wrkpth/$prj_name-nmap-testssl_cvss-nvd-$current_time.json
     cat $wrkpth/SSL/*.json | tee -a $wrkpth/$prj_name-testssl_output-$current_time.json
     cat $wrkpth/Nmap/*.csv | sort -u | tee -a $wrkpth/$prj_name-nmap_output.csv
     mv $wrkpth/$prj_name-testssl_output.* $wrkpth/SSL/

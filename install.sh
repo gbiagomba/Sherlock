@@ -47,7 +47,7 @@ for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang 
 done
 
 # Installing python dependencies
-for i in fierce dirbpy ssh-audit theHarvester; do
+for i in dnsrecon fierce dirbpy ssh-audit theHarvester uro; do
     if ! hash $i 2> /dev/null; then
         banner "$i"
         $SUDOH pip3 install $i
@@ -165,6 +165,18 @@ if ! hash shuffledns; then
     $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
+if ! hash dalfox; then
+    banner dalfox
+    $SUDOH go get -u -v github.com/detectify/page-fetch
+    if ! hash dalfox; then sudo snap install dalfox; fi
+fi
+
+if ! hash page-fetch; then
+    banner page-fetch
+    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install`; fi
+fi
+
 if ! hash massdns && [ ! -e /opt/massdns ]; then
     banner massdns
     cd /opt/
@@ -183,6 +195,11 @@ if ! hash gobuster; then
     $SUDOH go get -u -v github.com/OJ/gobuster
 fi
 
+if ! hash goverview; then
+    banner goverview
+    $SUDOH go get github.com/j3ssie/goverview
+fi
+
 if ! hash nuclei; then
     banner nuclei
     $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
@@ -191,6 +208,11 @@ if ! hash nuclei; then
         cd /opt/
         git clone https://github.com/projectdiscovery/nuclei.git; cd nuclei/v2/cmd/nuclei/; go build; mv nuclei /usr/bin/; nuclei -h
     fi
+fi
+
+if ! hash urinteresting; then
+    banner urinteresting
+    $SUDOH go get -u github.com/tomnomnom/hacks/urinteresting
 fi
 
 # Downloading the XSStrike dependency
@@ -202,6 +224,7 @@ if [ ! -e /opt/XSStrike ]; then
     $SUDOH pip3 install -r requirements.txt
     ln -s /opt/XSStrike/xsstrike.py /usr/bin/xsstrike
 else
+    banner XSStrike
     cd /opt/XSStrike
     git pull
 fi
@@ -214,6 +237,7 @@ if ! hash /usr/bin/ssh-audit; then
     cd /usr/bin/
     ln -s /opt/ssh-audit/ssh-audit.py ./ssh-audit
 else
+    banner ssh-audit
     cd /opt/ssh-audit
     git pull
 fi
@@ -224,6 +248,7 @@ if [ ! -e /opt/nmap-vulners ]; then
     git clone https://github.com/vulnersCom/nmap-vulners
     cp /opt/vulnersCom/nmap-vulners/vulners.nse /usr/share/nmap/scripts
 else
+    banner "nmap script vulners"
     cd /opt/nmap-vulners
     git pull
 fi
@@ -236,6 +261,7 @@ if [ ! -e /opt/nmap-converter ]; then
     cd nmap-converter
     $SUDOH pip3 install -r requirements.txt
 else
+    banner msfconsole
     cd /opt/nmap-converter
     git pull
 fi
@@ -248,6 +274,7 @@ if [ ! -e /opt/SubDomainizer ]; then
     cd SubDomainizer
     $SUDOH pip3 install -r requirements.txt
 else
+    banner SubDomainizer
     cd /opt/SubDomainizer
     git pull
 fi
@@ -267,12 +294,14 @@ if [ ! -e /opt/batea ]; then
     pip3 install -e .
     pytest
 else
+    banner batea
     cd /opt/batea
     git pull
 fi
 
 # Download and install favfreak
 if [ ! -e /opt/FavFreak ]; then
+    banner favfreak
     git clone https://github.com/devanshbatham/FavFreak
     cd FavFreak
     virtualenv -p python3 env
@@ -280,6 +309,7 @@ if [ ! -e /opt/FavFreak ]; then
     python3 -m pip install mmh3
     ln -s /opt/FavFreak/favfreak.py /usr/bin/favfreak
 else
+    banner favfreak
     cd /opt/FavFreak
     git pull
 fi
@@ -290,6 +320,7 @@ if [ ! -e /opt/nmap-bootstrap-xsl ]; then
     cd /opt/
     git clone https://github.com/honze-net/nmap-bootstrap-xsl.git
 else
+    banner "nmap HTML report template"
     cd /opt/nmap-bootstrap-xsl
     git pull
 fi
@@ -310,6 +341,7 @@ if [ ! -e /opt/Arjun ]; then
     cd /opt/
     git clone https://github.com/s0md3v/Arjun
 else
+    banner Arjun
     cd /opt/Arjun
     git pull
 fi
@@ -324,6 +356,7 @@ if [ ! -e /opt/Sublist3r ] && ! hash sublist3r 2> /dev/null; then
     $SUDOH python3 setup.py install
     ln -s /opt/Sublist3r/sublist3r.py /usr/bin//sublist3r
 else
+    banner Sublist3r
     cd /opt/Sublist3r
     git pull
 fi
@@ -338,6 +371,7 @@ if [ ! -e /opt/metagoofil ]; then
     $SUDOH python3 setup.py install
     ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
 else
+    banner metagoofil
     cd /opt/metagoofil
     git pull
 fi
@@ -350,6 +384,7 @@ if [ ! -e /opt/vulscan ]; then
     cd vulscan/
     ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan 
 else
+    banner vulscan
     cd /opt/vulscan
     git pull
 fi
@@ -363,6 +398,7 @@ if ! hash brutespray 2> /dev/null; then
     pip3 install -r requirements.txt
     ln -s /opt/brutespray/brutespray.py /usr/bin/brutespray
 else
+    banner "brutespray"
     cd /opt/brutespray/
     git pull
 fi
@@ -375,6 +411,7 @@ if [ ! -e /opt/OWASP-Janus ]; then
     cd OWASP-Janus/
     ln -s /opt/OWASP-Janus/janus.sh /usr/bin/janus
 else
+    banner "OWASP Janus"
     cd /opt/OWASP-Janus
     git pull
 fi
@@ -388,6 +425,7 @@ if [ ! -e /opt/xml2json ]; then
     $SUDOH pip3 install -r requirements.txt
     # ln -s /opt/xml2json/xml2json.py /usr/bin/xml2json
 else
+    banner xml2json
     cd /opt/xml2json
     git pull
 fi
@@ -411,6 +449,7 @@ if [ ! -e /opt/theHarvester] && ! hash theHarvester 2> /dev/null; then
     pip3 install -r requirements/base.txt
     ln -s /opt/theHarvester/theHarvester.py /usr/bin/theharvester
 else
+    banner theHarvester
     cd /opt/theHarvester
     git pull
 fi
@@ -422,8 +461,19 @@ if [ ! -e /opt/exploit-database ] && ! hash searchsploit 2> /dev/null; then
     cd /opt/exploit-database/
     ln -s /opt/exploit-database/searchsploit /usr/bin/searchsploit
 else
+    banner searchsploit
     searchsploit -u
     cd /opt/exploit-database/
+    git pull
+fi
+
+# Downloading and installing xss-payload-list
+if [ ! -e /opt/xss-payload-list ]; then
+    banner xss-payload-list
+    git clone https://github.com/payloadbox/xss-payload-list
+else
+    banner xss-payload-list
+    cd /opt/xss-payload-list/
     git pull
 fi
 
