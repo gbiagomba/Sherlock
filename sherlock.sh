@@ -65,7 +65,7 @@ if [[ "$diskSize" -ge "$diskMax" ]]; then
 fi
 
 # Setting Envrionment
-for i in Batea DNS_Recon EyeWitness GOLismero Halberd Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum SQLMap Wappalyzer WebVulnScan XSStrike l00tz; do
+for i in Batea DNS_Recon EyeWitness GOLismero Harvester Masscan Metagoofil Nikto Nmap PathEnum SSH SSL SubDomainEnum SQLMap Wappalyzer WebVulnScan XSStrike l00tz; do
     if [ ! -e $wrkpth/$i ]; then
         mkdir -p $wrkpth/$i
     fi
@@ -138,14 +138,6 @@ if [ ! -z $wrktmp/WebTargets ]; then
 fi
 echo
 
-# Checking subdomains against subdomainizer & favfreak
-cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
-for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do
-    timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
-    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
-done
-echo
-
 # Pulling out all the web targets
 for i in `ls $wrkpth/SubDomainEnum/ | rg "$current_time"`; do
     if [ ! -z $wrkpth/SubDomainEnum/$i ]; then
@@ -160,17 +152,6 @@ done
 cat $wrktmp/TempWeb | sort -u | tee -a $wrktmp/WebTargets
 echo
 
-# Using halberd
-Banner "Performing scan using Halberd"
-cat $wrktmp/WebTargets | parallel -j 10 -k "timeout 300 halberd {} -p 25 -t 90 -v | tee $wrkpth/Halberd/$prj_name-{}-halberd_output-$current_time.txt"
-for web in $(ls $wrkpth/Halberd/); do
-    if [ ! -z $wrkpth/Halberd/$i ]; then
-        cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -o -e "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | tee -a $wrktmp/TempTargets
-        cat $wrkpth/Halberd/$i | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
-    fi
-done
-echo
-
 Banner "Some house cleaning"
 # Some house cleaning
 cat $wrktmp/WebTargets | rg --auto-hybrid-regex --engine -i -e "(\.gov|\.us|\.net|\.com|\.edu|\.org|\.biz|\.io|\.info|\.tv|\.sh|\.sys)" | tee -a $wrktmp/TempWeb
@@ -181,6 +162,15 @@ cat $wrktmp/TempWeb | sort -u | tee -a $wrktmp/WebTargets
 cat $wrktmp/TempTargets | sort -u | tee -a $wrktmp/IPtargets
 cat $wrktmp/TempTargetsv6 | sort -u | tee -a $wrktmp/IPtargetsv6
 cat $wrktmp/IPtargets $wrktmp/IPtargetsv6 $wrktmp/WebTargets | tr "<BR>" "\n" | tr " " "\n" | tr "," "\n" | rg -iv found | grep -vi "SOA:" | grep -vi "NS:" | rg -iv "Zone:" | tr -d ":" | tr -d "\'" | tr -d "[" | tr -d "]" | sort -u | tee -a $wrktmp/tempFinal
+
+# Checking subdomains against subdomainizer & favfreak
+cat $wrktmp/WebTargets | httprobe | tee -a $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time
+for i in `cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time`; do
+    timeout 1200 python3 /opt/SubDomainizer/SubDomainizer.py -u $i -k -o $wrkpth/SubDomainEnum/$prj_name-subdomainizer_output-$current_time.txt 2> /dev/null
+    cat $wrkpth/SubDomainEnum/SubDomainizer_feed-$current_time | favfreak -o $wrkpth/FavFreak
+done
+echo
+
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
@@ -413,6 +403,7 @@ echo
 Banner "Performing path traversal enumeration"
 gospider -S $wrkpth/$prj_name-web_targets-$current_time.list -o $wrkpth/PathEnum/GoSpider -c 10 -d 5 -t 10 -a -s $wrkpth/PathEnum/$prj_name-gospider_output-$current_time.log
 dirdpy -f /usr/share/seclists/Discovery/Web-Content/common.txt -t 10 --hosts-file $wrkpth/$prj_name-web_targets-$current_time.list | tee -a $wrkpth/PathEnum/$prj_name-dirbpy_output-$current_time.log
+cat $wrkpth/$prj_name-web_targets-$current_time.list | page-fetch -c 10 --exclude image/ -o $wrkpth/PathEnum/$prj_name-page_fetch_output-$current_time.log
 for web in $(cat $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
     hakrawler --url $web -js -linkfinder -robots -subs -urls -usewayback -insecure -depth 10 -outdir $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-Hakcrawler-$current_time | tee -a $wrkpth/PathEnum/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-hakrawler_output.log
@@ -429,15 +420,20 @@ done
 find $wrkpth/XSStrike/ -type f -size -1k -delete
 echo
 
-# Using sqlmap & uro
+# Using page-fetch
 Banner "Parsing wappalyzer using uro"
 cat $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json | jq '.urls' | cut -d \" -f 2 | sort -u | egrep -iv "status|\}|\{" | tee -a $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list
+echo
+
+# Using sqlmap
 Banner "Scanning for SQLi using SQLMap"
 sqlmap -m "$wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list" --level=5 --risk=3 -a --os-shell --batch --disable-coloring --output-dir=$wrkpth/SQLMap/ --results-file=$wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.csv | tee -a $wrkpth/SQLMap/$prj_name-sqlmap_output-$current_time.log
+echo 
 
-# Using Goverview
-Banner "Getting an overfiew of URLs"
+# Using Goverview & page-fetch
+Banner "Using Goverview & page-fetch"
 cat $wrkpth/$prj_name-web_targets-$current_time.list | goverview probe -N -L -j -c 25 | tee -a -a $wrkpth/PathEnum/$prj_name-goverview_output-$current_time.json
+cat $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list | page-fetch -c 10 -o $wrkpth/PathEnum/$prj_name-pagefetch_output-$current_time.txt
 echo
 
 # Using Dalfox

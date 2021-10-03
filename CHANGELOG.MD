@@ -1,3 +1,8 @@
+# v1.19.4
+* Removed halberd
+* Updated readme
+* Added page-fetch and placed it alongside goverview
+
 # v1.19.3
 * Added more banners in install script
 

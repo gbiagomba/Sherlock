@@ -167,8 +167,14 @@ fi
 
 if ! hash dalfox; then
     banner dalfox
-    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    $SUDOH go get -u -v github.com/detectify/page-fetch
     if ! hash dalfox; then sudo snap install dalfox; fi
+fi
+
+if ! hash page-fetch; then
+    banner page-fetch
+    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install`; fi
 fi
 
 if ! hash massdns && [ ! -e /opt/massdns ]; then
