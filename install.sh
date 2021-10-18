@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per, 
+# Checking dependencies - halberd, sublist3r, theharvester, metagoofil, nikto, dirb, masscan, nmap, sn1per,
 #                         wapiti, sslscan, testssl, jexboss, xsstrike, grabber, golismero, docker, wappalyzer
 #                         sshscan, ssh-audit, dnsrecon, retirejs, python3, gobuster, seclists, metasploit
 # set -eux
@@ -16,13 +16,32 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-if [ "$OS_CHK" != "debian" ]; then
-    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-    exit
-fi
+# if [ "$OS_CHK" != "debian" ]; then
+#     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
+#     exit
+# fi
 
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -EH"
+
+# Figuring out the default package monitor
+if hash apt 2> /dev/null; then
+  PKGMAN_INSTALL="apt install -y"
+  PKGMAN_UPDATE="apt update"
+  PKGMAN_UPGRADE="apt upgrade -y"
+elif hash yum; then
+  PKGMAN_INSTALL="yum install -y"
+  PKGMAN_UPDATE="yum update"
+  PKGMAN_UPGRADE="yum upgrade -y"
+elif hash snap 2> /dev/null; then
+  PKGMAN_INSTALL="snap install"
+  PKGMAN_UPGRADE="snap refresh"
+  PKGMAN_UPDATE=$PKGMAN_UPGRADE
+elif hash brew 2> /dev/null; then
+  PKGMAN_INSTALL="brew install"
+  PKGMAN_UPDATE="brew update"
+  PKGMAN_UPGRADE="brew upgrade"
+fi
 
 # Function banner
 function banner
@@ -35,14 +54,14 @@ function banner
 {
 # Doing the basics
 banner "system updates"
-apt update
-apt upgrade -y
+$PKGMAN_UPDATE
+$PKGMAN_UPGRADE
 
 # Installing main system dependencies
 for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
-        apt install -y $i
+        $PKGMAN_INSTALL $i
     fi
 done
 
@@ -382,7 +401,7 @@ if [ ! -e /opt/vulscan ]; then
     cd /opt/
     git clone https://github.com/scipag/vulscan
     cd vulscan/
-    ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan 
+    ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan
 else
     banner vulscan
     cd /opt/vulscan
@@ -436,7 +455,7 @@ if [ ! -e /opt/medusa-2.2 ] && ! hash medusa 2> /dev/null; then
     wget -q http://foofus.net/goons/jmk/tools/medusa-2.2.tar.gz -O - | sudo tar -xvz
     cd medusa*
     ./configure
-    make 
+    make
     make install
     medusa -q
 fi
