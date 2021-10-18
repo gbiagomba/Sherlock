@@ -1,3 +1,6 @@
+# v1.19.5
+* Added brew and yum support to install script
+
 # v1.19.4
 * Removed halberd
 * Updated readme
