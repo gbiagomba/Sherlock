@@ -11,15 +11,10 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 wrkpth="$PWD"
 
 # Checking user is root & Ensuring system is debian based
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
   exit
 fi
-
-# if [ "$OS_CHK" != "debian" ]; then
-#     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-#     exit
-# fi
 
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -EH"
@@ -156,7 +151,6 @@ if ! hash go; then
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
     $SUDOH echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
     $SUDOH source ~/.bashrc
-
 fi
 
 if ! hash amass; then
