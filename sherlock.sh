@@ -37,7 +37,7 @@ diskMax=90
 diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'% | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
-wrktmp=$(mktemp -d)
+wrktmp=$(mktemp -p $pth/$prj_name-sherlock_tmp-$current_time)
 
 # Functions
 function Banner
@@ -174,11 +174,11 @@ echo
 
 # Nmap - Pingsweep using ICMP echo, netmask, timestamp
 Banner "Nmap Pingsweep - ICMP echo, netmask, timestamp & TCP SYN, and UDP"
-nmap -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PE -PM -PP -PO -PR -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
+nmap -T5 --min-rate 500 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PE -PM -PP -PO -PR -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time
 
 # Nmap - IPv6 Pingsweep using TCP SYN, and UDP
 Banner "Nmap - GRAB_IPV6 Pingsweep using TCP SYN, and UDP"
-nmap -6 -T5 --min-rate 300 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
+nmap -6 -T5 --min-rate 500 --resolve-all -PA"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PS"21-23,25,53,79,80-83,88,110,111,135,139,161,179,443,445,497,515,535,548,993,1025,1028,1029,1917,2869,3389,5000,5060,6000,8080,9001,9100,49000" -PU"42,53,67-68,88,111,123,135,137,138,161,500,3389,5355" -PY"22,80,179,5060" -R --reason --resolve-all -sn -iL $wrktmp/tempFinal -oA $wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time
 
 # Nmap - Grabing live hosts
 Banner "Grabbing livehosts from pingsweep"
@@ -216,8 +216,8 @@ Banner "Performing portknocking scan using Masscan"
 # nmapTimer=$(expr ((3*65535*$hostcount)/1000)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-masscan --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
-masscan --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargetsv6 -oL $wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list
+masscan -V -Pn --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargets -oL $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list
+masscan -V -Pn --rate 1000 --banners --open-only --retries 3 -p 0-65535 -iL $wrktmp/IPtargetsv6 -oL $wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list
 if [ -r "$wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list" ]; then
     cat $wrkpth/Masscan/$prj_name-masscan_portknock-$current_time.list | cut -d " " -f 4 | rg -v masscan | sort -u | tee -a $wrkpth/$prj_name-livehosts-$current_time.list
 elif [ -r "$wrkpth/Masscan/$prj_name-masscan_portknockv6-$current_time.list" ]; then
@@ -233,13 +233,13 @@ Banner "Performing portknocking scan using Nmap"
 # nmapTimer=$(expr ((6*65535*$hostcount)/300)*1.1)
 # printf "This portion of the scan will take approx"
 # convertAndPrintSeconds $nmapTimer
-nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
-nmap -T4 --min-rate 300p -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time
+nmap -T4 --min-rate 300p --max-retries 3 --defeat-rst-ratelimit --script-timeout 10 -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time
+nmap -T4 --min-rate 300p --max-retries 3 --defeat-rst-ratelimit --script-timeout 10 -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweep-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time
 
 # Scanning for GRAB_IPV6
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
-nmap -T4 --min-rate 300p -6 -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time
+nmap -T4 --min-rate 300p -6 --max-retries 3 --defeat-rst-ratelimit --script-timeout 10 -Pn -R --reason --resolve-all -sSV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time
+nmap -T4 --min-rate 300p -6 --max-retries 3 --defeat-rst-ratelimit --script-timeout 10 -Pn -R --reason --resolve-all -sTV --open -p- --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time
 nmap -T5 --min-rate 300p --defeat-icmp-ratelimit -6 -Pn -R --reason --resolve-all -sUV --open --top-ports 1000 --script $NMAP_SCRIPTS --script-args "newtargets,iX=$wrkpth/Nmap/$prj_name-nmap_pingsweepv6-$current_time.xml" -oA $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time
 
 # Enumerating the services discovered by nmap
@@ -262,8 +262,8 @@ echo
 for i in `cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-connect-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-connect-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_udpv6-$current_time $wrkpth/Nmap/$prj_name-nmap_portknock_udp-$current_time | rg Ports | cut -d "/" -f 5 | tr "|" "\n" | sort -u`; do
     Banner "Performing targeted scan of $i"
     PORTNUM=($(cat $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | rg Ports | cut -d ":" -f 3 | tr "," "\n" | rg -iv nmap | rg -i $i | cut -d "/" -f 1 | tr -d " " | sort -u))
-    nmap -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmap_$i-$current_time
-    nmap -6 -T4 --min-rate 300p -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmapv6_$i-$current_time
+    nmap -T4 --min-rate 300p --max-retries 2 --defeat-icmp-ratelimit --defeat-rst-ratelimit --script-timeout 10 -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | tr  " " ",")" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmap_$i-$current_time
+    nmap -6 -T4 --min-rate 300p --max-retries 2 --defeat-icmp-ratelimit --defeat-rst-ratelimit --script-timeout 10 -A -Pn -R --reason --resolve-all -sSUV --open -p "$(echo ${PORTNUM[*]} | sed 's/ /,/g')" --script="$(ls /usr/share/nmap/scripts/ | rg $i | rg -iv brute | tr "\n" ",")$NMAP_SCRIPTS" --script-args "$NMAP_SCRIPTARG" -iL $wrkpth/Nmap/$prj_name-`echo $i | tr '[:lower:]' '[:upper:]'`v6-$current_time.list -oA $wrkpth/Nmap/$prj_name-nmapv6_$i-$current_time
 done
 unset PORTNUM
 echo

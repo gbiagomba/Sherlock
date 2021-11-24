@@ -11,15 +11,10 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 wrkpth="$PWD"
 
 # Checking user is root & Ensuring system is debian based
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
   exit
 fi
-
-# if [ "$OS_CHK" != "debian" ]; then
-#     echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-#     exit
-# fi
 
 # Setting sudo to HOME variable to target user's home dir
 SUDOH="sudo -EH"
@@ -29,18 +24,22 @@ if hash apt 2> /dev/null; then
   PKGMAN_INSTALL="apt install -y"
   PKGMAN_UPDATE="apt update"
   PKGMAN_UPGRADE="apt upgrade -y"
+  PKGMAN_RM="apt remove -y"
 elif hash yum; then
   PKGMAN_INSTALL="yum install -y"
   PKGMAN_UPDATE="yum update"
   PKGMAN_UPGRADE="yum upgrade -y"
+  PKGMAN_RM="yum remove -y"
 elif hash snap 2> /dev/null; then
   PKGMAN_INSTALL="snap install"
   PKGMAN_UPGRADE="snap refresh"
   PKGMAN_UPDATE=$PKGMAN_UPGRADE
+  PKGMAN_RM="snap remove"
 elif hash brew 2> /dev/null; then
   PKGMAN_INSTALL="brew install"
   PKGMAN_UPDATE="brew update"
   PKGMAN_UPGRADE="brew upgrade"
+  PKGMAN_RM="brew uninstall"
 fi
 
 # Function banner
@@ -58,7 +57,7 @@ $PKGMAN_UPDATE
 $PKGMAN_UPGRADE
 
 # Installing main system dependencies
-for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         $PKGMAN_INSTALL $i
@@ -79,6 +78,7 @@ if ! hash testssl 2> /dev/null || ! hash testssl.sh 2> /dev/null; then
     cd /usr/bin/
     curl -s -o testssl https://testssl.sh/testssl.sh
     chmod +x testssl
+    ln -s testssl testssl.sh
 fi
 
 if [ ! -e /usr/share/seclists/ ]; then
@@ -102,11 +102,11 @@ if ! hash docker 2> /dev/null; then
     # Configure Docker APT repository (Kali is based on Debian testing, which will be called buster upon release, and Docker now has support for it):
     echo 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable' > /etc/apt/sources.list.d/docker.list
     # Update APT:
-    apt-get update
+    $PKGMAN_UPDATE
     # Uninstall older docker
     apt-get remove  docker docker-engine docker.io containerd runc -y
     # Install Docker:
-    apt-get install docker-ce docker-ce-cli containerd.io -y
+    $PKGMAN_INSTALL docker-ce docker-ce-cli containerd.io -y
 fi
 
 if ! hash ssh_scan 2> /dev/null; then
@@ -145,13 +145,12 @@ fi
 if ! hash go; then
     banner golang
     add-apt-repository ppa:longsleep/golang-backports
-    apt update
-    apt install  -y golang golang-go
+    $PKGMAN_UPDATE
+    $PKGMAN_INSTALL -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
     $SUDOH echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
     $SUDOH source ~/.bashrc
-
 fi
 
 if ! hash amass; then

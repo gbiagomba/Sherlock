@@ -1,3 +1,10 @@
+# v1.19.6
+* Added "defaet rst/icmp" flag to nmap commands
+* Added max retries on nmap and set it to 2-3 
+* Added nmap Script timeout of 10mins
+* Upped the nmap pingsweep min rate to 500
+* Moved temp directory from /tmp/ to [cwd](https://www.rapidtables.com/code/linux/linux-current-directory.html)
+
 # v1.19.5
 * Added brew and yum support to install script
 
