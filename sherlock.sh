@@ -351,8 +351,13 @@ echo
 # switch back to for loop, testssl doesnt properly parse gnmap
 Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
-testssl --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-testssl -6 --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
+if [ -x testssl ]; then
+    testssl --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+    testssl -6 --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
+elif [ -x docker ]; then
+    docker run --rm -ti -v "$PWD:/media/Project" drwetter/testssl.sh --append --assume-http --full --parallel --sneaky -oA /media/Project/$prj_name-testssl_output-$current_time --file /media/Project/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+    docker run --rm -ti -v "$PWD:/media/Project" drwetter/testssl.sh -6 --append --assume-http --full --parallel --sneaky -oA /media/Project/$prj_name-testssl_output-$current_time --file /media/Project/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+fi
 find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
 echo
