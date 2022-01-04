@@ -37,7 +37,8 @@ diskMax=90
 diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'% | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
-wrktmp=$(mktemp -p $pth/$prj_name-sherlock_tmp-$current_time)
+wrktmp=$(mktemp -d)
+# wrktmp=$(mktemp -p $pth/$prj_name-sherlock_tmp-$current_time)
 
 # Functions
 function Banner
