@@ -57,7 +57,7 @@ $PKGMAN_UPDATE
 $PKGMAN_UPGRADE
 
 # Installing main system dependencies
-for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb git git-core go golang jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs npm openssl parallel phantomjs pipenv python-pip python2 python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner $i
         $PKGMAN_INSTALL $i
@@ -151,6 +151,11 @@ if ! hash go; then
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
     $SUDOH echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
     $SUDOH source ~/.bashrc
+fi
+
+if ! hash subfinder; then
+    banner subfinder
+    $SUDOH go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 fi
 
 if ! hash amass; then
@@ -400,6 +405,13 @@ if [ ! -e /opt/vulscan ]; then
     cd /opt/
     git clone https://github.com/scipag/vulscan
     cd vulscan/
+    for i in https://www.computec.ch/projekte/vulscan/download/cve.csv https://www.computec.ch/projekte/vulscan/download/exploitdb.csv https://www.computec.ch/projekte/vulscan/download/openvas.csv https://www.computec.ch/projekte/vulscan/download/osvdb.csv https://www.computec.ch/projekte/vulscan/download/scipvuldb.csv https://www.computec.ch/projekte/vulscan/download/securityfocus.csv https://www.computec.ch/projekte/vulscan/download/securitytracker.csv https://www.computec.ch/projekte/vulscan/download/xforce.csv; do
+        if [ -x wget ]; then
+            wget --no-check-certificate -q $i
+        elif [ -x curl ]; then
+            curl -kLs $i | tee -a $(echo $i | cut -d'/' -f 7)
+        fi
+    done
     ln -s /opt/vulscan/ /usr/share/nmap/scripts/vulscan
 else
     banner vulscan

@@ -32,7 +32,7 @@ NMAP_SCRIPTARG="newtargets,userdb=/usr/share/seclists/Usernames/cirt-default-use
 NMAP_SCRIPTS="vulners,vulscan/vulscan.nse,vuln,auth,brute,targets-xml"
 OS_CHK=$(cat /etc/os-release | rg -o debian)
 WORDLIST="/opt/Sherlock/rsc/subdomains.list"
-current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+current_time=$(date "+%Y.%m.%d-%H.%M.%S.%N")
 diskMax=90
 diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'% | cut -d "%" -f 1)
 prj_name=$2
@@ -135,6 +135,7 @@ if [ ! -z $wrktmp/WebTargets ]; then
         Banner "with shuffledns"; shuffledns -t 25 -d $web -w $WORDLIST -o "$wrkpth/SubDomainEnum/$prj_name-$web-shuffledns_output-$current_time.txt" -r /opt/Sherlock/rsc/ressolvers.txt -massdns `which massdns`
         Banner "with fierce"; fierce --domain $web --subdomain-file $WORDLIST --traverse 255 2> /dev/null | tee -a "$wrkpth/SubDomainEnum/$prj_name-$web-fierce_output-$current_time.json"
     done
+    anner "with fierce"; subfinder -dL $wrktmp/WebTargets -all -nC -oD $wrkpth/SubDomainEnum/ | tee -a "$wrkpth/SubDomainEnum/$prj_name-sibfinder_output-$current_time.log"
 fi
 echo
 
@@ -420,7 +421,7 @@ done
 find $wrkpth/XSStrike/ -type f -size -1k -delete
 echo
 
-# Using page-fetch
+# Using uro
 Banner "Parsing wappalyzer using uro"
 cat $wrkpth/Wappalyzer/$prj_name-$web-wappalyzer_output-$current_time.json | jq '.urls' | cut -d \" -f 2 | sort -u | egrep -iv "status|\}|\{" | tee -a $wrkpth/Wappalyzer/$prj_name-url_targets-$current_time.list
 echo
