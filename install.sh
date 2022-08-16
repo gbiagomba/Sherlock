@@ -215,7 +215,7 @@ fi
 
 if ! hash goverview; then
     banner goverview
-    $SUDOH go get github.com/j3ssie/goverview
+    $SUDOH go install github.com/j3ssie/goverview
 fi
 
 if ! hash nuclei; then
@@ -230,7 +230,7 @@ fi
 
 if ! hash urinteresting; then
     banner urinteresting
-    $SUDOH go get -u github.com/tomnomnom/hacks/urinteresting
+    $SUDOH go install -u github.com/tomnomnom/hacks/urinteresting
 fi
 
 # Downloading the XSStrike dependency
