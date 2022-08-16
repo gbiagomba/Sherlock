@@ -155,43 +155,43 @@ fi
 
 if ! hash amass; then
     banner amass
-    $SUDOH go get -u -v github.com/OWASP/Amass
+    $SUDOH go install github.com/OWASP/Amass
 fi
 
 if ! hash httprobe; then
     banner httprobe
-    $SUDOH go get -u -v github.com/tomnomnom/httprobe
+    $SUDOH go install github.com/tomnomnom/httprobe
 fi
 
 if ! hash gospider; then
     banner gospider
-    $SUDOH go get -u -v github.com/jaeles-project/gospider
+    $SUDOH go install github.com/jaeles-project/gospider
 fi
 
 if ! hash hakrawler; then
     banner hakrawler
-    $SUDOH go get -u -v github.com/hakluke/hakrawler
+    $SUDOH go install github.com/hakluke/hakrawler
 fi
 
 if ! hash ffuf; then
     banner ffuf
-    $SUDOH go get -u -v github.com/ffuf/ffuf
+    $SUDOH go install github.com/ffuf/ffuf
 fi
 
 if ! hash shuffledns; then
     banner shuffledns
-    $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
+    $SUDOH go install github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
 if ! hash dalfox; then
     banner dalfox
-    $SUDOH go get -u -v github.com/detectify/page-fetch
+    $SUDOH go install github.com/detectify/page-fetch
     if ! hash dalfox; then sudo snap install dalfox; fi
 fi
 
 if ! hash page-fetch; then
     banner page-fetch
-    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    $SUDOH go install github.com/hahwul/dalfox/v2
     if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install`; fi
 fi
 
@@ -205,12 +205,12 @@ fi
 
 if ! hash aquatone; then
     banner aquatone
-    $SUDOH go get -u -v github.com/michenriksen/aquatone
+    $SUDOH go install github.com/michenriksen/aquatone
 fi
 
 if ! hash gobuster; then
     banner gobuster
-    $SUDOH go get -u -v github.com/OJ/gobuster
+    $SUDOH go install github.com/OJ/gobuster
 fi
 
 if ! hash goverview; then
@@ -220,7 +220,7 @@ fi
 
 if ! hash nuclei; then
     banner nuclei
-    $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+    $SUDOH go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei
     git clone https://github.com/projectdiscovery/nuclei-templates.git /opt/nuclei-templates/
     if ! hash nuclei; then
         cd /opt/
