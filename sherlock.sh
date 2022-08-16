@@ -50,12 +50,6 @@ function Banner
     echo "--------------------------------------------------"
 }
 
-# Ensuring system is debian based
-if [ "$OS_CHK" != "debian" ]; then
-    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-    exit
-fi
-
 # Checking system resources (HDD space)
 if [[ "$diskSize" -ge "$diskMax" ]]; then
 	clear
