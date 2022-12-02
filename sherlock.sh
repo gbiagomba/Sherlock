@@ -37,7 +37,8 @@ diskMax=90
 diskSize=$(df -kh $PWD | grep -iv filesystem | grep -o '[1-9]\+'% | cut -d "%" -f 1)
 prj_name=$2
 targets=$1
-wrktmp=$(mktemp -p $pth/$prj_name-sherlock_tmp-$current_time)
+wrktmp=$(mktemp -d)
+# wrktmp=$(mktemp -p $pth/$prj_name-sherlock_tmp-$current_time)
 
 # Functions
 function Banner
@@ -48,12 +49,6 @@ function Banner
     Current Time : $current_time"
     echo "--------------------------------------------------"
 }
-
-# Ensuring system is debian based
-if [ "$OS_CHK" != "debian" ]; then
-    echo "Unfortunately this install script was written for debian based distributions only, sorry!"
-    exit
-fi
 
 # Checking system resources (HDD space)
 if [[ "$diskSize" -ge "$diskMax" ]]; then
@@ -350,8 +345,13 @@ echo
 # switch back to for loop, testssl doesnt properly parse gnmap
 Banner "Performing scan using testssl"
 cd $wrkpth/SSL/
-testssl --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
-testssl -6 --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
+if [ -x testssl ]; then
+    testssl --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+    testssl -6 --append --assume-http --full --parallel --sneaky -oA --file $wrkpth/Nmap/$prj_name-nmap_portknock_tcpv6-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_outputv6-$current_time.txt
+elif [ -x docker ]; then
+    docker run --rm -ti -v "$PWD:/media/Project" drwetter/testssl.sh --append --assume-http --full --parallel --sneaky -oA /media/Project/$prj_name-testssl_output-$current_time --file /media/Project/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+    docker run --rm -ti -v "$PWD:/media/Project" drwetter/testssl.sh -6 --append --assume-http --full --parallel --sneaky -oA /media/Project/$prj_name-testssl_output-$current_time --file /media/Project/$prj_name-nmap_portknock_tcp-$current_time.gnmap | tee -a $wrkpth/SSL/$prj_name-TestSSL_output-$current_time.txt
+fi
 find $wrkpth/SSL/ -type f -size -1k -delete
 cd $pth
 echo
