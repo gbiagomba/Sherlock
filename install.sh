@@ -27,7 +27,7 @@ if hash apt 2> /dev/null; then
   PAKMAN_RM="apt remove -y"
 elif hash yum; then
   PAKMAN_INSTALL="yum install -y --skip-broken"
-  PAKMAN_UPDATE="yum update --skip-broken"
+  PAKMAN_UPDATE="yum update -y --skip-broken"
   PAKMAN_UPGRADE="yum upgrade -y --skip-broken"
   PAKMAN_RM="yum remove -y"
 elif hash snap 2> /dev/null; then
