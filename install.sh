@@ -21,53 +21,53 @@ SUDOH="sudo -EH"
 
 # Figuring out the default package monitor
 if hash apt 2> /dev/null; then
-  PKGMAN_INSTALL="apt install -y"
-  PKGMAN_UPDATE="apt update"
-  PKGMAN_UPGRADE="apt upgrade -y"
-  PKGMAN_RM="apt remove -y"
+  PAKMAN_INSTALL="apt install -y"
+  PAKMAN_UPDATE="apt update"
+  PAKMAN_UPGRADE="apt upgrade -y"
+  PAKMAN_RM="apt remove -y"
 elif hash yum; then
-  PKGMAN_INSTALL="yum install -y"
-  PKGMAN_UPDATE="yum update"
-  PKGMAN_UPGRADE="yum upgrade -y"
-  PKGMAN_RM="yum remove -y"
+  PAKMAN_INSTALL="yum install -y --skip-broken"
+  PAKMAN_UPDATE="yum update -y --skip-broken"
+  PAKMAN_UPGRADE="yum upgrade -y --skip-broken"
+  PAKMAN_RM="yum remove -y"
 elif hash snap 2> /dev/null; then
-  PKGMAN_INSTALL="snap install"
-  PKGMAN_UPGRADE="snap refresh"
-  PKGMAN_UPDATE=$PKGMAN_UPGRADE
-  PKGMAN_RM="snap remove"
+  PAKMAN_INSTALL="snap install"
+  PAKMAN_UPGRADE="snap refresh"
+  PAKMAN_UPDATE=$PAKMAN_UPGRADE
+  PAKMAN_RM="snap remove"
 elif hash brew 2> /dev/null; then
-  PKGMAN_INSTALL="brew install"
-  PKGMAN_UPDATE="brew update"
-  PKGMAN_UPGRADE="brew upgrade"
-  PKGMAN_RM="brew uninstall"
+  PAKMAN_INSTALL="brew install"
+  PAKMAN_UPDATE="brew update"
+  PAKMAN_UPGRADE="brew upgrade"
+  PAKMAN_RM="brew uninstall"
 fi
 
 # Function banner
 function banner
 {
     echo "--------------------------------------------------"
-    echo "Installing $1"
+    echo "$1"
     echo "--------------------------------------------------"
 }
 
 {
 # Doing the basics
 banner "system updates"
-$PKGMAN_UPDATE
-$PKGMAN_UPGRADE
+$PAKMAN_UPDATE
+$PAKMAN_UPGRADE
 
 # Installing main system dependencies
 for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb git git-core go golang jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs npm openssl parallel phantomjs pipenv python-pip python2 python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
-        banner $i
-        $PKGMAN_INSTALL $i
+        banner "Installing $i"
+        $PAKMAN_INSTALL $i
     fi
 done
 
 # Installing python dependencies
 for i in dnsrecon fierce dirbpy ssh-audit theHarvester uro; do
     if ! hash $i 2> /dev/null; then
-        banner "$i"
+        banner "Installing python package $i"
         $SUDOH pip3 install $i
     fi
 done
@@ -102,11 +102,11 @@ if ! hash docker 2> /dev/null; then
     # Configure Docker APT repository (Kali is based on Debian testing, which will be called buster upon release, and Docker now has support for it):
     echo 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable' > /etc/apt/sources.list.d/docker.list
     # Update APT:
-    $PKGMAN_UPDATE
+    $PAKMAN_UPDATE
     # Uninstall older docker
     apt-get remove  docker docker-engine docker.io containerd runc -y
     # Install Docker:
-    $PKGMAN_INSTALL docker-ce docker-ce-cli containerd.io -y
+    $PAKMAN_INSTALL docker-ce docker-ce-cli containerd.io -y
 fi
 
 if ! hash ssh_scan 2> /dev/null; then
@@ -145,8 +145,8 @@ fi
 if ! hash go; then
     banner golang
     add-apt-repository ppa:longsleep/golang-backports
-    $PKGMAN_UPDATE
-    $PKGMAN_INSTALL -y golang golang-go
+    $PAKMAN_UPDATE
+    $PAKMAN_INSTALL -y golang golang-go
     $SUDOH export GOPATH=$(go env GOPATH)
     $SUDOH export PATH=$PATH:$(go env GOPATH)/bin
     $SUDOH echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
@@ -160,43 +160,43 @@ fi
 
 if ! hash amass; then
     banner amass
-    $SUDOH go get -u -v github.com/OWASP/Amass
+    $SUDOH go install github.com/OWASP/Amass
 fi
 
 if ! hash httprobe; then
     banner httprobe
-    $SUDOH go get -u -v github.com/tomnomnom/httprobe
+    $SUDOH go install github.com/tomnomnom/httprobe
 fi
 
 if ! hash gospider; then
     banner gospider
-    $SUDOH go get -u -v github.com/jaeles-project/gospider
+    $SUDOH go install github.com/jaeles-project/gospider
 fi
 
 if ! hash hakrawler; then
     banner hakrawler
-    $SUDOH go get -u -v github.com/hakluke/hakrawler
+    $SUDOH go install github.com/hakluke/hakrawler
 fi
 
 if ! hash ffuf; then
     banner ffuf
-    $SUDOH go get -u -v github.com/ffuf/ffuf
+    $SUDOH go install github.com/ffuf/ffuf
 fi
 
 if ! hash shuffledns; then
     banner shuffledns
-    $SUDOH go get -u -v github.com/projectdiscovery/shuffledns/cmd/shuffledns
+    $SUDOH go install github.com/projectdiscovery/shuffledns/cmd/shuffledns
 fi
 
 if ! hash dalfox; then
     banner dalfox
-    $SUDOH go get -u -v github.com/detectify/page-fetch
+    $SUDOH go install github.com/detectify/page-fetch
     if ! hash dalfox; then sudo snap install dalfox; fi
 fi
 
 if ! hash page-fetch; then
     banner page-fetch
-    $SUDOH go get -u -v github.com/hahwul/dalfox/v2
+    $SUDOH go install github.com/hahwul/dalfox/v2
     if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install`; fi
 fi
 
@@ -210,22 +210,22 @@ fi
 
 if ! hash aquatone; then
     banner aquatone
-    $SUDOH go get -u -v github.com/michenriksen/aquatone
+    $SUDOH go install github.com/michenriksen/aquatone
 fi
 
 if ! hash gobuster; then
     banner gobuster
-    $SUDOH go get -u -v github.com/OJ/gobuster
+    $SUDOH go install github.com/OJ/gobuster
 fi
 
 if ! hash goverview; then
     banner goverview
-    $SUDOH go get github.com/j3ssie/goverview
+    $SUDOH go install github.com/j3ssie/goverview
 fi
 
 if ! hash nuclei; then
     banner nuclei
-    $SUDOH go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+    $SUDOH go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei
     git clone https://github.com/projectdiscovery/nuclei-templates.git /opt/nuclei-templates/
     if ! hash nuclei; then
         cd /opt/
@@ -235,7 +235,7 @@ fi
 
 if ! hash urinteresting; then
     banner urinteresting
-    $SUDOH go get -u github.com/tomnomnom/hacks/urinteresting
+    $SUDOH go install github.com/tomnomnom/hacks/urinteresting
 fi
 
 # Downloading the XSStrike dependency

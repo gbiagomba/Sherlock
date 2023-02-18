@@ -1,6 +1,9 @@
 ![alt tag](http://detective-tours.com/site/assets/files/1104/sherlock-banner.940x258.jpg)
 
 # Sherlock - Web Inspector
+![GitHub](https://img.shields.io/github/license/Achiefs/fim)
+[![Tip Me via PayPal](https://img.shields.io/badge/PayPal-tip_me-green?logo=paypal)](paypal.me/gbiagomba)
+
 Over the years I have had to do various web application and network pentests and I realized I was spending a lot of time performing the asset discovery, network vulnerability and web vulnerability scans. So I wrote this script to help handle that and I figuered I should share it with the world. Be advised, this tool was written for educational, and research purposes, please do not use this tool on systems you do not own.
 
 ## Pre-requisite
