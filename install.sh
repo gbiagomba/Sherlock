@@ -57,7 +57,7 @@ $PAKMAN_UPDATE
 $PAKMAN_UPGRADE
 
 # Installing main system dependencies
-for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
+for i in aha amass brutespray chromium dirb dirbuster dnsrecon exploitdb golang git git-core go golang golang-go jq masscan mediainfo medusa metagoofil msfconsole nikto nmap nodejs openssl pipenv parallel python2 python-pip python3 python3-pip ripgrep seclists sublist3r sudo testssl.sh theharvester unrar wapiti; do
     if ! hash $i 2> /dev/null; then
         banner "Installing $i"
         $PAKMAN_INSTALL $i
@@ -155,44 +155,44 @@ fi
 
 if ! hash amass; then
     banner amass
-    $SUDOH go install github.com/OWASP/Amass
+    $SUDOH go install -v github.com/OWASP/Amass@latest
 fi
 
 if ! hash httprobe; then
     banner httprobe
-    $SUDOH go install github.com/tomnomnom/httprobe
+    $SUDOH go install -v github.com/tomnomnom/httprobe@latest
 fi
 
 if ! hash gospider; then
     banner gospider
-    $SUDOH go install github.com/jaeles-project/gospider
+    $SUDOH go install -v github.com/jaeles-project/gospider@latest
 fi
 
 if ! hash hakrawler; then
     banner hakrawler
-    $SUDOH go install github.com/hakluke/hakrawler
+    $SUDOH go install -v github.com/hakluke/hakrawler@latest
 fi
 
 if ! hash ffuf; then
     banner ffuf
-    $SUDOH go install github.com/ffuf/ffuf
+    $SUDOH go install -v github.com/ffuf/ffuf@latest
 fi
 
 if ! hash shuffledns; then
     banner shuffledns
-    $SUDOH go install github.com/projectdiscovery/shuffledns/cmd/shuffledns
+    $SUDOH go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
 fi
 
 if ! hash dalfox; then
     banner dalfox
-    $SUDOH go install github.com/detectify/page-fetch
+    $SUDOH go install -v github.com/detectify/page-fetch@latest
     if ! hash dalfox; then sudo snap install dalfox; fi
 fi
 
 if ! hash page-fetch; then
     banner page-fetch
-    $SUDOH go install github.com/hahwul/dalfox/v2
-    if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install`; fi
+    $SUDOH go install -v github.com/hahwul/dalfox/v2@latest
+    if ! hash page-fetch; then sudo `git clone https://github.com/detectify/page-fetch.git /opt/page-fetch/ && cd /opt/page-fetch/ && go install -v`; fi
 fi
 
 if ! hash massdns && [ ! -e /opt/massdns ]; then
@@ -205,22 +205,22 @@ fi
 
 if ! hash aquatone; then
     banner aquatone
-    $SUDOH go install github.com/michenriksen/aquatone
+    $SUDOH go install -v github.com/michenriksen/aquatone@latest
 fi
 
 if ! hash gobuster; then
     banner gobuster
-    $SUDOH go install github.com/OJ/gobuster
+    $SUDOH go install -v github.com/OJ/gobuster@latest
 fi
 
 if ! hash goverview; then
     banner goverview
-    $SUDOH go install github.com/j3ssie/goverview
+    $SUDOH go install -v github.com/j3ssie/goverview@latest
 fi
 
 if ! hash nuclei; then
     banner nuclei
-    $SUDOH go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+    $SUDOH go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
     git clone https://github.com/projectdiscovery/nuclei-templates.git /opt/nuclei-templates/
     if ! hash nuclei; then
         cd /opt/
@@ -230,7 +230,7 @@ fi
 
 if ! hash urinteresting; then
     banner urinteresting
-    $SUDOH go install github.com/tomnomnom/hacks/urinteresting
+    $SUDOH go install -v github.com/tomnomnom/hacks/urinteresting@latest
 fi
 
 # Downloading the XSStrike dependency
@@ -259,6 +259,7 @@ else
     cd /opt/ssh-audit
     git pull
 fi
+
 # Downloading the Vulners Nmap Script
 if [ ! -e /opt/nmap-vulners ]; then
     banner "nmap script vulners"
@@ -367,11 +368,7 @@ fi
 # Installing main dependencies
 if [ ! -e /opt/Sublist3r ] && ! hash sublist3r 2> /dev/null; then
     banner Sublist3r
-    cd /opt/
-    git clone https://github.com/aboul3la/Sublist3r
-    cd Sublist3r/
-    $SUDOH pip3 install -r requirements.txt
-    $SUDOH python3 setup.py install
+    pip3 install --user git+https://github.com/aboul3la/Sublist3r
     ln -s /opt/Sublist3r/sublist3r.py /usr/bin//sublist3r
 else
     banner Sublist3r
@@ -382,11 +379,7 @@ fi
 # Downloading and installing metagofil
 if [ ! -e /opt/metagoofil ]; then
     banner metagoofil
-    cd /opt/
-    git clone https://github.com/laramies/metagoofil
-    cd metagoofil/
-    $SUDOH pip3 install -r requirements.txt
-    $SUDOH python3 setup.py install
+    pip3 install --user git+https://github.com/laramies/metagoofil
     ln -s /opt/metagoofil/metagoofil.py /usr/bin//metagoofil
 else
     banner metagoofil
