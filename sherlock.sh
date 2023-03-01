@@ -448,10 +448,12 @@ if nuclei 2> /dev/null; then
 elif docker 2> /dev/null && [ `wc -l $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.out | cut -d ' ' -f 8` eq 0 ]; then
     docker run --rm -it -v "$PWD:/media/Project" projectdiscovery/nuclei -t technologies/ -t network/ -t miscellaneous/ -t iot/ -t headless/ -t file/ -t exposed-panels/ -t dns/ -t default-logins/ -t cnvd/ -t cves/ -t exposures/ -t misconfiguration/ -t vulnerabilities/ -t takeovers/ -t fuzzing/ -severity critical,high,medium,info -exclude dos -c 25 -nc -l /media/Project/Sherlock/$prj_name-web_targets.list -o /media/Project/Sherlock/WebVulnScan/$prj_name-nuclei_output-$current_time.out -vv | tee -a $wrkpth/WebVulnScan/$prj_name-nuclei_output-$current_time.txt
 fi
+
+ for i in GET HEAD POST PUT TRACE; do pythoon3 /opt/Arjun/arjun.py -i "$wrkpth/$prj_name-web_targets-$current_time.list" --get --post -t 25 -f /opt/Arjun/db/params.txt -o  $wrkpth/WebVulnScan/$prj_name-$i-arjun_output.json -oT $wrkpth/WebVulnScan/$prj_name-$i-arjun_output.out -m $i --stable; done
+
 for web in $(cat  $wrkpth/$prj_name-web_targets-$current_time.list); do
     echo "--------------------------Scanning $web------------------------"
     wapiti -u "$web" -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_http_result-$current_time -f html -m "all" -v 1 2> /dev/null | tee -a $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-wapiti_result-$current_time.log
-    pythoon3 /opt/Arjun/arjun.py -u "$web" --get --post -t 10 -f /opt/Arjun/db/params.txt -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-arjun_output-$current_time.txt 2> /dev/null
     ffuf -r -recursion -recursion-depth 5 -ac -maxtime 600 -w /usr/share/seclists/Fuzzing/fuzz-Bo0oM.txt -mc 200,401,403 -of all -o $wrkpth/WebVulnScan/$prj_name-`echo $web | tr "/" "_" | tr ":" "_" | cut -d "_" -f 1,4-5`-ffuf_output -c -u "$web/FUZZ"
 done
 echo
