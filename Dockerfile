@@ -1,8 +1,8 @@
 FROM kalilinux/kali-rolling:latest
 
 # copy files to /app
-WORKDIR /opt
-# COPY . /app
+WORKDIR /app
+COPY . /app
 
 # install necessary packages
 RUN apt-get update
