@@ -1,8 +1,8 @@
 FROM kalilinux/kali-rolling:latest
 
 # copy files to /app
-WORKDIR /app
-COPY . /app
+WORKDIR /opt
+# COPY . /app
 
 # install necessary packages
 RUN apt-get update
@@ -18,5 +18,5 @@ RUN npm install -g npm@latest
 RUN npm install
 
 # start the app
-# EXPOSE 3000
-ENTRYPOINT ["./sherlock.sh"]
+ENTRYPOINT ["bash"]
+CMD ["./sherlock.sh"]
