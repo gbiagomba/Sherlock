@@ -11,12 +11,6 @@ RUN git clone https://github.com/gbiagomba/Sherlock.git
 RUN cd Sherlock
 RUN bash "install.sh"
 
-# update npm
-RUN npm install -g npm@latest
-
-# install node modules
-RUN npm install
-
 # start the app
 ENTRYPOINT ["bash"]
 CMD ["./sherlock.sh"]
