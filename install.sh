@@ -16,7 +16,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Checking the operating system & setting bin
-if [ $(uname -o) -eq "Darwin" ]; then
+if [[ $(uname -o) -eq "Darwin" ]]; then
   BIN_INSTALL="$HOME/.sherlock/bin/"
   mkdir -p $BIN_INSTALL/
 else
