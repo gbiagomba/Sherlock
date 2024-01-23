@@ -19,7 +19,7 @@ fi
 if [ $(uname -o) -eq "Darwin" ]; then
   BIN_INSTALL="$HOME/.sherlock/bin/"
   mkdir -p $BIN_INSTALL/
-else; then
+else;
   BIN_INSTALL="$/opt/"
 fi
 
