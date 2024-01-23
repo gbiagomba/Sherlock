@@ -61,7 +61,7 @@ $PAKMAN_UPDATE
 $PAKMAN_UPGRADE
 
 # Installing main system dependencies
-for i in aha amass arjun batea brutespray chromium dirb dirbuster dnsrecon exploitdb git git-core go golang golang-go janus jq masscan mediainfo medusa metagofil metagoofil msfconsole nikto nmap nmap-bootstrap-xsl nmap-converter nodejs nuclei openssl parallel pipenv python-pip python2 python3 python3-pip ripgrep searchsploit seclists ssh-audit subdomainizer sublist3r testssl testssl.sh theharvester unrar vulscan wapiti xml2json xss-payload-list xsstrike; do
+for i in aha amass arjun batea brutespray chromium dirb dirbuster dnsrecon exploitdb git git-core go golang golang-go janus jq masscan mediainfo medusa metagofil metagoofil metasploit msfconsole nikto nmap nmap-bootstrap-xsl nmap-converter nodejs nuclei openssl parallel pipenv python-pip python2 python3 python3-pip ripgrep searchsploit seclists ssh-audit subdomainizer sublist3r testssl testssl.sh theharvester unrar vulscan wapiti xml2json xss-payload-list xsstrike; do
     if ! hash $i 2> /dev/null; then
         banner "Installing $i"
         $PAKMAN_INSTALL $i
