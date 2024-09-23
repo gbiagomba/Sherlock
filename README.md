@@ -1,4 +1,4 @@
-![alt%20tag](images/Firefly%20Create%20a%20sleek%20and%20professional%20logo%20inspired%20by%20the%20art%20style%20of%20the%20Sherlock%20Holmes%20detect%20(3).jpg)
+![alt tag](img/Firefly%20Create%20a%20sleek%20and%20professional%20logo%20inspired%20by%20the%20art%20style%20of%20the%20Sherlock%20Holmes%20detect%20(3).jpg)
 
 # Sherlock - Web Inspector
 
