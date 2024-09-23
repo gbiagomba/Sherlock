@@ -1,0 +1,28 @@
+[package]
+name = "sherlock"
+version = "2.0.0-dev"
+authors = ["Darth R3v4n"]
+edition = "2021"
+license = "GPL-3.0"
+description = "Sherlock is a recon automation tool for web application assessments."
+repository = "https://github.com/gbiagomba/sherlock"
+homepage = "https://github.com/gbiagomba/sherlock"
+readme = "README.md"
+keywords = ["recon", "security", "automation", "web-app"]
+categories = ["security", "network", "command-line-utilities"]
+documentation = "https://docs.rs/sherlock"
+rust-version = "1.56"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+
+[features]
+default = []
+
+[[bin]]
+name = "sherlock"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
