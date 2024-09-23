@@ -1,16 +1,8 @@
-![alt tag](images/Firefly Create a sleek and professional logo inspired by the art style of the Sherlock Holmes detect (3).jpg)
-```
-     _               _            _    
-    | |             | |          | |   
- ___| |__   ___ _ __| | ___   ___| | __
-/ __| '_ \ / _ \ '__| |/ _ \ / __| |/ /
-\__ \ | | |  __/ |  | | (_) | (__|   < 
-|___/_| |_|\___|_|  |_|\___/ \___|_|\_\
-```
+![alt tag](img/Firefly%20Create%20a%20sleek%20and%20professional%20logo%20inspired%20by%20the%20art%20style%20of%20the%20Sherlock%20Holmes%20detect%20(3).jpg)
+
 # Sherlock - Web Inspector
 
-![GitHub](https://img.shields.io/github/license/Achiefs/fim)
-[![Tip Me via PayPal](https://img.shields.io/badge/PayPal-tip_me-green?logo=paypal)](paypal.me/gbiagomba)
+![GitHub](https://img.shields.io/github/license/Achiefs/fim) [![Tip Me via PayPal](https://img.shields.io/badge/PayPal-tip_me-green?logo=paypal)](paypal.me/gbiagomba)
 
 ## Background/Lore
 Sherlock is a powerful recon automation tool designed to streamline the early phases of web application security assessments. Named after the legendary detective, it automates tasks like target scanning, excluding specific hosts, and more. With Sherlock, security professionals can perform their investigations efficiently while focusing on critical vulnerabilities.
@@ -82,7 +74,7 @@ This will generate an optimized binary located in the `target/release` directory
 - [ ] Add function to check if the script is running on latest version [inprogress]
 - [ ] Add exclusion list config file
 - [ ] Add flag support
-- [ ] Convert sherlock to rust lang
+- [x] Convert sherlock to rust lang
 
 ## Contributing
 We welcome contributions! Please follow the standard GitHub workflow:
