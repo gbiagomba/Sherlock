@@ -40,7 +40,7 @@ if [[ $WITH_TOOLS -eq 1 ]]; then
     if ! command -v amass >/dev/null 2>&1; then
       echo "[i] amass not available via brew or not found; installing via go"
       export GOPATH=${GOPATH:-"$HOME/go"}; export PATH="$PATH:$GOPATH/bin"
-      go install github.com/OWASP/Amass/v3/...@latest || true
+      go install github.com/owasp-amass/amass/v3/...@latest || true
       sudo install -m 0755 "$GOPATH/bin/amass" /usr/local/bin/amass || true
     fi
   elif command -v apt-get >/dev/null 2>&1; then
@@ -49,7 +49,7 @@ if [[ $WITH_TOOLS -eq 1 ]]; then
     export GOPATH=${GOPATH:-"$HOME/go"}; export PATH="$PATH:$GOPATH/bin"
     go install github.com/projectdiscovery/httpx/cmd/httpx@latest || true
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest || true
-    go install github.com/OWASP/Amass/v3/...@latest || true
+    go install github.com/owasp-amass/amass/v3/...@latest || true
     sudo install -m 0755 "$GOPATH/bin/httpx" /usr/local/bin/httpx || true
     sudo install -m 0755 "$GOPATH/bin/nuclei" /usr/local/bin/nuclei || true
     sudo install -m 0755 "$GOPATH/bin/amass" /usr/local/bin/amass || true
@@ -59,7 +59,7 @@ if [[ $WITH_TOOLS -eq 1 ]]; then
     # gobuster/amass availability varies; prefer go install
     export GOPATH=${GOPATH:-"$HOME/go"}; export PATH="$PATH:$GOPATH/bin"
     go install github.com/OJ/gobuster/v3@latest || true
-    go install github.com/OWASP/Amass/v3/...@latest || true
+    go install github.com/owasp-amass/amass/v3/...@latest || true
     go install github.com/projectdiscovery/httpx/cmd/httpx@latest || true
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest || true
     for b in gobuster amass httpx nuclei; do sudo install -m 0755 "$GOPATH/bin/$b" /usr/local/bin/$b || true; done

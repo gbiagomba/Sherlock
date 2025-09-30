@@ -26,7 +26,7 @@ ENV GOPATH=/root/go PATH=/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 # Install httpx, nuclei, and amass
 RUN go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
-    go install github.com/OWASP/Amass/v3/...@latest
+    go install github.com/owasp-amass/amass/v3/...@latest
 WORKDIR /app
 COPY --from=builder /usr/src/sherlock/target/release/sherlock /usr/local/bin/sherlock
 COPY rsc /app/rsc
