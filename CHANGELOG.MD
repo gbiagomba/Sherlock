@@ -1,5 +1,17 @@
+# v2.0.0 (2025-09-30)
+- Full rewrite in Rust with modular CLI subcommands: `recon`, `investigate`, `hound`, `report`, `mindpalace`, `doctor`.
+- Safe tool orchestration with timeouts, bounded concurrency, and argv-only execution.
+- New adapters: Amass, Gobuster DNS, Nmap (XML: host discovery + service scan), httpx, nuclei.
+- Feed-forward pipeline: subdomains → targets; services → inferred URLs → nuclei.
+- Reporting: consolidated `findings.jsonl` and generated `report.json`, `report.csv`, `report.html`, `report.txt`, plus `services.csv` inventory.
+- Mindpalace visualization and `graph.json` export.
+- Installers: `scripts/install.sh` (Linux/macOS) and `scripts/install.ps1` (Windows).
+- Docker: ready-to-run image with nmap, amass, gobuster, httpx, nuclei.
+- CI/CD: multi-arch Docker release; multi-platform binaries (Linux glibc+musl x64/aarch64, macOS x64/arm64, Windows x64/arm64) with asset naming `sherlock-{target}`.
+- Docs updated (README) with usage, flags, installers, Docker, CI/CD.
+
 # v2.0.0-dev
-- Started conversion to rust
+- Started conversion to Rust
 - Moved `sherlock.sh` and `gift_wrapper.sh` to legacy
 
 # v1.19.6
