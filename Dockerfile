@@ -1,16 +1,32 @@
-FROM kalilinux/kali-rolling:latest
+# Use the official Rust image as a base image
+FROM rust:latest AS builder
 
-# copy files to /app
+# Install nmap (or any other tools the Rust program might use)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates pkg-config libssl-dev make git curl wget unzip \
+    nmap gobuster amass golang && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the container
+WORKDIR /usr/src/sherlock
+
+# Copy the Cargo.toml and Cargo.lock files first (to cache dependencies)
+COPY Cargo.toml Cargo.lock ./
+
+# Fetch dependencies, caching them
+RUN cargo fetch
+
+# Copy the rest of the project files into the container
+COPY . .
+RUN cargo build --release
+
+FROM debian:stable-slim AS runner
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates git curl unzip nmap gobuster amass golang && rm -rf /var/lib/apt/lists/*
+ENV GOPATH=/root/go PATH=/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Install httpx and nuclei
+RUN go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 WORKDIR /app
-COPY . /app
-
-# install necessary packages
-RUN apt-get update
-RUN apt-get install -y nodejs npm wget curl gnupg git python3 python3-pip
-RUN git clone https://github.com/gbiagomba/Sherlock.git
-RUN cd Sherlock
-RUN bash "install.sh"
-
-# start the app
-ENTRYPOINT ["bash"]
-CMD ["./sherlock.sh"]
+COPY --from=builder /usr/src/sherlock/target/release/sherlock /usr/local/bin/sherlock
+COPY rsc /app/rsc
+ENTRYPOINT ["sherlock"]

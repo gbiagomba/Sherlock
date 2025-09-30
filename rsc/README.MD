@@ -48,7 +48,20 @@ This will generate an optimized binary located in the `target/release` directory
   ./sherlock --target-file targets.txt --exclude exclude.txt
   ```
 
+### Dockerfile:
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t sherlock .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -it sherlock --target 192.168.1.1 --report-format html
+   ```
+
 ### Using the `Makefile`
+
 - **Build the project**:
   ```bash
   make build

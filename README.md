@@ -8,12 +8,12 @@
 Sherlock is a powerful recon automation tool designed to streamline the early phases of web application security assessments. Named after the legendary detective, it automates tasks like target scanning, excluding specific hosts, and more. With Sherlock, security professionals can perform their investigations efficiently while focusing on critical vulnerabilities.
 
 ## Features
-- Single target scanning (`--target` or `-t`).
-- Multi-target scanning from file (`--target-file` or `-f`).
-- Ability to exclude specific targets from scans (`--exclude` or `-e`).
-- Cross-platform support (Linux, macOS, Windows).
-- Efficient automation of recon tasks like port scanning (using nmap).
-- Open-source and extendable.
+- System-agnostic single binary (Rust) with subcommands.
+- Passive and active recon via external tools (amass, gobuster, nmap).
+- Optional HTTP probing via httpx; aggressive checks via nuclei.
+- Concurrency and timeouts per tool; no shell eval; structured outputs.
+- Consolidated reporting in JSON, CSV, HTML, and TXT.
+- Optional “Mindpalace” visual map (HTML + JSON) of targets and findings.
 
 ## Installation
 
@@ -32,30 +32,113 @@ cargo build --release
 ```
 This will generate an optimized binary located in the `target/release` directory.
 
+### Installer scripts
+- Linux/macOS: `scripts/install.sh`
+  - Install Sherlock to `/usr/local/bin` and optionally tools.
+  - Examples:
+    - `scripts/install.sh` (just install sherlock)
+    - `scripts/install.sh --with-tools` (also install nmap, amass, gobuster, httpx, nuclei)
+
+- Windows: `scripts/install.ps1`
+  - Install `sherlock.exe` to `C:\\Program Files\\Sherlock` and add to PATH.
+  - Example (PowerShell): `./scripts/install.ps1 -WithTools`
+  - Note: Tools are suggested; use winget/choco/scoop to install as available.
+
+### Docker
+The provided Dockerfile builds a ready-to-go image with nmap, amass, gobuster, httpx, and nuclei preinstalled.
+
+Build and run:
+```bash
+docker build -t sherlock:latest .
+docker run --rm -it -v $(pwd):/data sherlock:latest recon -t example.com -p demo -o /data/work/demo
+```
+Data written to `/data/work/...` inside your current directory.
+
+### CI/CD
+- Binaries: Publishing on tags `v*.*.*` builds multi-arch binaries and attaches them to the release.
+  - Linux (glibc+musl): x86_64 and aarch64
+  - macOS: macos-13 (x64) and macos-14 (Apple Silicon)
+  - Windows: x64 and arm64 (MSVC)
+  - Workflow: `.github/workflows/release-binaries.yml` (uses `taiki-e/upload-rust-binary`).
+- Docker: Multi-arch images (linux/amd64, linux/arm64) built and pushed on `main` and tags.
+  - Workflow: `.github/workflows/release-docker.yml` (Buildx with QEMU).
+  - Pushes to GHCR `ghcr.io/<owner>/<repo>`; optionally also to Docker Hub if secrets present.
+
+Configure secrets for Docker Hub (optional):
+- `DOCKERHUB_USERNAME`: your Docker Hub username
+- `DOCKERHUB_TOKEN`: a Docker Hub access token
+- `DOCKERHUB_REPO` (optional): override repository name (default: `docker.io/<owner>/<repo>`)
+
+Tag a release to trigger both pipelines:
+```bash
+git tag v2.0.0
+git push origin v2.0.0
+```
+
 ## Usage
 
+### Subcommands
+
+- `sherlock recon`: Passive recon only (subdomain enumeration without brute force).
+- `sherlock investigate`: Full pipeline (subdomain enum with brute + host discovery + basic service scan).
+- `sherlock hound`: Aggressive hunting leveraging service fingerprints (nmap) and web probes (httpx) to run nuclei; extensible to metasploit.
+- `sherlock report`: Generate JSON, CSV, HTML, and TXT reports from `findings.jsonl` in `--out`.
+- `sherlock mindpalace`: Build `graph.json` and `mindpalace.html` visualization.
+- `sherlock doctor`: Check environment for tools and print versions.
+
+### Common flags
+
+- `-t, --target <TARGET>`: Single target (repeatable). Accepts hostname, IP, or CIDR.
+- `-f, --target-file <FILE>`: File with list of targets.
+- `-e, --exclude <FILE>`: File with targets to exclude.
+- `-p, --project <NAME>`: Project label for output grouping.
+- `-o, --out <DIR>`: Output directory (default: `work/<timestamp>_<project>`).
+- `--timeout <SECS>`: Per-tool timeout (default: 600).
+- `--concurrency <N>`: Max concurrent tasks (default: 8).
+- `-w, --wordlist <FILE>`: Wordlist for DNS brute force (defaults to `rsc/subdomains.list` if present).
+- `--dry-run`: Print the execution plan without running tools.
+- `--use-httpx`: Enable httpx probing; feeds discovered URLs into nuclei.
+- `--nuclei-templates <PATH>`: Path to nuclei templates (directory or file) used in `hound`.
+- `--nuclei-severity <LIST>`: CSV of severities to include, e.g. `critical,high,medium`.
+
 ### Examples
-- **Scan a single target**:
-  ```bash
-  ./sherlock --target 192.168.1.1
-  ```
-- **Scan multiple targets from a file**:
-  ```bash
-  ./sherlock --target-file targets.txt
-  ```
-- **Scan multiple targets while excluding specific ones**:
-  ```bash
-  ./sherlock --target-file targets.txt --exclude exclude.txt
-  ```
+
+- Passive recon for a domain list:
+  - `sherlock recon -f domains.txt -p acme -o work/acme-recon`
+
+- Full investigation for one domain with wordlist:
+  - `sherlock investigate -t example.com -w rsc/subdomains.list -p acme`
+
+- Full investigation including httpx probing:
+  - `sherlock investigate -t example.com --use-httpx -w rsc/subdomains.list -p acme`
+
+- Generate reports from prior run:
+  - `sherlock report -s work/2025.03.07-12.00.00_acme`
+
+- Create visual map:
+  - `sherlock mindpalace -s work/2025.03.07-12.00.00_acme`
+
+### Outputs
+- During runs, findings stream to `findings.jsonl` under the chosen `--out`.
+- `report` produces:
+  - `report.json`, `report.csv`, `report.html`, `report.txt`, and `services.csv` (service inventory: target, host, port, proto, state, service).
 
 ### Using the `Makefile`
 - **Build the project**:
   ```bash
   make build
   ```
-- **Run the project**:
+- **Run a passive recon**:
   ```bash
-  make run
+  make build && make recon ARGS="-t example.com -p demo"
+  ```
+- **Run a full investigation**:
+  ```bash
+  make build && make investigate ARGS="-t example.com -w rsc/subdomains.list"
+  ```
+- **Generate reports**:
+  ```bash
+  make report ARGS="-s work/..."
   ```
 - **Clean the project**:
   ```bash
@@ -67,14 +150,10 @@ This will generate an optimized binary located in the `target/release` directory
   ```
 
 ## TODO
-- [ ] Add multi-thread parallel processing
-- [ ] Limit amount of data stored to disk, use more variables
-- [ ] Add Tenable API scanning/support [Queued]
-- [ ] Add joomscan & droopescan scan [Queued]
-- [ ] Add function to check if the script is running on latest version [inprogress]
-- [ ] Add exclusion list config file
-- [ ] Add flag support
-- [x] Convert sherlock to rust lang
+- [ ] Add Tenable/OpenVAS/Nessus integrations
+- [ ] Add HTTP-aware runners (httpx, nuclei) and parser adapters
+- [ ] Add service-specific exploit hooks (Metasploit modules)
+- [ ] Expand mindpalace visualization (grouping, filters)
 
 ## Contributing
 We welcome contributions! Please follow the standard GitHub workflow:
@@ -98,5 +177,5 @@ Sherlock is licensed under the GPL-3.0 License. For more information, see the [L
          '-`)     =|-.   )s
           /`--.'--'   \ .-.
         .'`-._ `.\    | J /
-  jgs  /      `--.|   \__/
+  jgs  /      `--.|   \__/ 
 ```
