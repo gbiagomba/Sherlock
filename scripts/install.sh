@@ -37,14 +37,22 @@ if [[ $WITH_TOOLS -eq 1 ]]; then
     brew update
     brew install nmap gobuster amass || true
     brew install projectdiscovery/tap/httpx projectdiscovery/tap/nuclei || true
+    if ! command -v amass >/dev/null 2>&1; then
+      echo "[i] amass not available via brew or not found; installing via go"
+      export GOPATH=${GOPATH:-"$HOME/go"}; export PATH="$PATH:$GOPATH/bin"
+      go install github.com/OWASP/Amass/v3/...@latest || true
+      sudo install -m 0755 "$GOPATH/bin/amass" /usr/local/bin/amass || true
+    fi
   elif command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update
-    sudo apt-get install -y nmap gobuster amass golang-go
+    sudo apt-get install -y nmap gobuster golang-go
     export GOPATH=${GOPATH:-"$HOME/go"}; export PATH="$PATH:$GOPATH/bin"
     go install github.com/projectdiscovery/httpx/cmd/httpx@latest || true
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest || true
+    go install github.com/OWASP/Amass/v3/...@latest || true
     sudo install -m 0755 "$GOPATH/bin/httpx" /usr/local/bin/httpx || true
     sudo install -m 0755 "$GOPATH/bin/nuclei" /usr/local/bin/nuclei || true
+    sudo install -m 0755 "$GOPATH/bin/amass" /usr/local/bin/amass || true
   elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
     PM=$(command -v dnf || command -v yum)
     sudo $PM install -y nmap golang || true
@@ -61,4 +69,3 @@ if [[ $WITH_TOOLS -eq 1 ]]; then
 fi
 
 echo "[+] Done. Run: sherlock doctor"
-

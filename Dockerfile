@@ -4,7 +4,7 @@ FROM rust:latest AS builder
 # Install nmap (or any other tools the Rust program might use)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates pkg-config libssl-dev make git curl wget unzip \
-    nmap gobuster amass golang && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/sherlock
@@ -21,11 +21,12 @@ RUN cargo build --release
 
 FROM debian:stable-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates git curl unzip nmap gobuster amass golang && rm -rf /var/lib/apt/lists/*
+    ca-certificates git curl unzip nmap gobuster golang && rm -rf /var/lib/apt/lists/*
 ENV GOPATH=/root/go PATH=/root/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-# Install httpx and nuclei
+# Install httpx, nuclei, and amass
 RUN go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
-    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
+    go install github.com/OWASP/Amass/v3/...@latest
 WORKDIR /app
 COPY --from=builder /usr/src/sherlock/target/release/sherlock /usr/local/bin/sherlock
 COPY rsc /app/rsc
