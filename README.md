@@ -161,6 +161,11 @@ We welcome contributions! Please follow the standard GitHub workflow:
 2. Create a new feature branch.
 3. Submit a pull request after testing your changes.
 
+Notes for contributors
+- Commit `Cargo.lock` for this application. Our CI enforces that a tracked lockfile exists to ensure reproducible builds and working Docker layers.
+- Prefer adding new external tooling via adapters that consume structured outputs (JSON/CSV) and never via `sh -c`.
+- For any new tools, update `VERSIONS.md` with proposed version pins and add smoke tests.
+
 Feel free to open issues or suggest improvements.
 
 ## License
