@@ -1,0 +1,70 @@
+# Rust build artifacts
+target/
+*.rs.bk
+Cargo.lock.bak
+
+# IDE/editor configuration files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test outputs and artifacts
+output.txt
+test_output.html
+test_output.json
+test_output.csv
+test_*.txt
+test_*.html
+test_*.json
+test_*.csv
+*.test.log
+*.test.txt
+
+# Working directories
+work/
+output/
+results/
+tmp/
+temp/
+
+# Logs
+*.log
+logs/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.tar.bz2
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+credentials.json
+secrets.txt
+
+# macOS specific
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux specific
+.directory
+
+# Windows specific
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
