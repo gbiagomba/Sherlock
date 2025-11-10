@@ -150,10 +150,42 @@ git push origin v2.0.0
   ```
 
 ## TODO
-- [ ] Add Tenable/OpenVAS/Nessus integrations
-- [ ] Add HTTP-aware runners (httpx, nuclei) and parser adapters
-- [ ] Add service-specific exploit hooks (Metasploit modules)
-- [ ] Expand mindpalace visualization (grouping, filters)
+
+### Infrastructure & Integrations
+- [ ] Add scan result ingestion from vulnerability scanners
+  - Support for Tenable Nessus `.nessus` files (XML format)
+  - Support for Greenbone OpenVAS XML exports
+  - Support for Nmap XML results (already partially supported; extend with direct import command)
+  - Parse and normalize findings into sherlock's unified finding format
+  - Enable automated follow-up validation checks based on ingested findings
+
+### Service-Specific Exploitation & Validation
+- [ ] Add service-specific exploit hooks and validation modules
+  - Implement Metasploit integration for `sherlock hound` mode
+  - When SMTP is detected (via nmap or ingested scans), run targeted nmap scripts (smtp-*)
+  - When RDP is detected, run rdp-specific validation checks
+  - When SSH is detected, run ssh-specific checks (ssh-auth-methods, weak ciphers)
+  - Create extensible framework for service-to-validation mapping
+  - Add optional Metasploit module suggestions based on identified services/CVEs
+
+### Visualization & Reporting
+- [ ] Enhance mindpalace visualization
+  - Add node grouping by category (subdomains, services, vulnerabilities)
+  - Implement filtering by severity, service type, or tool
+  - Add search functionality for nodes
+  - Consider implementation options:
+    - Web app with backend API (more interactive, requires deployment)
+    - Enhanced static HTML with client-side filtering (portable, no backend needed)
+    - CLI-based visualization using terminal graphics libraries
+    - Database backend (SQLite for portability, PostgreSQL for larger deployments)
+  - Add export capabilities (PNG/SVG for reports)
+  - Implement severity-based color coding for nodes
+
+### Completed Items
+- [x] Add HTTP-aware runners (httpx, nuclei) and parser adapters
+  - httpx integration complete (src/tools/tool_httpx.rs)
+  - nuclei integration complete (src/tools/tool_nuclei.rs)
+  - Available via `--use-httpx` flag and `hound` mode
 
 ## Contributing
 We welcome contributions! Please follow the standard GitHub workflow:

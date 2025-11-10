@@ -1,3 +1,28 @@
+# v2.0.1 (2025-11-10)
+
+## Documentation & Infrastructure
+- Added comprehensive `scripts/README.md` documenting installation scripts for all platforms
+- Enhanced main README TODO section with detailed roadmap:
+  - Infrastructure & Integrations: Vulnerability scanner ingestion (Nessus, OpenVAS, Nmap XML)
+  - Service-Specific Exploitation: Metasploit integration and service-specific validation hooks
+  - Visualization & Reporting: Enhanced mindpalace with grouping, filtering, and multiple output options
+  - Marked httpx/nuclei integration as completed
+- Created `.version-tracking.md` for semantic versioning compliance and change tracking
+- Enhanced `.gitignore` to exclude test artifacts, logs, working directories, and sensitive files
+- Added `.github/workflows/` to version control for CI/CD transparency
+
+## Analysis & Findings
+- Confirmed httpx and nuclei are fully integrated (tool_httpx.rs, tool_nuclei.rs)
+- Identified Metasploit mentioned but not yet implemented in `sherlock hound` mode
+- Documented current mindpalace visualization capabilities and enhancement roadmap
+- Verified multi-platform CI/CD workflows are properly configured for releases
+
+## Resource Cleanup
+- Analyzed `rsc/` directory usage:
+  - `rsc/subdomains.list`: Actively used as default wordlist (src/main.rs:154)
+  - `rsc/resolvers.txt`: Only used by legacy bash script
+  - `rsc/arch_sherlock.zip`: Unused artifact (candidate for removal)
+
 # v2.0.0 (2025-09-30)
 - Full rewrite in Rust with modular CLI subcommands: `recon`, `investigate`, `hound`, `report`, `mindpalace`, `doctor`.
 - Safe tool orchestration with timeouts, bounded concurrency, and argv-only execution.

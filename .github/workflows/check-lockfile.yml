@@ -1,0 +1,26 @@
+name: Check Cargo.lock
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  verify-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Ensure Cargo.lock exists and is tracked
+        shell: bash
+        run: |
+          if [ ! -f Cargo.lock ]; then
+            echo "Cargo.lock is missing at repo root" >&2
+            exit 1
+          fi
+          if ! git ls-files --error-unmatch Cargo.lock >/dev/null 2>&1; then
+            echo "Cargo.lock exists but is not tracked by git" >&2
+            exit 1
+          fi
+          echo "Cargo.lock present and tracked."

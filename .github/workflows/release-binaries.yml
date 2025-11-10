@@ -1,0 +1,116 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux (glibc+musl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary@v1
+        with:
+          bin: sherlock
+          target: >-
+            x86_64-unknown-linux-gnu,
+            aarch64-unknown-linux-gnu,
+            x86_64-unknown-linux-musl,
+            aarch64-unknown-linux-musl
+          use-cross: true
+          archive: auto
+          asset: sherlock-{target}
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  macos-x64:
+    name: macOS x64 (macos-13)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary@v1
+        with:
+          bin: sherlock
+          target: x86_64-apple-darwin
+          # Native build on macOS runner
+          use-cross: false
+          archive: auto
+          asset: sherlock-{target}
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  macos-arm64:
+    name: macOS arm64 (macos-14)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary@v1
+        with:
+          bin: sherlock
+          target: aarch64-apple-darwin
+          use-cross: false
+          archive: auto
+          asset: sherlock-{target}
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  windows:
+    name: Windows (x64 + arm64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary@v1
+        with:
+          bin: sherlock
+          target: >-
+            x86_64-pc-windows-msvc,
+            aarch64-pc-windows-msvc
+          use-cross: false
+          archive: auto
+          asset: sherlock-{target}
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  checksums-sign:
+    name: Checksums and Sign
+    needs: [linux, macos-x64, macos-arm64, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install GitHub CLI
+        uses: cli/cli/action@v2
+      - name: Download release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist
+          gh release download "$GITHUB_REF_NAME" --pattern 'sherlock-*' --dir dist
+      - name: Generate SHA256SUMS
+        run: |
+          cd dist
+          if command -v sha256sum >/dev/null 2>&1; then sha256sum sherlock-* > SHA256SUMS; else shasum -a 256 sherlock-* > SHA256SUMS; fi
+      - name: Import GPG key
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --import
+      - name: Sign SHA256SUMS
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        run: |
+          cd dist
+          gpg --batch --yes --armor --detach-sign -o SHA256SUMS.asc SHA256SUMS
+      - name: Upload checksum and signature to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" dist/SHA256SUMS dist/SHA256SUMS.asc --clobber || gh release upload "$GITHUB_REF_NAME" dist/SHA256SUMS --clobber
